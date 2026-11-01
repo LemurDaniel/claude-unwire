@@ -31,11 +31,20 @@ somewhere in there.
    **Code behind a login.** Most single-page apps serve their scripts without a login, only
    the data is protected: try without a session first. When the start page or the scripts
    redirect to a login, use session mode:
-   - The user logs in in their own browser and sets the cookie themselves:
-     `$env:UNWIRE_COOKIE = '<name>=<value>'`. Never ask for the password, never log in,
-     never ask the user to paste the cookie into the chat.
-   - Add `-UseSession`. Then only the start page and `*.js`, `*.mjs`, `*.map` are requested,
+   - The user logs in in their own browser and copies the session cookie from the dev tools
+     (Application → Cookies, e.g. `i_like_gitea`, `grafana_session`) as `name=value`.
+   - Run the script with `-PromptSession` in a terminal the user types into (in the Claude
+     desktop app: a terminal tab of the user), not in your own shell. It asks with a masked
+     prompt, the cookie stays in memory for that one run: not on disk, not in the history.
+   - Never ask for the password, never log in, never ask the user to paste the cookie into
+     the chat, never write it to a file.
+   - `-UseSession` reads the cookie from `$env:UNWIRE_COOKIE` instead, for automation only.
+   - In session mode only the start page and `*.js`, `*.mjs`, `*.map` are requested,
      nothing on the denylist (logout, reboot, delete, ...), no frames, no redirects.
+     The signed-in start page is read for its script references only and never saved
+     (status `read`): it may hold personal data or tokens.
+   - The user's paste may span many lines ("Copy as cURL"), the prompt reads all of them.
+     Never ask the user to paste terminal output into the chat, read the terminal yourself.
    - A warning about a redirect of the start page means the session expired: ask the user
      to log in again and update the variable.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.

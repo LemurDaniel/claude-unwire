@@ -4,9 +4,11 @@
 #   webpack runtime) and their source maps.
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
 #
-#   Session mode (-UseSession) for UIs whose code is behind a login: sends the cookie from an
-#   environment variable and loads only the start page and *.js, *.mjs, *.map files, never a
-#   page, frame, endpoint or redirect. The cookie never appears in output, logs or manifest.
+#   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
+#   the start page and *.js, *.mjs, *.map files, never a page, frame, endpoint or redirect.
+#   -PromptSession asks for the cookie with a masked prompt (interactive, nothing on disk),
+#   -UseSession reads it from an environment variable (automation). The cookie never appears
+#   in output, logs or manifest.
 #
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
@@ -14,7 +16,10 @@
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #
-#   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'     # copied from the browser after the login
+#   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession
+#     Session cookie (name=value): ****                   # copied from the browser after the login
+#
+#   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
 
 #
@@ -135,7 +140,18 @@ param (
         Mandatory = $false
     )]
     [System.String]
-    $SessionVariable = 'UNWIRE_COOKIE'
+    $SessionVariable = 'UNWIRE_COOKIE',
+
+    <#
+    [Optional]
+    Asks for the session cookie with a masked prompt and switches to session mode like
+    UseSession. The cookie lives only in memory for this run: not on disk, not in the history.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [switch]
+    $PromptSession
 )
 
 Set-StrictMode -Version 1.0
@@ -166,6 +182,9 @@ $CHUNK_HASH        = '^[0-9a-fA-F]{6,}$'
 # Session mode: what may be requested at all, and what never
 $SESSION_STATIC    = '\.(m?js|map)$'
 $SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)'
+# Line continuations of a pasted cURL command: bash '\', cmd '^', PowerShell '`'
+$PASTE_CONTINUATION = '\s[\\^`]\s*$'
+$MAX_PASTE_LINES    = 200
 
 # ===========================================================================
 # ===============================   HELPERS   ===============================
@@ -173,6 +192,8 @@ $SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|dele
 #
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
 #   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
+#   ConvertTo-UnwireCookieHeader   Cookie header from the usual copy formats of a browser.
+#   Get-UnwireCookieShape          Describes pasted text without showing its content.
 #   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
 #   Get-UnwireAssetFile            Local file path of an asset, always inside the root.
 #   Find-UnwireAssetReference      Scripts, frames, chunks and source maps of a text.
@@ -211,6 +232,67 @@ function Get-UnwireSessionBlock {
         return $null
     }
     return 'session mode: no static script or source map'
+}
+
+function ConvertTo-UnwireCookieHeader {
+    param (
+        [System.String] $Text
+    )
+
+    <#
+        > cURL ("Copy as cURL")         -> the -b / --cookie value, else the cookie: header,
+                                           bash and cmd (^"...^") quoting
+        > Header line ("cookie: a=b")   -> everything after 'cookie:'
+        > DevTools table row            -> 'name<TAB>value<TAB>domain...' => 'name=value'
+        > Anything else                 -> trimmed as it is, 'a=b; c=d' stays a list
+    #>
+
+    $value = $Text.Trim()
+
+    # cURL ("Copy as cURL")
+    if ($value -MATCH '^curl\s') {
+        # cmd format escapes with '^': -b ^"a=b; c=d^" => -b "a=b; c=d"
+        if ($value.Contains('^"')) {
+            $value = $value -REPLACE '\^(.)', '$1'
+        }
+        $curlCookie = [System.Text.RegularExpressions.Regex]::Match($value, '(?:-b|--cookie)\s+(?<q>[''"])(?<value>.*?)\k<q>')
+        if (-NOT $curlCookie.Success) {
+            $curlCookie = [System.Text.RegularExpressions.Regex]::Match($value, '-H\s+(?<q>[''"])(?i:cookie):\s*(?<value>.*?)\k<q>')
+        }
+        return $(if ($curlCookie.Success) { $curlCookie.Groups['value'].Value.Trim() } else { $value })
+    }
+
+    # Header line ("cookie: a=b")
+    if ($value -MATCH '^(?i)cookie:\s*') {
+        return ($value -REPLACE '^(?i)cookie:\s*', '').Trim()
+    }
+
+    # DevTools table row
+    if ($value.Contains("`t")) {
+        $fields = $value.Split("`t")
+        return "$($fields[0].Trim())=$($fields[1].Trim())"
+    }
+
+    # Anything else
+    return $value
+}
+
+function Get-UnwireCookieShape {
+    param (
+        [System.String] $Text
+    )
+
+    # Only the shape: length and structure, never a single character of the value.
+    $traits = @(
+        "$($Text.Length) characters"
+        if ($Text.Contains('=')) { "contains '='" } else { "no '='" }
+        if ($Text.Contains(';')) { "contains ';'" }
+        if ($Text.Contains("`t")) { 'contains tabs' }
+        if ($Text -MATCH '\s') { 'contains spaces' }
+        if ($Text.TrimStart() -MATCH '^curl\s') { "starts with 'curl'" }
+        if ($Text.TrimStart() -MATCH '^[''"{\[]') { 'starts with a quote or bracket' }
+    )
+    return $traits -join ', '
 }
 
 function Invoke-UnwireAssetRequest {
@@ -401,13 +483,47 @@ if (-NOT [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $StartU
     throw [System.ArgumentException]::new("Uri must be an absolute http or https URI, e.g. 'http://192.168.178.1', got '$Uri'.")
 }
 
-# The cookie value never goes into a message, a log line or the manifest.
-$SessionCookie = if ($UseSession) { [System.Environment]::GetEnvironmentVariable($SessionVariable) } else { $null }
-if ($UseSession -AND [System.String]::IsNullOrWhiteSpace($SessionCookie)) {
-    throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'grafana_session=<VALUE>'.")
-}
-if ($UseSession -AND $null -NE (Get-UnwireSessionBlock -Target $StartUri -Start $StartUri)) {
+# PromptSession is session mode too, only the source of the cookie differs.
+$IsSessionMode = $UseSession.IsPresent -OR $PromptSession.IsPresent
+
+if ($IsSessionMode -AND $null -NE (Get-UnwireSessionBlock -Target $StartUri -Start $StartUri)) {
     throw [System.ArgumentException]::new("Uri '$StartUri' must not match the session denylist (logout, reboot, delete, ...).")
+}
+
+<#
+    The cookie value never goes into a message, a log line or the manifest.
+    Order of precedence:
+    - PromptSession  -> masked prompt
+    - UseSession     -> environment variable SessionVariable
+    - neither        -> no session
+#>
+$SessionCookie = $null
+# PromptSession -> masked prompt
+if ($PromptSession) {
+    # A multi-line paste ("Copy as cURL" ends its lines with '\', '^' or '`') must be read
+    # completely here: every line left unread would run as a command in the user's shell.
+    $pastedLines = [System.Collections.Generic.List[System.String]]::new()
+    do {
+        $prompt     = if ($pastedLines.Count -EQ 0) { 'Session cookie (name=value, cookie header or "Copy as cURL")' } else { '...' }
+        $secureLine = Read-Host -Prompt $prompt -AsSecureString
+        $pastedLine = [System.Net.NetworkCredential]::new('', $secureLine).Password
+        $pastedLines.Add(($pastedLine -REPLACE $PASTE_CONTINUATION, ''))
+    } while ($pastedLine -MATCH $PASTE_CONTINUATION -AND $pastedLines.Count -LT $MAX_PASTE_LINES)
+
+    $SessionCookie = ConvertTo-UnwireCookieHeader -Text ($pastedLines -join ' ')
+}
+# UseSession -> environment variable SessionVariable
+elseif ($UseSession) {
+    $variableCookie = [System.Environment]::GetEnvironmentVariable($SessionVariable)
+    if ([System.String]::IsNullOrWhiteSpace($variableCookie)) {
+        throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'grafana_session=<VALUE>'.")
+    }
+    $SessionCookie = ConvertTo-UnwireCookieHeader -Text $variableCookie
+}
+
+# A bare value without its name is the most common copy mistake.
+if ($IsSessionMode -AND $SessionCookie -NOTMATCH '^[^=\s;]+=\S') {
+    throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'i_like_gitea=<VALUE>' or 'grafana_session=<VALUE>', with the name from the browser's cookie list. Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
 }
 
 # ---------------------------------------------------------------------------
@@ -425,9 +541,9 @@ $RequestConfig = @{
     SkipHttpErrorCheck   = $true
     SkipCertificateCheck = $SkipCertificateCheck.IsPresent
 }
-if ($UseSession) {
+if ($IsSessionMode) {
     $RequestConfig.Headers = @{ Cookie = $SessionCookie }
-    Write-Verbose "[Save-UnwireAsset] Session mode: cookie from '$SessionVariable', only the start page and *.js, *.mjs, *.map."
+    Write-Verbose "[Save-UnwireAsset] Session mode: cookie from $(if ($PromptSession) { 'the prompt' } else { "'$SessionVariable'" }), only the start page and *.js, *.mjs, *.map."
 }
 
 $Queue     = [System.Collections.Generic.Queue[PSCustomObject]]::new()
@@ -463,6 +579,7 @@ $Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; Fou
     > Map that is no source map             -> record as skipped
     > Same content as a saved asset         -> record as skipped (iframes that only differ
                                                in the query string)
+    > Page in session mode                  -> record as read, queue its scripts, not saved
     > Otherwise                             -> save, record, queue references:
         - html  -> scripts and frames, while inside MaxDepth
         - js    -> its source map always, chunks while inside MaxDepth
@@ -488,7 +605,7 @@ $GuessMisses = 0
         Write-Verbose "[Save-UnwireAsset] '$key' is cross-origin -> skipping."
         continue CRAWL
     }
-    $sessionBlock = if ($UseSession) { Get-UnwireSessionBlock -Target $item.Uri -Start $StartUri } else { $null }
+    $sessionBlock = if ($IsSessionMode) { Get-UnwireSessionBlock -Target $item.Uri -Start $StartUri } else { $null }
     if ($null -NE $sessionBlock) {
         $record.Reason = $sessionBlock
         Write-Verbose "[Save-UnwireAsset] '$key' -> $sessionBlock -> skipping."
@@ -505,7 +622,7 @@ $GuessMisses = 0
 
     # Request fails or not HTTP 200
     try {
-        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig -IsRedirectAllowed (-NOT $UseSession)
+        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig -IsRedirectAllowed (-NOT $IsSessionMode)
     }
     catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
         if ($item.Depth -EQ 0) {
@@ -529,7 +646,7 @@ $GuessMisses = 0
         $record.Status = 'failed'
         $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
         Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
-        if ($item.Depth -EQ 0 -AND $UseSession -AND $result.Reason -LIKE '*redirect*') {
+        if ($item.Depth -EQ 0 -AND $IsSessionMode -AND $result.Reason -LIKE '*redirect*') {
             Write-Warning "[Save-UnwireAsset] Start page '$StartUri' redirects, the session cookie is probably expired: log in again and update '$SessionVariable'."
         }
         elseif ($item.Depth -EQ 0) {
@@ -558,6 +675,18 @@ $GuessMisses = 0
     if ($SavedHashes.ContainsKey($hash)) {
         $record.Reason = "same content as '$($SavedHashes[$hash])'"
         Write-Verbose "[Save-UnwireAsset] '$key' has the same content as '$($SavedHashes[$hash])' -> skipping."
+        continue CRAWL
+    }
+
+    # Session mode: the signed-in page may hold personal data or tokens, it is only read for
+    # its script references and never written to disk.
+    if ($IsSessionMode -AND $item.Kind -EQ 'html') {
+        $record.Status = 'read'
+        $record.Reason = 'session mode: page read for script references only, not saved'
+        Write-Verbose "[Save-UnwireAsset] '$key' read in session mode, not saved."
+        foreach ($reference in Find-UnwireAssetReference -Text $text -Kind 'html' -AssetUri $result.FinalUri -PageBase $item.PageBase) {
+            $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed })
+        }
         continue CRAWL
     }
 
@@ -632,7 +761,7 @@ if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
     $null = New-Item -ItemType Directory -Path $RootPath -Force
     [PSCustomObject]@{
         startUri = $StartUri.AbsoluteUri
-        session  = $UseSession.IsPresent     # whether a cookie was sent, never its value
+        session  = $IsSessionMode     # whether a cookie was sent, never its value
         assets   = $Records
     }
     | ConvertTo-Json -Depth 5
@@ -646,4 +775,5 @@ return [PSCustomObject]@{
     Skipped         = @($Records | Where-Object -Property Status -EQ -Value 'skipped').Count
     Failed          = @($Records | Where-Object -Property Status -EQ -Value 'failed').Count
     NotFound        = @($Records | Where-Object -Property Status -EQ -Value 'not-found').Count
+    ReadOnly        = @($Records | Where-Object -Property Status -EQ -Value 'read').Count
 }

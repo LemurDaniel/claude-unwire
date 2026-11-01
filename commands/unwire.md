@@ -19,8 +19,9 @@ found in the code, never submit a form, never execute downloaded JavaScript.
 - `-Name`: short name of the API, used for the output folder and the module prefix.
   Ask the user when it is missing.
 - `-SkipCertificateCheck`: for devices with self-signed certificates. Ask before using it.
-- Code behind a login: the user sets `$env:UNWIRE_COOKIE` after logging in in their own
-  browser, then `unwire-analyze` uses session mode (scripts only). Never ask for a password.
+- Code behind a login: the user logs in in their own browser, `unwire-analyze` runs the
+  download with `-PromptSession` in the user's terminal, they paste the cookie at the masked
+  prompt (scripts only). Never ask for a password or for the cookie in the chat.
 
 ## Output
 ```

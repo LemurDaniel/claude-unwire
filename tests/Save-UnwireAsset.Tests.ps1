@@ -5,6 +5,7 @@
 
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'Pester shares BeforeAll variables with the It blocks and mocks.')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'The test helper only builds an in-memory object.')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'The Read-Host mocks return fake test cookies.')]
 param ()
 
 # ===========================================================================
@@ -37,6 +38,13 @@ param ()
 #   session_denylist       Never requests a denylisted path, also not a script.
 #   session_no_redirect    Never follows a redirect and warns about an expired session.
 #   session_secret         Never writes the cookie value into the manifest or the output.
+#   session_page_unsaved   Reads the signed-in start page for scripts, never saves it.
+#   prompt_session         Asks for the cookie masked and sends it, no variable needed.
+#   prompt_header_line     Accepts a pasted 'Cookie: name=value' header line.
+#   prompt_curl            Takes the cookie out of a pasted 'Copy as cURL' command.
+#   prompt_multi_line      Reads a multi-line cURL paste completely, bash and cmd format.
+#   prompt_devtools_row    Turns a pasted DevTools cookie table row into name=value.
+#   prompt_bare_value      Fails early on a value without its name, shows only its shape.
 #
 
 BeforeAll {
@@ -310,7 +318,8 @@ Describe 'Save-UnwireAsset' {
             $summary  = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
             $manifest = Get-Content -Path $summary.Manifest -Raw | ConvertFrom-Json
 
-            $summary.Saved | Should -Be 2
+            $summary.Saved    | Should -Be 1
+            $summary.ReadOnly | Should -Be 1
             Should -Invoke Invoke-WebRequest -Times 2 -Exactly
             Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -IN @('/panel', '/data.lua', '/api/status') }
             ($manifest.assets | Where-Object -Property Uri -EQ -Value 'http://router.test/panel').Reason | Should -Be 'session mode: no static script or source map'
@@ -346,6 +355,106 @@ Describe 'Save-UnwireAsset' {
             $output  | Should -Not -Match 'TOP-SECRET-VALUE'
             $summary | Should -Not -Match 'TOP-SECRET-VALUE'
             (Get-Content -Path (Join-Path $OutputDirectory 'unwire-assets.json') -Raw | ConvertFrom-Json).session | Should -BeTrue
+        }
+
+        It 'session_page_unsaved: reads the signed-in start page for scripts, never saves it' {
+            $Site['http://router.test/']       = New-TestResponse -Content '<html>Hello daniel<script src="/app.js"></script></html>'
+            $Site['http://router.test/app.js'] = New-TestResponse -Content 'a()'
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
+
+            $summary.Saved    | Should -Be 1
+            $summary.ReadOnly | Should -Be 1
+            Join-Path -Path $OutputDirectory -ChildPath 'index.html' | Should -Not -Exist
+            Join-Path -Path $OutputDirectory -ChildPath 'app.js'     | Should -Exist
+        }
+    }
+
+    Context 'prompt session' {
+        BeforeEach {
+            $Site['http://router.test/']       = New-TestResponse -Content '<script src="/app.js"></script><iframe src="/panel"></iframe>'
+            $Site['http://router.test/app.js'] = New-TestResponse -Content 'a()'
+            $PromptConfig = @{ PromptSession = $true; SkipSourceMapProbe = $true }
+        }
+
+        It 'prompt_session: asks for the cookie masked and sends it, no variable needed' {
+            Mock Read-Host { ConvertTo-SecureString -String 'i_like_gitea=PROMPT-SECRET' -AsPlainText -Force }
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            $summary.Saved | Should -Be 1
+            Should -Invoke Read-Host -Times 1 -Exactly -ParameterFilter { $AsSecureString }
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'i_like_gitea=PROMPT-SECRET' }
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/panel' }
+            Get-Content -Path $summary.Manifest -Raw | Should -Not -Match 'PROMPT-SECRET'
+        }
+
+        It 'prompt_header_line: accepts a pasted Cookie header line' {
+            Mock Read-Host { ConvertTo-SecureString -String '  Cookie: i_like_gitea=PROMPT-SECRET ' -AsPlainText -Force }
+
+            $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'i_like_gitea=PROMPT-SECRET' }
+        }
+
+        It 'prompt_curl: takes the cookie out of a pasted Copy as cURL command' -ForEach @(
+            @{ Pasted = "curl 'https://router.test/' -H 'accept: text/html' -b 'lang=de-DE; i_like_gitea=PROMPT-SECRET' --compressed" }
+            @{ Pasted = "curl 'https://router.test/' -H 'cookie: lang=de-DE; i_like_gitea=PROMPT-SECRET' -H 'accept: */*'" }
+        ) {
+            Mock Read-Host { ConvertTo-SecureString -String $Pasted -AsPlainText -Force }
+
+            $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'lang=de-DE; i_like_gitea=PROMPT-SECRET' }
+        }
+
+        It 'prompt_multi_line: reads a multi-line cURL paste completely, <Format> format' -ForEach @(
+            @{
+                Format = 'cmd'
+                Lines  = @(
+                    'curl ^"https://router.test/gitea/^" ^'
+                    '  -H ^"Accept: text/html^" ^'
+                    '  -b ^"lang=de-DE; i_like_gitea=PROMPT-SECRET^" ^'
+                    '  -H ^"sec-ch-ua: ^\^"Opera^\^";v=^\^"137^\^"^" ^'
+                    '  --insecure'
+                )
+            }
+            @{
+                Format = 'bash'
+                Lines  = @(
+                    "curl 'https://router.test/gitea/' \"
+                    "  -H 'accept: text/html' \"
+                    "  -b 'lang=de-DE; i_like_gitea=PROMPT-SECRET' \"
+                    '  --compressed'
+                )
+            }
+        ) {
+            $pasted = [System.Collections.Generic.Queue[System.String]]::new([System.String[]] $Lines)
+            Mock Read-Host { ConvertTo-SecureString -String $pasted.Dequeue() -AsPlainText -Force }
+
+            $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            Should -Invoke Read-Host -Times $Lines.Count -Exactly
+            $pasted.Count | Should -Be 0
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'lang=de-DE; i_like_gitea=PROMPT-SECRET' }
+        }
+
+        It 'prompt_devtools_row: turns a pasted DevTools cookie table row into name=value' {
+            Mock Read-Host { ConvertTo-SecureString -String "i_like_gitea`tPROMPT-SECRET`tnfs.fritz.box`t/gitea`tSession`t46`ttrue`ttrue`tLax" -AsPlainText -Force }
+
+            $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'i_like_gitea=PROMPT-SECRET' }
+        }
+
+        It 'prompt_bare_value: fails early on a value without its name, shows only its shape' {
+            Mock Read-Host { ConvertTo-SecureString -String 'PROMPT-SECRET' -AsPlainText -Force }
+
+            $thrown = { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig } | Should -Throw -ExceptionType ([System.ArgumentException]) -PassThru
+
+            $thrown.Exception.Message | Should -BeLike "The session cookie must be 'name=value'*Got: 13 characters, no '='."
+            $thrown.Exception.Message | Should -Not -Match 'PROMPT-SECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
         }
     }
 }
