@@ -66,6 +66,9 @@ somewhere in there.
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Test-UnwireSpec.ps1" -Path './unwire/<name>/openapi.json'
    ```
+   Returns one finding per problem (`Severity`, `Location`, `Rule`, `Message`), nothing when
+   valid. Fix every `Error` before unwire-module. A `Warning` may stay, but low-confidence
+   operations without `x-unwire-open` should get their open points.
 
 ## Rules
 - Nothing is dropped silently: what cannot be resolved becomes an open point.

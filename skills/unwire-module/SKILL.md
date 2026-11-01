@@ -8,6 +8,10 @@ description: Step 4 of Unwire. Generates a native PowerShell script module (.psm
 Turns `unwire/<name>/openapi.json` into an idiomatic PowerShell 7 script module. No compiled
 C#, no AutoRest.
 
+## Precondition
+`Test-UnwireSpec.ps1` returns no `Error` for the spec. Stop and fix the spec otherwise:
+the function names come from `operationId`, the confirmations from `x-unwire-impact`.
+
 ## Layout
 Start from `${CLAUDE_PLUGIN_ROOT}/templates/module/` and replace `__NAME__` and `__PREFIX__`:
 ```

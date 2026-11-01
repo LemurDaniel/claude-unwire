@@ -32,8 +32,8 @@ downloaded JavaScript.
 | `tests/` | Pester tests of `scripts/`. |
 
 ## Status
-v0.1.0 scaffold: `Find-UnwireSpec.ps1`, `Save-UnwireAsset.ps1` and `Get-UnwireJsCandidate.ps1`
-work, `Test-UnwireSpec.ps1` is a stub.
+v0.1.0: all scripts work. Not yet run end to end as `/unwire`, the module generation of
+`unwire-module` is untested.
 
 ## Development
 ```powershell
