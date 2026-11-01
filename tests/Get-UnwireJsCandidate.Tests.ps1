@@ -17,6 +17,7 @@ param ()
 #   xhr_open            Finds XMLHttpRequest.open with method and path.
 #   jquery_getjson      Maps $.getJSON to GET.
 #   url_strings         Finds API paths and script endpoints as plain strings.
+#   url_templates       Finds template URLs on a base variable, not pure variable paths.
 #   dynamic_target      Marks a variable target as not literal.
 #   line_column         Reports line and column of a hit in a multi-line file.
 #   source_map          Prefers the map over its bundle, skips vendor sources.
@@ -100,6 +101,15 @@ Describe 'Get-UnwireJsCandidate' {
 
         $hits.Kind   | Should -Be @('url-string', 'url-string')
         $hits.Target | Should -Be @('/api/v1/users', 'data.lua')
+    }
+
+    It 'url_templates: finds template URLs on a base variable, not pure variable paths' {
+        $folder = Set-TestAsset -Name 'app.js' -Content 'async function Kl(){let e=await X(`${Vl}/user/stopwatches`);let f=`${d}/${u}`;let g=`${e.repoLink}/issues/${n}`}'
+
+        $hits = @(& $SCRIPT_PATH -Path $folder)
+
+        $hits.Kind   | Should -Be @('url-template', 'url-template')
+        $hits.Target | Should -Be @('${Vl}/user/stopwatches', '${e.repoLink}/issues/${n}')
     }
 
     It 'dynamic_target: marks a variable target as not literal' {

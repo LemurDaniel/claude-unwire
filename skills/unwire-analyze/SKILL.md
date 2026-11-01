@@ -19,13 +19,25 @@ somewhere in there.
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Save-UnwireAsset.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/assets'
    ```
-   It follows the start page, its frames, same-origin scripts, chunk paths in scripts
-   (up to `-MaxDepth`, default 3) and every script's source map. Other origins, SPA
+   It follows the start page, its frames, same-origin scripts, the lazy chunks of a webpack
+   runtime, chunk paths in scripts (up to `-MaxDepth`, default 3) and every script's source
+   map. Other origins, SPA
    fallbacks (HTML instead of a script) and redirects to other origins are skipped.
    `unwire-assets.json` lists every asset with `saved`, `skipped`, `failed` or `not-found`
    and the reason: skipped CDN scripts and failed assets go into the open points.
    `not-found` are guessed chunk paths (any `'*.js'` string in a script), a 404 there is normal.
    Prefer the source maps: they hold the original sources with real names.
+
+   **Code behind a login.** Most single-page apps serve their scripts without a login, only
+   the data is protected: try without a session first. When the start page or the scripts
+   redirect to a login, use session mode:
+   - The user logs in in their own browser and sets the cookie themselves:
+     `$env:UNWIRE_COOKIE = '<name>=<value>'`. Never ask for the password, never log in,
+     never ask the user to paste the cookie into the chat.
+   - Add `-UseSession`. Then only the start page and `*.js`, `*.mjs`, `*.map` are requested,
+     nothing on the denylist (logout, reboot, delete, ...), no frames, no redirects.
+   - A warning about a redirect of the start page means the session expired: ask the user
+     to log in again and update the variable.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Get-UnwireJsCandidate.ps1" `

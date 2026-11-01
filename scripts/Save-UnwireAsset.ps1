@@ -1,13 +1,21 @@
 # NOTE:
 #   Downloads the static assets of a web UI for unwire-analyze: the start page, its frames,
-#   every same-origin script, the chunks those scripts reference and their source maps.
+#   every same-origin script, the chunks those scripts reference (also the lazy chunks of a
+#   webpack runtime) and their source maps.
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
+#
+#   Session mode (-UseSession) for UIs whose code is behind a login: sends the cookie from an
+#   environment variable and loads only the start page and *.js, *.mjs, *.map files, never a
+#   page, frame, endpoint or redirect. The cookie never appears in output, logs or manifest.
 #
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
 #
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
+#
+#   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'     # copied from the browser after the login
+#   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
 
 #
 #   Chapters:
@@ -41,14 +49,15 @@ param (
 
     <#
     [Optional]
-    Maximum number of saved assets. Default is 200.
+    Maximum number of saved assets, source maps included. Default is 1000, a webpack app
+    easily has a few hundred chunks.
     #>
     [Parameter(
         Mandatory = $false
     )]
-    [ValidateRange(1, 5000)]
+    [ValidateRange(1, 10000)]
     [System.Int32]
-    $MaxAssets = 200,
+    $MaxAssets = 1000,
 
     <#
     [Optional]
@@ -103,7 +112,30 @@ param (
         Mandatory = $false
     )]
     [switch]
-    $SkipCertificateCheck
+    $SkipCertificateCheck,
+
+    <#
+    [Optional]
+    Sends the session cookie from the environment variable SessionVariable and switches to
+    session mode: only the start page and *.js, *.mjs, *.map files are requested, nothing
+    on the denylist (logout, reboot, delete, ...), no redirects.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [switch]
+    $UseSession,
+
+    <#
+    [Optional]
+    Environment variable holding the Cookie header for UseSession, e.g. 'sid=...; theme=dark'.
+    Default is UNWIRE_COOKIE.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [System.String]
+    $SessionVariable = 'UNWIRE_COOKIE'
 )
 
 Set-StrictMode -Version 1.0
@@ -124,12 +156,23 @@ $HTML_FRAME_REF    = '<i?frame\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
 # 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`
 $JS_CHUNK_REF      = '[''"`](?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`]'
+# Webpack runtime, the file name of a lazy chunk built from two maps:
+# - ""+({123:"SupportBundles"}[e]||e)+"."+{123:"cbbdd876417c6516e99c"}[e]+".js"   => SupportBundles.cbbdd876417c6516e99c.js
+# - "static/js/"+e+"."+{45:"0a1b2c3d"}[e]+".chunk.js"                              => static/js/45.0a1b2c3d.chunk.js
+$JS_CHUNK_MAP      = '(?:"(?<prefix>[^"]*)"\+)?(?:\(\{(?<names>[^{}]*)\}\[\w+\]\|\|\w+\)|\b\w+)\+"(?<sep>[.-])"\+\{(?<hashes>[^{}]*)\}\[\w+\]\+"(?<suffix>(?:\.chunk)?\.m?js)"'
+$JS_MAP_ENTRY      = '"?(?<key>[\w-]+)"?\s*:\s*"(?<value>[^"]*)"'
+$JS_PUBLIC_PATH    = '\b\w+\.p\s*=\s*"(?<path>[^"]*)"'
+$CHUNK_HASH        = '^[0-9a-fA-F]{6,}$'
+# Session mode: what may be requested at all, and what never
+$SESSION_STATIC    = '\.(m?js|map)$'
+$SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)'
 
 # ===========================================================================
 # ===============================   HELPERS   ===============================
 # ===========================================================================
 #
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
+#   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
 #   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
 #   Get-UnwireAssetFile            Local file path of an asset, always inside the root.
 #   Find-UnwireAssetReference      Scripts, frames, chunks and source maps of a text.
@@ -145,11 +188,37 @@ function Test-UnwireSameOrigin {
     return 0 -EQ [System.Uri]::Compare($Left, $Right, [System.UriComponents]::SchemeAndServer, [System.UriFormat]::SafeUnescaped, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
+function Get-UnwireSessionBlock {
+    param (
+        [System.Uri] $Target,
+        [System.Uri] $Start
+    )
+
+    <#
+        > Path or query on the denylist   -> blocked, also the start page
+        > The start page itself           -> allowed
+        > *.js, *.mjs, *.map              -> allowed
+        > Anything else                   -> blocked (pages, frames, endpoints)
+    #>
+
+    if ("$($Target.AbsolutePath)$($Target.Query)" -MATCH $SESSION_DENYLIST) {
+        return 'session mode: path on the denylist'
+    }
+    if ($Target.GetLeftPart([System.UriPartial]::Query) -EQ $Start.GetLeftPart([System.UriPartial]::Query)) {
+        return $null
+    }
+    if ($Target.AbsolutePath.ToLowerInvariant() -MATCH $SESSION_STATIC) {
+        return $null
+    }
+    return 'session mode: no static script or source map'
+}
+
 function Invoke-UnwireAssetRequest {
     param (
         [System.Uri]                  $Target,
         [System.Uri]                  $Origin,
-        [System.Collections.Hashtable] $RequestConfig
+        [System.Collections.Hashtable] $RequestConfig,
+        [System.Boolean]              $IsRedirectAllowed
     )
 
     $current = $Target
@@ -157,6 +226,10 @@ function Invoke-UnwireAssetRequest {
         $response = Invoke-WebRequest @RequestConfig -Uri $current
         if ($response.StatusCode -NOTIN $REDIRECT_CODES) {
             return [PSCustomObject]@{ Response = $response; FinalUri = $current; Reason = $null }
+        }
+        # Session mode: a redirect target is a page the positive list never checked.
+        if (-NOT $IsRedirectAllowed) {
+            return [PSCustomObject]@{ Response = $null; FinalUri = $current; Reason = "HTTP $($response.StatusCode) redirect, not followed in session mode" }
         }
 
         $location = if ($null -NE $response.Headers) { @($response.Headers['Location'])[0] } else { $null }
@@ -215,6 +288,8 @@ function Find-UnwireAssetReference {
         > HTML  -> <script src>, <link href="*.js"> as js, <frame>/<iframe src> as html,
                    relative to the <base href> of the page, else to the page itself
         > JS    -> the last sourceMappingURL as map, relative to the script
+                -> webpack runtime chunk maps as js, exact names, relative to the literal
+                   publicPath (against the page base), else to the runtime's folder
                 -> chunk paths as js: './x.js', '../x.js', '/x.js' relative to the script,
                    bare 'static/js/x.js' relative to the base of the page that loaded
                    the script (webpack publicPath)
@@ -256,6 +331,30 @@ function Find-UnwireAssetReference {
         }
     }
 
+    # JS: webpack runtime chunk maps
+    $chunkMaps = [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_MAP)
+    if ($chunkMaps.Count -GT 0) {
+        $publicPath = [System.Text.RegularExpressions.Regex]::Match($Text, $JS_PUBLIC_PATH)
+        $chunkBase  = if ($publicPath.Success -AND $publicPath.Groups['path'].Value -NE 'auto') { [System.Uri]::new($PageBase, $publicPath.Groups['path'].Value) } else { [System.Uri]::new($AssetUri, './') }
+
+        foreach ($chunkMap in $chunkMaps) {
+            $names = @{}
+            foreach ($entry in [System.Text.RegularExpressions.Regex]::Matches($chunkMap.Groups['names'].Value, $JS_MAP_ENTRY)) {
+                $names[$entry.Groups['key'].Value] = $entry.Groups['value'].Value
+            }
+            foreach ($entry in [System.Text.RegularExpressions.Regex]::Matches($chunkMap.Groups['hashes'].Value, $JS_MAP_ENTRY)) {
+                # Only content hashes: an object of other strings is no chunk map.
+                if ($entry.Groups['value'].Value -NOTMATCH $CHUNK_HASH) {
+                    continue
+                }
+                $chunkId   = $entry.Groups['key'].Value
+                $chunkName = if ($names.ContainsKey($chunkId)) { $names[$chunkId] } else { $chunkId }
+                $chunkFile = "$($chunkMap.Groups['prefix'].Value)$chunkName$($chunkMap.Groups['sep'].Value)$($entry.Groups['value'].Value)$($chunkMap.Groups['suffix'].Value)"
+                $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($chunkBase, $chunkFile); Kind = 'js'; Data = $null; PageBase = $PageBase; Guessed = $false })
+            }
+        }
+    }
+
     # JS: chunks
     foreach ($chunkMatch in [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_REF)) {
         $chunkRef = $chunkMatch.Groups['ref'].Value
@@ -288,18 +387,27 @@ function ConvertFrom-UnwireDataUri {
 # ============================   PREPARE CRAWL   ============================
 # ===========================================================================
 #
-#   1. Validations   Fails early on a URI that is not absolute http(s).
+#   1. Validations   Fails early on a bad URI or a missing session cookie.
 #   2. Queue         Queues the start page and prepares the request settings.
 #
 
 # ---------------------------------------------------------------------------
 # Validations
-#   Fails early on a URI that is not absolute http(s).
+#   Fails early on a bad URI or a missing session cookie.
 # ---------------------------------------------------------------------------
 
 $StartUri = $null
 if (-NOT [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $StartUri) -OR $StartUri.Scheme -NOTIN @('http', 'https')) {
     throw [System.ArgumentException]::new("Uri must be an absolute http or https URI, e.g. 'http://192.168.178.1', got '$Uri'.")
+}
+
+# The cookie value never goes into a message, a log line or the manifest.
+$SessionCookie = if ($UseSession) { [System.Environment]::GetEnvironmentVariable($SessionVariable) } else { $null }
+if ($UseSession -AND [System.String]::IsNullOrWhiteSpace($SessionCookie)) {
+    throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'grafana_session=<VALUE>'.")
+}
+if ($UseSession -AND $null -NE (Get-UnwireSessionBlock -Target $StartUri -Start $StartUri)) {
+    throw [System.ArgumentException]::new("Uri '$StartUri' must not match the session denylist (logout, reboot, delete, ...).")
 }
 
 # ---------------------------------------------------------------------------
@@ -316,6 +424,10 @@ $RequestConfig = @{
     MaximumRedirection   = 0          # followed by Invoke-UnwireAssetRequest, only within the origin
     SkipHttpErrorCheck   = $true
     SkipCertificateCheck = $SkipCertificateCheck.IsPresent
+}
+if ($UseSession) {
+    $RequestConfig.Headers = @{ Cookie = $SessionCookie }
+    Write-Verbose "[Save-UnwireAsset] Session mode: cookie from '$SessionVariable', only the start page and *.js, *.mjs, *.map."
 }
 
 $Queue     = [System.Collections.Generic.Queue[PSCustomObject]]::new()
@@ -341,9 +453,11 @@ $Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; Fou
 
 <#
     > Already visited                       -> skip silently
-    > Cross-origin, MaxAssets or            -> record as skipped
-      MaxGuessMisses reached
-    > Guessed path answers 404              -> record as not-found, count the miss
+    > Cross-origin, blocked in session      -> record as skipped, nothing is requested
+      mode, MaxAssets or MaxGuessMisses
+      reached
+    > Guessed path or source map answers    -> record as not-found, count the miss when
+      404                                      guessed
     > Request fails or not HTTP 200         -> record as failed (the start page throws)
     > Script that is HTML (SPA fallback)    -> record as skipped
     > Map that is no source map             -> record as skipped
@@ -368,10 +482,16 @@ $GuessMisses = 0
     $record = [PSCustomObject]@{ Uri = $key; Kind = $item.Kind; Status = 'skipped'; Reason = $null; File = $null; FoundIn = $item.FoundIn }
     $Records.Add($record)
 
-    # Cross-origin or MaxAssets reached
+    # Cross-origin, blocked in session mode, MaxAssets or MaxGuessMisses reached
     if (-NOT (Test-UnwireSameOrigin -Left $item.Uri -Right $StartUri)) {
         $record.Reason = 'cross-origin'
         Write-Verbose "[Save-UnwireAsset] '$key' is cross-origin -> skipping."
+        continue CRAWL
+    }
+    $sessionBlock = if ($UseSession) { Get-UnwireSessionBlock -Target $item.Uri -Start $StartUri } else { $null }
+    if ($null -NE $sessionBlock) {
+        $record.Reason = $sessionBlock
+        Write-Verbose "[Save-UnwireAsset] '$key' -> $sessionBlock -> skipping."
         continue CRAWL
     }
     if ($SavedCount -GE $MaxAssets) {
@@ -385,7 +505,7 @@ $GuessMisses = 0
 
     # Request fails or not HTTP 200
     try {
-        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig
+        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig -IsRedirectAllowed (-NOT $UseSession)
     }
     catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
         if ($item.Depth -EQ 0) {
@@ -396,17 +516,23 @@ $GuessMisses = 0
         Write-Warning "[Save-UnwireAsset] '$key' failed: $($_.Exception.Message)"
         continue CRAWL
     }
-    if ($item.Guessed -AND $null -NE $result.Response -AND $result.Response.StatusCode -EQ 404) {
-        $GuessMisses++
+    if (($item.Guessed -OR $item.Kind -EQ 'map') -AND $null -NE $result.Response -AND $result.Response.StatusCode -EQ 404) {
+        # A map named in sourceMappingURL but not deployed is common in production builds.
         $record.Status = 'not-found'
-        $record.Reason = 'HTTP 404 on a guessed path'
+        $record.Reason = if ($item.Guessed) { 'HTTP 404 on a guessed path' } else { 'HTTP 404, source map referenced but not deployed' }
+        if ($item.Guessed) {
+            $GuessMisses++
+        }
         continue CRAWL
     }
     if ($null -EQ $result.Response -OR $result.Response.StatusCode -NE 200) {
         $record.Status = 'failed'
         $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
         Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
-        if ($item.Depth -EQ 0) {
+        if ($item.Depth -EQ 0 -AND $UseSession -AND $result.Reason -LIKE '*redirect*') {
+            Write-Warning "[Save-UnwireAsset] Start page '$StartUri' redirects, the session cookie is probably expired: log in again and update '$SessionVariable'."
+        }
+        elseif ($item.Depth -EQ 0) {
             Write-Warning "[Save-UnwireAsset] Start page '$StartUri' could not be loaded: $($record.Reason)."
         }
         continue CRAWL
@@ -506,6 +632,7 @@ if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
     $null = New-Item -ItemType Directory -Path $RootPath -Force
     [PSCustomObject]@{
         startUri = $StartUri.AbsoluteUri
+        session  = $UseSession.IsPresent     # whether a cookie was sent, never its value
         assets   = $Records
     }
     | ConvertTo-Json -Depth 5

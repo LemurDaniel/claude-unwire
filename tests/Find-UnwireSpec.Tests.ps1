@@ -99,7 +99,8 @@ Describe 'Find-UnwireSpec' {
     It 'get_only: never sends anything but GET' {
         $null = & $SCRIPT_PATH -Uri $BASE_URI -WarningAction SilentlyContinue
 
-        Should -Invoke Invoke-WebRequest -Times 17 -Exactly -ParameterFilter { $Method -EQ 'Get' -AND $MaximumRedirection -EQ 0 }
+        $pathCount = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../scripts/data/spec-paths.json') -Raw | ConvertFrom-Json).paths.Count
+        Should -Invoke Invoke-WebRequest -Times $pathCount -Exactly -ParameterFilter { $Method -EQ 'Get' -AND $MaximumRedirection -EQ 0 }
         Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Method -NE 'Get' }
     }
 

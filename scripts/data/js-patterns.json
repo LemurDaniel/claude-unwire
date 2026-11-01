@@ -22,6 +22,10 @@
       "pattern": "\\.(?<method>get|post|put|patch|delete)\\s*\\(\\s*(?<target>['\"`]/[^'\"`\\r\\n]{0,300}['\"`])"
     },
     {
+      "kind": "url-template",
+      "pattern": "(?<target>`\\$\\{[\\w.$]+\\}/[A-Za-z_-][^`\\s]{0,300}`)"
+    },
+    {
       "kind": "url-string",
       "pattern": "(?<target>['\"`](?:https?://[^'\"`\\s/]+)?/?(?:api|rest|cgi-bin|rpc|jsonrpc|graphql|v\\d+)/[^'\"`\\s]{0,300}['\"`])"
     },

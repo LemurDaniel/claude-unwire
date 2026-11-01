@@ -19,6 +19,8 @@ found in the code, never submit a form, never execute downloaded JavaScript.
 - `-Name`: short name of the API, used for the output folder and the module prefix.
   Ask the user when it is missing.
 - `-SkipCertificateCheck`: for devices with self-signed certificates. Ask before using it.
+- Code behind a login: the user sets `$env:UNWIRE_COOKIE` after logging in in their own
+  browser, then `unwire-analyze` uses session mode (scripts only). Never ask for a password.
 
 ## Output
 ```
