@@ -1,0 +1,7 @@
+{
+  "name": "__NAME__",
+  "prefix": "__PREFIX__",
+  "generatedBy": "unwire",
+  "specFile": "../../openapi.json",
+  "specVersion": "__SPEC_VERSION__"
+}
