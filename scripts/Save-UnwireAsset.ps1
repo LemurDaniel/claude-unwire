@@ -1,18 +1,27 @@
 # NOTE:
-#   Not implemented yet (v1 scaffold).
+#   Downloads the static assets of a web UI for unwire-analyze: the start page, its frames,
+#   every same-origin script, the chunks those scripts reference and their source maps.
+#   GET only, same origin only, redirects only within the origin. Nothing is executed.
 #
-#   Downloads the static assets of a web UI for unwire-analyze: the HTML page, every
-#   same-origin <script src> and the matching .js.map source maps. GET requests to static
-#   files only, never to API endpoints.
+#   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
+#   with every saved, skipped and failed asset.
 #
 #   ./scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
+#   ./scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Stub, the parameters are the planned interface.')]
+#
+#   Chapters:
+#     HELPERS           Same-origin requests, file paths and reference extraction.
+#     PREPARE CRAWL     Validates the input and queues the start page.
+#     DOWNLOAD ASSETS   Downloads every queued asset and queues its references.
+#     WRITE MANIFEST    Writes unwire-assets.json and returns a summary.
+#
+
 [CmdletBinding(SupportsShouldProcess = $true)]
 param (
     <#
     [Required]
-    Base URI of the web UI, e.g. 'http://192.168.178.1'.
+    URI of the web UI's start page, e.g. 'http://192.168.178.1'.
     #>
     [Parameter(
         Mandatory = $true
@@ -32,6 +41,62 @@ param (
 
     <#
     [Optional]
+    Maximum number of saved assets. Default is 200.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidateRange(1, 5000)]
+    [System.Int32]
+    $MaxAssets = 200,
+
+    <#
+    [Optional]
+    Maximum link depth from the start page: 1 = its scripts and frames, 2 = also the chunks
+    those scripts reference. Source maps are always loaded for a saved script. Default is 3.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidateRange(1, 10)]
+    [System.Int32]
+    $MaxDepth = 3,
+
+    <#
+    [Optional]
+    Timeout per request in seconds. Default is 15.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidateRange(1, 300)]
+    [System.Int32]
+    $TimeoutSec = 15,
+
+    <#
+    [Optional]
+    Guessed paths (chunk strings in scripts, '<script>.map' probes) that may answer 404
+    before guessing stops. Default is 50.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidateRange(0, 5000)]
+    [System.Int32]
+    $MaxGuessMisses = 50,
+
+    <#
+    [Optional]
+    Does not try '<script>.map' for scripts without a sourceMappingURL.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [switch]
+    $SkipSourceMapProbe,
+
+    <#
+    [Optional]
     Accepts self-signed certificates, common on routers and NAS devices.
     #>
     [Parameter(
@@ -44,4 +109,414 @@ param (
 Set-StrictMode -Version 1.0
 $ErrorActionPreference = 'Stop'
 
-throw [System.NotImplementedException]::new('Save-UnwireAsset is not implemented yet. Save the page in the browser and pass the folder to unwire-analyze instead.')
+. $PSScriptRoot/lib/ConvertTo-UnwireText.ps1
+
+$MANIFEST_FILE     = 'unwire-assets.json'
+$MAX_REDIRECTS     = 5
+$REDIRECT_CODES    = @(301, 302, 303, 307, 308)
+$SOURCE_MAP_HEADER = @('SourceMap', 'X-SourceMap')
+# <base href="/grafana/">, <script src="/js/app.js">, <link rel="modulepreload" href="/js/chunk.js">, <frame src="menu.html">
+$HTML_BASE_REF     = '<base\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+)'
+$HTML_SCRIPT_REF  = '<script\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
+$HTML_PRELOAD_REF  = '<link\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+\.m?js(?:\?[^"''\s>]*)?)'
+$HTML_FRAME_REF    = '<i?frame\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
+# //# sourceMappingURL=app.js.map (last one wins, bundlers append it at the end)
+$JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
+# 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`
+$JS_CHUNK_REF      = '[''"`](?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`]'
+
+# ===========================================================================
+# ===============================   HELPERS   ===============================
+# ===========================================================================
+#
+#   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
+#   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
+#   Get-UnwireAssetFile            Local file path of an asset, always inside the root.
+#   Find-UnwireAssetReference      Scripts, frames, chunks and source maps of a text.
+#   ConvertFrom-UnwireDataUri      Decodes an inline 'data:' source map.
+#
+
+function Test-UnwireSameOrigin {
+    param (
+        [System.Uri] $Left,
+        [System.Uri] $Right
+    )
+
+    return 0 -EQ [System.Uri]::Compare($Left, $Right, [System.UriComponents]::SchemeAndServer, [System.UriFormat]::SafeUnescaped, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+function Invoke-UnwireAssetRequest {
+    param (
+        [System.Uri]                  $Target,
+        [System.Uri]                  $Origin,
+        [System.Collections.Hashtable] $RequestConfig
+    )
+
+    $current = $Target
+    for ($redirect = 0; $redirect -LE $MAX_REDIRECTS; $redirect++) {
+        $response = Invoke-WebRequest @RequestConfig -Uri $current
+        if ($response.StatusCode -NOTIN $REDIRECT_CODES) {
+            return [PSCustomObject]@{ Response = $response; FinalUri = $current; Reason = $null }
+        }
+
+        $location = if ($null -NE $response.Headers) { @($response.Headers['Location'])[0] } else { $null }
+        if ([System.String]::IsNullOrEmpty($location)) {
+            return [PSCustomObject]@{ Response = $null; FinalUri = $current; Reason = "HTTP $($response.StatusCode) without Location" }
+        }
+
+        $next = [System.Uri]::new($current, $location)
+        if (-NOT (Test-UnwireSameOrigin -Left $next -Right $Origin)) {
+            return [PSCustomObject]@{ Response = $null; FinalUri = $current; Reason = "cross-origin redirect to '$next'" }
+        }
+        Write-Verbose "[Invoke-UnwireAssetRequest] '$current' redirects to '$next'."
+        $current = $next
+    }
+    return [PSCustomObject]@{ Response = $null; FinalUri = $current; Reason = "more than $MAX_REDIRECTS redirects" }
+}
+
+function Get-UnwireAssetFile {
+    param (
+        [System.Uri]    $AssetUri,
+        [System.String] $Root,
+        [System.String] $Kind
+    )
+
+    # '/static/js/main.4f2a.js' => 'static/js/main.4f2a.js', '/' => 'index.html', '/login' => 'login.html'
+    $invalidChars = [System.Text.RegularExpressions.Regex]::Escape(-join [System.IO.Path]::GetInvalidFileNameChars())
+    $segments     = @(
+        [System.Uri]::UnescapeDataString($AssetUri.AbsolutePath).Split('/')
+        | Where-Object { $_ -NOTIN @('', '.', '..') }
+        | ForEach-Object { $_ -REPLACE "[$invalidChars]", '_' }
+    )
+    if ($segments.Count -EQ 0 -OR $AssetUri.AbsolutePath.EndsWith('/')) {
+        $segments += 'index.html'
+    }
+    if ($Kind -EQ 'html' -AND [System.String]::IsNullOrEmpty([System.IO.Path]::GetExtension($segments[-1]))) {
+        $segments[-1] += '.html'
+    }
+
+    # Downloaded paths are untrusted: the file must stay inside the root.
+    $fullPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine([System.String[]] (@($Root) + $segments)))
+    if (-NOT $fullPath.StartsWith($Root + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw [System.InvalidOperationException]::new("Asset file '$fullPath' must be inside '$Root'.")
+    }
+    return $fullPath
+}
+
+function Find-UnwireAssetReference {
+    param (
+        [System.String] $Text,
+        [System.String] $Kind,
+        [System.Uri]    $AssetUri,
+        [System.Uri]    $PageBase
+    )
+
+    <#
+        > HTML  -> <script src>, <link href="*.js"> as js, <frame>/<iframe src> as html,
+                   relative to the <base href> of the page, else to the page itself
+        > JS    -> the last sourceMappingURL as map, relative to the script
+                -> chunk paths as js: './x.js', '../x.js', '/x.js' relative to the script,
+                   bare 'static/js/x.js' relative to the base of the page that loaded
+                   the script (webpack publicPath)
+        Every reference carries the PageBase its own references resolve against, and
+        whether it is Guessed (chunk strings may be any '*.js' text, not a real file).
+    #>
+
+    $references = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+    # HTML
+    if ($Kind -EQ 'html') {
+        $baseMatch    = [System.Text.RegularExpressions.Regex]::Match($Text, $HTML_BASE_REF, 'IgnoreCase')
+        $documentBase = if ($baseMatch.Success) { [System.Uri]::new($AssetUri, $baseMatch.Groups['ref'].Value) } else { $AssetUri }
+
+        $htmlRefs = @(
+            [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_SCRIPT_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'js' } }
+            [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_PRELOAD_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'js' } }
+            [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_FRAME_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'html' } }
+        )
+        foreach ($htmlRef in $htmlRefs) {
+            if ($htmlRef.Ref -MATCH '^(data|blob|javascript|about):') {
+                continue
+            }
+            # A frame is a page of its own with its own base, a script keeps this page's base.
+            $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($documentBase, $htmlRef.Ref); Kind = $htmlRef.Kind; Data = $null; PageBase = $documentBase; Guessed = $false })
+        }
+        return $references
+    }
+
+    # JS: source map
+    $mapMatches = [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_SOURCE_MAP_REF)
+    if ($mapMatches.Count -GT 0) {
+        $mapRef = $mapMatches[$mapMatches.Count - 1].Groups['ref'].Value
+        if ($mapRef.StartsWith('data:')) {
+            $references.Add([PSCustomObject]@{ Uri = $AssetUri; Kind = 'map-inline'; Data = $mapRef; PageBase = $PageBase; Guessed = $false })
+        }
+        else {
+            $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($AssetUri, $mapRef); Kind = 'map'; Data = $null; PageBase = $PageBase; Guessed = $false })
+        }
+    }
+
+    # JS: chunks
+    foreach ($chunkMatch in [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_REF)) {
+        $chunkRef = $chunkMatch.Groups['ref'].Value
+        $baseUri  = if ($chunkRef -MATCH '^(\.{1,2})?/') { $AssetUri } else { $PageBase }
+        $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($baseUri, $chunkRef); Kind = 'js'; Data = $null; PageBase = $PageBase; Guessed = $true })
+    }
+    return $references
+}
+
+function ConvertFrom-UnwireDataUri {
+    param (
+        [System.String] $DataUri
+    )
+
+    # 'data:application/json;charset=utf-8;base64,eyJ2...' => header 'data:application/json;charset=utf-8;base64', payload 'eyJ2...'
+    $separator = $DataUri.IndexOf(',')
+    if ($separator -LT 0) {
+        return $null
+    }
+    $header  = $DataUri.Substring(0, $separator)
+    $payload = $DataUri.Substring($separator + 1)
+
+    if ($header -MATCH ';base64$') {
+        return [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($payload))
+    }
+    return [System.Uri]::UnescapeDataString($payload)
+}
+
+# ===========================================================================
+# ============================   PREPARE CRAWL   ============================
+# ===========================================================================
+#
+#   1. Validations   Fails early on a URI that is not absolute http(s).
+#   2. Queue         Queues the start page and prepares the request settings.
+#
+
+# ---------------------------------------------------------------------------
+# Validations
+#   Fails early on a URI that is not absolute http(s).
+# ---------------------------------------------------------------------------
+
+$StartUri = $null
+if (-NOT [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $StartUri) -OR $StartUri.Scheme -NOTIN @('http', 'https')) {
+    throw [System.ArgumentException]::new("Uri must be an absolute http or https URI, e.g. 'http://192.168.178.1', got '$Uri'.")
+}
+
+# ---------------------------------------------------------------------------
+# Queue
+#   Queues the start page and prepares the request settings.
+# ---------------------------------------------------------------------------
+
+# Absolute path relative to the PowerShell location, the folder is created on the first save.
+$RootPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputDirectory).TrimEnd([System.IO.Path]::DirectorySeparatorChar)
+
+$RequestConfig = @{
+    Method               = 'Get'
+    TimeoutSec           = $TimeoutSec
+    MaximumRedirection   = 0          # followed by Invoke-UnwireAssetRequest, only within the origin
+    SkipHttpErrorCheck   = $true
+    SkipCertificateCheck = $SkipCertificateCheck.IsPresent
+}
+
+$Queue     = [System.Collections.Generic.Queue[PSCustomObject]]::new()
+$Visited   = [System.Collections.Generic.HashSet[System.String]]::new([System.StringComparer]::Ordinal)
+$UsedFiles = [System.Collections.Generic.HashSet[System.String]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$Records   = [System.Collections.Generic.List[PSCustomObject]]::new()     # written in WRITE MANIFEST
+
+$SavedHashes = [System.Collections.Generic.Dictionary[System.String, System.String]]::new()     # content hash => saved file
+
+$Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; FoundIn = $null; PageBase = $StartUri; Guessed = $false })
+
+# ===========================================================================
+# ===========================   DOWNLOAD ASSETS   ===========================
+# ===========================================================================
+#
+#   1. Crawl   Downloads every queued asset, saves it and queues its references.
+#
+
+# ---------------------------------------------------------------------------
+# Crawl
+#   Downloads every queued asset, saves it and queues its references.
+# ---------------------------------------------------------------------------
+
+<#
+    > Already visited                       -> skip silently
+    > Cross-origin, MaxAssets or            -> record as skipped
+      MaxGuessMisses reached
+    > Guessed path answers 404              -> record as not-found, count the miss
+    > Request fails or not HTTP 200         -> record as failed (the start page throws)
+    > Script that is HTML (SPA fallback)    -> record as skipped
+    > Map that is no source map             -> record as skipped
+    > Same content as a saved asset         -> record as skipped (iframes that only differ
+                                               in the query string)
+    > Otherwise                             -> save, record, queue references:
+        - html  -> scripts and frames, while inside MaxDepth
+        - js    -> its source map always, chunks while inside MaxDepth
+#>
+
+$SavedCount  = 0
+$GuessMisses = 0
+
+:CRAWL while ($Queue.Count -GT 0) {
+    $item = $Queue.Dequeue()
+    $key  = $item.Uri.GetLeftPart([System.UriPartial]::Query)
+
+    # Already visited
+    if (-NOT $Visited.Add($key)) {
+        continue CRAWL
+    }
+    $record = [PSCustomObject]@{ Uri = $key; Kind = $item.Kind; Status = 'skipped'; Reason = $null; File = $null; FoundIn = $item.FoundIn }
+    $Records.Add($record)
+
+    # Cross-origin or MaxAssets reached
+    if (-NOT (Test-UnwireSameOrigin -Left $item.Uri -Right $StartUri)) {
+        $record.Reason = 'cross-origin'
+        Write-Verbose "[Save-UnwireAsset] '$key' is cross-origin -> skipping."
+        continue CRAWL
+    }
+    if ($SavedCount -GE $MaxAssets) {
+        $record.Reason = "MaxAssets $MaxAssets reached"
+        continue CRAWL
+    }
+    if ($item.Guessed -AND $GuessMisses -GE $MaxGuessMisses) {
+        $record.Reason = "MaxGuessMisses $MaxGuessMisses reached"
+        continue CRAWL
+    }
+
+    # Request fails or not HTTP 200
+    try {
+        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig
+    }
+    catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
+        if ($item.Depth -EQ 0) {
+            throw [System.InvalidOperationException]::new("Uri '$StartUri' must be reachable, the request failed: $($_.Exception.Message)", $_.Exception)
+        }
+        $record.Status = 'failed'
+        $record.Reason = $_.Exception.Message
+        Write-Warning "[Save-UnwireAsset] '$key' failed: $($_.Exception.Message)"
+        continue CRAWL
+    }
+    if ($item.Guessed -AND $null -NE $result.Response -AND $result.Response.StatusCode -EQ 404) {
+        $GuessMisses++
+        $record.Status = 'not-found'
+        $record.Reason = 'HTTP 404 on a guessed path'
+        continue CRAWL
+    }
+    if ($null -EQ $result.Response -OR $result.Response.StatusCode -NE 200) {
+        $record.Status = 'failed'
+        $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
+        Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
+        if ($item.Depth -EQ 0) {
+            Write-Warning "[Save-UnwireAsset] Start page '$StartUri' could not be loaded: $($record.Reason)."
+        }
+        continue CRAWL
+    }
+    $text = ConvertTo-UnwireText -Content $result.Response.Content
+
+    # Script that is HTML (SPA fallback)
+    if ($item.Kind -EQ 'js' -AND $text.TrimStart().StartsWith('<')) {
+        $record.Reason = 'HTML instead of a script (SPA fallback)'
+        Write-Verbose "[Save-UnwireAsset] '$key' returned HTML -> skipping."
+        continue CRAWL
+    }
+
+    # Map that is no source map
+    if ($item.Kind -EQ 'map' -AND -NOT ((Test-Json -Json $text -ErrorAction SilentlyContinue) -AND $text -MATCH '"(sources|mappings)"\s*:')) {
+        $record.Reason = 'not a source map'
+        Write-Verbose "[Save-UnwireAsset] '$key' is no source map -> skipping."
+        continue CRAWL
+    }
+
+    # Same content as a saved asset
+    $hash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes($text)))
+    if ($SavedHashes.ContainsKey($hash)) {
+        $record.Reason = "same content as '$($SavedHashes[$hash])'"
+        Write-Verbose "[Save-UnwireAsset] '$key' has the same content as '$($SavedHashes[$hash])' -> skipping."
+        continue CRAWL
+    }
+
+    # Otherwise: save
+    $file = Get-UnwireAssetFile -AssetUri $result.FinalUri -Root $RootPath -Kind $item.Kind
+    if (-NOT $UsedFiles.Add($file)) {
+        # Same path with another query string: keep both
+        $file = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($file), "$([System.IO.Path]::GetFileNameWithoutExtension($file))~$($Records.Count)$([System.IO.Path]::GetExtension($file))")
+        $null = $UsedFiles.Add($file)
+    }
+    if ($PSCmdlet.ShouldProcess($file, "Save '$key'")) {
+        $null = New-Item -ItemType Directory -Path ([System.IO.Path]::GetDirectoryName($file)) -Force
+        Set-Content -Path $file -Value $text -NoNewline -Encoding utf8NoBOM
+    }
+    $SavedCount++
+    $record.Status = 'saved'
+    $record.File   = [System.IO.Path]::GetRelativePath($RootPath, $file).Replace('\', '/')
+    $SavedHashes[$hash] = $record.File
+    Write-Verbose "[Save-UnwireAsset] Saved '$key' as '$($record.File)'."
+
+    if ($item.Kind -EQ 'map') {
+        continue CRAWL
+    }
+
+    # Otherwise: queue references
+    $references = @(Find-UnwireAssetReference -Text $text -Kind $item.Kind -AssetUri $result.FinalUri -PageBase $item.PageBase)
+
+    if ($item.Kind -EQ 'js') {
+        $hasMapReference = $null -NE ($references | Where-Object -Property Kind -IN -Value @('map', 'map-inline'))
+        $headerMap       = $SOURCE_MAP_HEADER | ForEach-Object { if ($null -NE $result.Response.Headers) { @($result.Response.Headers[$_])[0] } } | Where-Object { -NOT [System.String]::IsNullOrEmpty($_) } | Select-Object -First 1
+
+        # Order of precedence: sourceMappingURL comment > SourceMap header > '<script>.map' probe
+        if (-NOT $hasMapReference -AND $null -NE $headerMap) {
+            $references += [PSCustomObject]@{ Uri = [System.Uri]::new($result.FinalUri, $headerMap); Kind = 'map'; Data = $null; PageBase = $item.PageBase; Guessed = $false }
+        }
+        elseif (-NOT $hasMapReference -AND -NOT $SkipSourceMapProbe) {
+            $references += [PSCustomObject]@{ Uri = [System.Uri]::new($result.FinalUri.GetLeftPart([System.UriPartial]::Path) + '.map'); Kind = 'map'; Data = $null; PageBase = $item.PageBase; Guessed = $true }
+        }
+    }
+
+    foreach ($reference in $references) {
+        # Inline source map: saved right away next to its script
+        if ($reference.Kind -EQ 'map-inline') {
+            $mapText = ConvertFrom-UnwireDataUri -DataUri $reference.Data
+            if ($null -NE $mapText -AND $PSCmdlet.ShouldProcess("$file.map", 'Save inline source map')) {
+                Set-Content -Path "$file.map" -Value $mapText -NoNewline -Encoding utf8NoBOM
+                $Records.Add([PSCustomObject]@{ Uri = "$key (inline)"; Kind = 'map'; Status = 'saved'; Reason = $null; File = "$($record.File).map"; FoundIn = $key })
+            }
+            continue
+        }
+        if ($reference.Kind -NE 'map' -AND $item.Depth + 1 -GT $MaxDepth) {
+            continue
+        }
+        $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed })
+    }
+}
+
+# ===========================================================================
+# ===========================   WRITE MANIFEST   ============================
+# ===========================================================================
+#
+#   1. Report   Writes unwire-assets.json and returns a summary.
+#
+
+# ---------------------------------------------------------------------------
+# Report
+#   Writes unwire-assets.json and returns a summary.
+# ---------------------------------------------------------------------------
+
+$ManifestPath = Join-Path -Path $RootPath -ChildPath $MANIFEST_FILE
+if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
+    $null = New-Item -ItemType Directory -Path $RootPath -Force
+    [PSCustomObject]@{
+        startUri = $StartUri.AbsoluteUri
+        assets   = $Records
+    }
+    | ConvertTo-Json -Depth 5
+    | Set-Content -Path $ManifestPath -Encoding utf8NoBOM
+}
+
+return [PSCustomObject]@{
+    OutputDirectory = $RootPath
+    Manifest        = $ManifestPath
+    Saved           = @($Records | Where-Object -Property Status -EQ -Value 'saved').Count
+    Skipped         = @($Records | Where-Object -Property Status -EQ -Value 'skipped').Count
+    Failed          = @($Records | Where-Object -Property Status -EQ -Value 'failed').Count
+    NotFound        = @($Records | Where-Object -Property Status -EQ -Value 'not-found').Count
+}

@@ -19,6 +19,12 @@ somewhere in there.
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Save-UnwireAsset.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/assets'
    ```
+   It follows the start page, its frames, same-origin scripts, chunk paths in scripts
+   (up to `-MaxDepth`, default 3) and every script's source map. Other origins, SPA
+   fallbacks (HTML instead of a script) and redirects to other origins are skipped.
+   `unwire-assets.json` lists every asset with `saved`, `skipped`, `failed` or `not-found`
+   and the reason: skipped CDN scripts and failed assets go into the open points.
+   `not-found` are guessed chunk paths (any `'*.js'` string in a script), a 404 there is normal.
    Prefer the source maps: they hold the original sources with real names.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.
    ```powershell

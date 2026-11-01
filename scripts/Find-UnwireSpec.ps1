@@ -8,7 +8,7 @@
 
 #
 #   Chapters:
-#     HELPERS                  Text decoding and documentation detection.
+#     HELPERS                  Documentation detection.
 #     PROBE KNOWN SPEC PATHS   Probes every path, saves the specs and reports the hits.
 #
 
@@ -69,7 +69,9 @@ param (
 Set-StrictMode -Version 1.0
 $ErrorActionPreference = 'Stop'
 
-$SPEC_PATHS_FILE   = Join-Path -Path $PSScriptRoot -ChildPath 'data/spec-paths.json'
+. $PSScriptRoot/lib/ConvertTo-UnwireText.ps1
+
+$SPEC_PATHS_FILE  = Join-Path -Path $PSScriptRoot -ChildPath 'data/spec-paths.json'
 $SPEC_KINDS        = @('OpenApi', 'Swagger', 'OpenApiYaml')     # kinds that are saved as files
 # 'openapi: 3.1.0' or "swagger: '2.0'" at the start of a line
 $YAML_SPEC_PATTERN = '(?m)^(?<kind>openapi|swagger)\s*:\s*[''"]?(?<version>[\d.]+)'
@@ -78,20 +80,8 @@ $YAML_SPEC_PATTERN = '(?m)^(?<kind>openapi|swagger)\s*:\s*[''"]?(?<version>[\d.]
 # ===============================   HELPERS   ===============================
 # ===========================================================================
 #
-#   ConvertTo-UnwireText     Turns a response body (string or bytes) into text.
 #   Get-UnwireSpecMatch      Detects which kind of documentation a text is.
 #
-
-function ConvertTo-UnwireText {
-    param (
-        [System.Object] $Content
-    )
-
-    if ($Content -is [System.Byte[]]) {
-        return [System.Text.Encoding]::UTF8.GetString($Content)
-    }
-    return [System.String] $Content
-}
 
 function Get-UnwireSpecMatch {
     param (
