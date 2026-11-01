@@ -23,6 +23,8 @@ param ()
 #   duplicate_operation_id  Rejects an operationId used twice.
 #   broken_ref              Rejects a $ref to a missing target.
 #   low_without_open        Warns on low confidence without open points.
+#   root_open_points        Rejects root x-unwire-open that is no list of strings.
+#   example_spec            Returns nothing for examples/grafana/openapi.json.
 #   errors_first            Returns errors before warnings.
 #   missing_file            Fails early on a missing file.
 #
@@ -181,6 +183,21 @@ Describe 'Test-UnwireSpec' {
 
         $findings.Rule        | Should -Be @('x-unwire-open')
         $findings[0].Severity | Should -Be 'Warning'
+    }
+
+    It 'root_open_points: rejects root x-unwire-open that is no list of strings' {
+        $spec = New-TestSpec
+        $spec['x-unwire-open'] = 'Auth unclear'
+
+        $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))
+
+        $findings.Location | Should -Be @('x-unwire-open')
+    }
+
+    It 'example_spec: returns nothing for examples/grafana/openapi.json' {
+        $findings = @(& $SCRIPT_PATH -Path (Join-Path -Path $PSScriptRoot -ChildPath '../examples/grafana/openapi.json'))
+
+        $findings.Count | Should -Be 0
     }
 
     It 'errors_first: returns errors before warnings' {

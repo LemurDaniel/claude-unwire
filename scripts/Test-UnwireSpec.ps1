@@ -148,14 +148,14 @@ if ($Spec -isnot [System.Collections.IDictionary]) {
 # =============================   CHECK SPEC   ==============================
 # ===========================================================================
 #
-#   1. Root         openapi 3.x, info.title, info.version and paths.
+#   1. Root         openapi 3.x, info.title, info.version, x-unwire-open and paths.
 #   2. Operations   Path parameters, operationId, responses and x-unwire-*.
 #   3. References   Every local $ref points to an existing target.
 #
 
 # ---------------------------------------------------------------------------
 # Root
-#   openapi 3.x, info.title, info.version and paths.
+#   openapi 3.x, info.title, info.version, x-unwire-open and paths.
 # ---------------------------------------------------------------------------
 
 if (-NOT ([System.String] $Spec['openapi']).StartsWith('3.')) {
@@ -167,6 +167,12 @@ foreach ($field in @('title', 'version')) {
     if ($Info -isnot [System.Collections.IDictionary] -OR [System.String]::IsNullOrWhiteSpace($Info[$field])) {
         Add-UnwireFinding -Severity Error -Location "info.$field" -Rule 'info' -Message "info.$field must be a non-empty string."
     }
+}
+
+# Root x-unwire-open: the open points of the whole spec (auth, unresolved URLs)
+$RootOpen = $Spec['x-unwire-open']
+if ($null -NE $RootOpen -AND ($RootOpen -isnot [System.Collections.IList] -OR @($RootOpen | Where-Object { $_ -isnot [System.String] }).Count -GT 0)) {
+    Add-UnwireFinding -Severity Error -Location 'x-unwire-open' -Rule 'x-unwire-open' -Message 'x-unwire-open must be a list of strings.'
 }
 
 $Paths = $Spec['paths']

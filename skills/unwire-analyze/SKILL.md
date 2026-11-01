@@ -1,6 +1,6 @@
 ---
 name: unwire-analyze
-description: Step 2 of Unwire. Derives an OpenAPI spec from the static frontend code of a web UI (HTML, JS bundles, source maps) without calling the API, and records everything it cannot resolve in OPEN-POINTS.md. Use after unwire-discover found no complete spec.
+description: Step 2 of Unwire. Derives an OpenAPI spec from the static frontend code of a web UI (HTML, JS bundles, source maps) without calling the API, and records everything it cannot resolve as open points in the spec. Use after unwire-discover found no complete spec.
 ---
 
 # Unwire: Analyze
@@ -53,21 +53,25 @@ somewhere in there.
    | `x-unwire-source` | `"assets/app.4f2a.js:1842"`, where it was found |
    | `x-unwire-confidence` | `high` (literal path and body), `medium` (derived), `low` (guessed) |
    | `x-unwire-verified` | always `false` in v1, nothing was executed |
+   | `x-unwire-impact` | `write` for operations that change data, else `read` |
    | `x-unwire-open` | list of open points of this operation |
 
-5. **Open points**: write `unwire/<name>/OPEN-POINTS.md`, one checkbox per point:
-   ```markdown
-   - [ ] `POST /api/wlan`: response schema unknown (assets/app.js:1842)
-   - [ ] Auth: login found, token header unclear
-   - [ ] 3 URLs are built at runtime, path not resolvable (assets/app.js:210, 388, 902)
+5. **Open points**: everything that belongs to no single operation goes into the root
+   `x-unwire-open` of the spec, one string per point, with its source:
+   ```json
+   "x-unwire-open": [
+     "Auth: login found (assets/app.js:88), token header unclear.",
+     "3 URLs are built at runtime, path not resolvable (assets/app.js:210, 388, 902)."
+   ]
    ```
-   Group by: Auth, Endpoints, Schemas, Unresolved URLs.
+   Operation-level points stay in the operation's `x-unwire-open`. `unwire-document` shows
+   both on one page.
 6. **Validate**:
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Test-UnwireSpec.ps1" -Path './unwire/<name>/openapi.json'
    ```
    Returns one finding per problem (`Severity`, `Location`, `Rule`, `Message`), nothing when
-   valid. Fix every `Error` before unwire-module. A `Warning` may stay, but low-confidence
+   valid. Fix every `Error` before unwire-document. A `Warning` may stay, but low-confidence
    operations without `x-unwire-open` should get their open points.
 
 ## Rules

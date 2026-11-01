@@ -1,16 +1,19 @@
 ---
 name: unwire-module
-description: Step 4 of Unwire. Generates a native PowerShell script module (.psm1, one function per file, Pester tests against mocks) from an Unwire openapi.json. Use after unwire-analyze or when an existing OpenAPI spec should become a PowerShell client.
+description: Optional step 4 of Unwire, only on request. Generates a native PowerShell script module (.psm1, one function per file, Pester tests against mocks) for the operations the user picked from an Unwire openapi.json. Use after unwire-document, or when an existing OpenAPI spec should become a PowerShell client.
 ---
 
 # Unwire: Module
 
-Turns `unwire/<name>/openapi.json` into an idiomatic PowerShell 7 script module. No compiled
-C#, no AutoRest.
+Turns selected operations of `unwire/<name>/openapi.json` into an idiomatic PowerShell 7
+script module. No compiled C#, no AutoRest.
 
 ## Precondition
-`Test-UnwireSpec.ps1` returns no `Error` for the spec. Stop and fix the spec otherwise:
-the function names come from `operationId`, the confirmations from `x-unwire-impact`.
+- `Test-UnwireSpec.ps1` returns no `Error` for the spec. Stop and fix the spec otherwise:
+  the function names come from `operationId`, the confirmations from `x-unwire-impact`.
+- The user picked what to generate, by tag (`Teams`), by path prefix (`/api/teams`) or by
+  `operationId`. Ask when nothing was picked: a module for every operation of a large spec
+  is noise nobody reads. Write `meta.json.operations` with the picked operationIds.
 
 ## Layout
 Start from `${CLAUDE_PLUGIN_ROOT}/templates/module/` and replace `__NAME__` and `__PREFIX__`:

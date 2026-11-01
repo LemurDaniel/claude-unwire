@@ -1,0 +1,202 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Grafana (NAS dashboard)",
+    "version": "0.1.0",
+    "description": "Derived statically from the Grafana frontend bundles served under /grafana/. Example output of Unwire, trimmed to a few operations."
+  },
+  "servers": [
+    { "url": "https://nas.example.test/grafana" }
+  ],
+  "x-unwire-source": "assets/grafana/public/build",
+  "x-unwire-open": [
+    "Auth: the bundles send the session cookie 'grafana_session', the login flow (POST /login) was not found in the analyzed chunks.",
+    "12 URLs are built at runtime from datasource settings, see assets/grafana/public/build/9778.aeed2343301c3e5780fc.js."
+  ],
+  "tags": [
+    { "name": "Teams", "description": "Teams of the organization." },
+    { "name": "Access Control", "description": "Role based permissions on resources." },
+    { "name": "Query History", "description": "Saved Explore queries of the user." },
+    { "name": "User", "description": "The signed-in user." }
+  ],
+  "paths": {
+    "/api/teams/search": {
+      "get": {
+        "tags": ["Teams"],
+        "operationId": "searchTeams",
+        "summary": "Search teams",
+        "description": "Pages through the teams of the current organization, filtered by name.",
+        "parameters": [
+          { "name": "query", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Part of the team name." },
+          { "name": "perpage", "in": "query", "required": false, "schema": { "type": "integer", "default": 100 } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of teams.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TeamSearchResult" } } }
+          }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:482113",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read"
+      }
+    },
+    "/api/teams/{teamId}": {
+      "parameters": [
+        { "$ref": "#/components/parameters/TeamId" }
+      ],
+      "get": {
+        "tags": ["Teams"],
+        "operationId": "getTeam",
+        "summary": "Get a team",
+        "responses": {
+          "200": {
+            "description": "The team.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Team" } } }
+          }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:481902",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read"
+      }
+    },
+    "/api/access-control/{resource}/{resourceId}/{type}/{typeId}": {
+      "post": {
+        "tags": ["Access Control"],
+        "operationId": "setResourcePermission",
+        "summary": "Set a permission on a resource",
+        "description": "Grants a user, team or built-in role a permission level on one resource.",
+        "parameters": [
+          { "name": "resource", "in": "path", "required": true, "schema": { "type": "string", "enum": ["dashboards", "folders", "datasources", "teams"] } },
+          { "name": "resourceId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string", "enum": ["users", "teams", "builtInRoles"] } },
+          { "name": "typeId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "permission": { "type": "string", "enum": ["View", "Edit", "Admin", ""] } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": { "description": "Unknown, the caller only checks for an error." }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:502771",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "x-unwire-open": [
+          "Response schema unknown, the UI only reloads the permission list afterwards.",
+          "Empty permission '' seems to remove the permission, derived from the 'Remove' button handler."
+        ]
+      }
+    },
+    "/api/query-history/{id}": {
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "patch": {
+        "tags": ["Query History"],
+        "operationId": "updateQueryHistoryComment",
+        "summary": "Update the comment of a saved query",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "comment": { "type": "string" } } } } }
+        },
+        "responses": {
+          "200": { "description": "The updated query.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QueryHistoryItem" } } } }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:611204",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write"
+      },
+      "delete": {
+        "tags": ["Query History"],
+        "operationId": "deleteQueryHistory",
+        "summary": "Delete a saved query",
+        "responses": {
+          "default": { "description": "Unknown." }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:611580",
+        "x-unwire-confidence": "low",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "x-unwire-open": [
+          "Only the URL was found, the call goes through a generic request helper."
+        ]
+      }
+    },
+    "/api/user/password": {
+      "put": {
+        "tags": ["User"],
+        "operationId": "changeUserPassword",
+        "summary": "Change the own password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["oldPassword", "newPassword"],
+                "properties": {
+                  "oldPassword": { "type": "string", "format": "password" },
+                  "newPassword": { "type": "string", "format": "password" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password changed." }
+        },
+        "x-unwire-source": "assets/grafana/public/build/9778.aeed2343301c3e5780fc.js:1:433710",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write"
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "TeamId": { "name": "teamId", "in": "path", "required": true, "schema": { "type": "integer" } }
+    },
+    "schemas": {
+      "Team": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "memberCount": { "type": "integer" }
+        }
+      },
+      "TeamSearchResult": {
+        "type": "object",
+        "properties": {
+          "totalCount": { "type": "integer" },
+          "page": { "type": "integer" },
+          "perPage": { "type": "integer" },
+          "teams": { "type": "array", "items": { "$ref": "#/components/schemas/Team" } }
+        }
+      },
+      "QueryHistoryItem": {
+        "type": "object",
+        "properties": {
+          "uid": { "type": "string" },
+          "datasourceUid": { "type": "string" },
+          "comment": { "type": "string" },
+          "starred": { "type": "boolean" },
+          "createdAt": { "type": "integer", "description": "Unix seconds." }
+        }
+      }
+    }
+  }
+}
