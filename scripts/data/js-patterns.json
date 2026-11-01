@@ -1,0 +1,33 @@
+{
+  "description": "Endpoint patterns of Get-UnwireJsCandidate, matched in this order. {ARG} is replaced with the first-argument pattern. A later pattern skips a target an earlier one already found.",
+  "patterns": [
+    {
+      "kind": "fetch",
+      "pattern": "\\bfetch\\s*\\(\\s*{ARG}"
+    },
+    {
+      "kind": "axios",
+      "pattern": "\\baxios(?:\\.(?<method>get|post|put|patch|delete|head|request))?\\s*\\(\\s*{ARG}"
+    },
+    {
+      "kind": "jquery",
+      "pattern": "(?:\\$|\\bjQuery)\\.(?<method>ajax|getJSON|get|post)\\s*\\(\\s*{ARG}"
+    },
+    {
+      "kind": "xhr",
+      "pattern": "\\.open\\s*\\(\\s*['\"](?<method>GET|POST|PUT|PATCH|DELETE|HEAD)['\"]\\s*,\\s*{ARG}"
+    },
+    {
+      "kind": "http-client",
+      "pattern": "\\.(?<method>get|post|put|patch|delete)\\s*\\(\\s*(?<target>['\"`]/[^'\"`\\r\\n]{0,300}['\"`])"
+    },
+    {
+      "kind": "url-string",
+      "pattern": "(?<target>['\"`](?:https?://[^'\"`\\s/]+)?/?(?:api|rest|cgi-bin|rpc|jsonrpc|graphql|v\\d+)/[^'\"`\\s]{0,300}['\"`])"
+    },
+    {
+      "kind": "url-string",
+      "pattern": "(?<target>['\"`][\\w./-]{0,200}\\.(?:lua|cgi|php|aspx?|jsp)(?:\\?[^'\"`\\s]{0,200})?['\"`])"
+    }
+  ]
+}

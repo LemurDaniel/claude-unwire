@@ -25,8 +25,14 @@ somewhere in there.
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/Get-UnwireJsCandidate.ps1" `
        -Path './unwire/<name>/assets' -OutputFile './unwire/<name>/candidates.json'
    ```
-   Each candidate has file, line, kind (`fetch`, `axios`, `xhr`, `jquery`, `url-string`)
-   and a snippet.
+   The script returns a summary (count per kind). Each candidate in the file has `File`
+   (`bundle.js.map::src/api.ts` for code from a source map), `Line`, `Column`, `Kind`
+   (`fetch`, `axios`, `jquery`, `xhr`, `http-client`, `url-string`), `Method` (`null` when
+   unknown), `Target`, `IsLiteralTarget` (`false` for URLs built at runtime) and a `Snippet`.
+   - Bundles with a source map next to them are skipped, vendor code in maps too.
+     Add `-IncludeVendor` only when the API client lives in a vendor package.
+   - `IsLiteralTarget: false`: follow the variable in the code, else it is an open point.
+   - Candidates are hints, not endpoints: drop noise like `/api/` in a help text.
 3. **Analyze** every candidate with its surrounding code:
    - **Method and path**: merge variants into templates (`/api/devices/12` → `/api/devices/{id}`).
    - **Parameters**: query, path and body fields, from the code that builds the request.
