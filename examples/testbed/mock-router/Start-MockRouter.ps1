@@ -39,6 +39,7 @@ $WWW_ROOT       = Join-Path -Path $PSScriptRoot -ChildPath 'www'
 $VARIANTS_FILE  = Join-Path -Path $PSScriptRoot -ChildPath 'data/mock-router.variants.json'
 $REALM          = 'mock-router'
 $FORM_COOKIE    = 'mock_form_session'
+$LOGIN_PAGE     = '^/login\.\w+\.htm$'
 $PATH_PREFIX    = '/ui/'
 $PATH_TOKEN     = 'tok'
 $CONTENT_TYPES  = @{
@@ -104,7 +105,10 @@ function Send-MockFile {
         }
     }
     $contentType = $CONTENT_TYPES[$extension] ?? 'application/octet-stream'
-    Send-MockResponse -Response $Response -Status 200 -Body $content -ContentType $contentType
+    # Login page: cookies ignore the port, every variant and the shop share those of 127.0.0.1.
+    # Clearing them gives each login a clean browser, no cookie of another variant in its cURL.
+    $headers = ($RelativePath -MATCH $LOGIN_PAGE) ? @{ 'Clear-Site-Data' = '"cookies"' } : @{}
+    Send-MockResponse -Response $Response -Status 200 -Body $content -ContentType $contentType -Headers $headers
 }
 
 function Get-MockMd5 {

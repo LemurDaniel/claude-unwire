@@ -28,4 +28,8 @@ Shared in every variant: pages under `pages/*.htm` only reachable by `-Page`
 (`loadPage` builds the path), `js/views/devices.js` only by `-Script` (`loadView`),
 `POST /api/reboot` only in an `onclick` attribute.
 
+Every login page answers with `Clear-Site-Data: "cookies"`: cookies ignore the port, so
+without it the `mock_form_session` of 3013 (or a Juice Shop cookie) rides along in the
+cURL of another variant. Opening a login page clears every cookie of `127.0.0.1`.
+
 How to run Unwire against each variant, and its recorded output: [examples/mocks](../../mocks/README.md).

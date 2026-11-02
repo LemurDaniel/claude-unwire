@@ -29,9 +29,16 @@ function getLogs(level) {
   return api.get('/api/logs', { level: level });
 }
 
+// Raw XHR does not go through api.get/api.post: it sets the headers of the login method itself
+function setAuthHeaders(xhr) {
+  var headers = window.mockAuth.headers();
+  Object.keys(headers).forEach(function (name) { xhr.setRequestHeader(name, headers[name]); });
+}
+
 function getConfig(section) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', api.url('/cgi-bin/config.cgi', { section: section }));
+  setAuthHeaders(xhr);
   xhr.send();
   return xhr;
 }
@@ -40,6 +47,7 @@ function setConfig(section, values) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', api.url('/cgi-bin/config.cgi', { section: section }));
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  setAuthHeaders(xhr);
   xhr.send(new URLSearchParams(values).toString());
   return xhr;
 }
