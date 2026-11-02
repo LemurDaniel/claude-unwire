@@ -1,7 +1,7 @@
 # claude-unwire
 Claude Code plugin (also for Copilot CLI, Codex and Gemini CLI, see [Install](#install)) that reverse engineers the undocumented HTTP API of a web UI (router, NAS,
 smart home device, web app) into an OpenAPI spec and a clickable HTML documentation.
-Client code for the parts you need is planned (`unwire:code`, not implemented yet).
+For the parts you need it writes a PowerShell module (`unwire:code`), one function per picked operation.
 
 <img src="docs/teaser/teaser.gif" width="720" alt="Unwire teaser: /unwire on a router in the home network, discover, analyze and document into API.html (illustration, AI generated)">
 
@@ -14,7 +14,7 @@ Client code for the parts you need is planned (`unwire:code`, not implemented ye
 > explicit "at my own risk" confirmation.
 
 > [!WARNING]
-> **Prototype.** Unwire is an early prototype (v0.4.0). It is tested against a few home
+> **Prototype.** Unwire is an early prototype (v0.5.0). It is tested against a few home
 > systems only, its output can be incomplete or wrong, and its interfaces may change without
 > notice. Treat every generated spec and page as a draft to review, not as fact.
 
@@ -35,7 +35,7 @@ status codes and JSON keys, never a response body.
 2. Analyze    HTML + JS bundles + source maps → openapi.json           static assets only
               optional: live GET of the safe operations                after a yes per run
 3. Document   openapi.json → API.html (primary output)                 offline, no CDN
-4. Code       picked operations → client code                          not implemented yet
+4. Code       picked operations → PowerShell module                    you run it, Unwire never does
 ```
 
 Open points (auth flow, URLs built at runtime, unknown schemas) live in the spec and show up
@@ -52,7 +52,6 @@ on the page, per operation and as one list.
 
 ```
 /unwire https://nas.example.test               # name derived from the host: Nas
-/unwire http://192.168.178.1 -Name FritzBox    # an IP has no name to derive
 /unwire https://nas.example.test/gitea/ with login   # name from the path: Gitea, code behind a login
 /unwire ./saved-ui                             # saved copy ("Save page as"), fully offline: logins without a cookie, unreachable devices
 ```
@@ -71,6 +70,13 @@ On Windows it then opens a separate window with a masked prompt, you paste the c
 and close the window when the download is done. Only the cookie is taken from it. The cookie stays in that window's memory:
 never in a file, a log or the chat. Unwire never logs in itself. Saying "with login" up front
 skips the first try.
+
+**Client code.** After the documentation, `unwire:code` writes a PowerShell 7 module for the
+operations you pick into `/unwire/<name>/module/<Name>/`, in the layout of
+[its reference](plugins/unwire/skills/code/references/ReferenceHard/):
+`Connect-<Name>` keeps the base URL and your session in memory only (masked prompt, no file),
+every function that changes the device asks first (`-WhatIf`, `-Confirm`), unsure operations
+warn on every call. Claude never runs the module, only you do, in your own terminal.
 
 ## Try it on the testbed
 Throwaway targets on `127.0.0.1`, no volumes, made to be analyzed (Docker required). Details
@@ -140,9 +146,9 @@ asks before anything gets installed.
 | Linux | per distro, see [Installing PowerShell on Linux](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux) |
 
 ## Status
-v0.4.0: all scripts work and are tested, with an optional live GET of the safe operations. Full runs against Gitea (518 operations), the Juice Shop and a mock router with 7 login methods (see [examples](examples/README.md)).
+v0.5.0: all scripts work and are tested, with an optional live GET of the safe operations and a PowerShell module of the picked operations. Full runs against Gitea (518 operations), the Juice Shop and a mock router with 7 login methods (see [examples](examples/README.md)).
 Installs in Claude Code, Copilot CLI, Codex and Gemini CLI.
-Step 4, `unwire:code`, is not implemented yet.
+Step 4, `unwire:code`, is new: checked against its reference module, not yet run against a real device.
 
 ## Development
 ```powershell

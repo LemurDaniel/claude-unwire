@@ -8,7 +8,7 @@ things got here; this file holds what holds now, and the one next thing at the e
 
 A Claude Code plugin that turns the undocumented HTTP API of a web UI (router, NAS, smart
 home, web app) into an OpenAPI spec and a clickable HTML documentation, without ever
-changing anything on the target. Client code for picked operations is planned (`unwire:code`).
+changing anything on the target. On request a PowerShell module of picked operations (`unwire:code`).
 
 ## Decisions, and why
 
@@ -37,7 +37,15 @@ changing anything on the target. Client code for picked operations is planned (`
 - **The spec is the contract** (2026-11-02). `openapi.json` with `x-unwire-source`,
   `-confidence`, `-verified`, `-impact`, `-open`, root `x-unwire-target` (the URL of the run,
   default base URL of API.html, filled in by the live GET); `Test-UnwireSpec` checks it.
-- **Step 4 is `unwire:code`, not implemented** (2026-11-02). The plugin promises only what works.
+- **Step 4 `unwire:code` is a PowerShell module the agent writes** (2026-11-02, user
+  decisions). Shape of the user's own modules: `.psd1`, `.psm1` with one dot-source per file,
+  `meta.json`, `functions/<group>/` with reads under `_data.sources/`, one wrapper
+  `Invoke-<Name>Rest` that alone sends (no redirects, logs only method and path template).
+  Agent writes the code after `skills/code/references/ReferenceHard/` (from
+  `reference.hard.openapi.json`), not a generator script; `Test-UnwireModule` checks it
+  against the spec. Session in memory only (`Connect-<Name>`, masked prompt); user picks
+  operations, writes included behind `ShouldProcess`/`ConfirmImpact High`; unsure
+  operations in, `.NOTES` plus `Write-Warning` for `low`/`medium`. The agent never runs it.
 - **Sessions only from a paste, in a window** (2026-11-02). `shared/session/`: a pasted cURL
   gives cookie, `Authorization` and auth headers, path token or URL parameter; the masked
   prompt asks again (up to 3 pastes) with the reason and a Fetch/XHR or POST hint, and the
@@ -82,9 +90,9 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## State
 
-- v0.4.0 on `master`, not pushed.
-  Skills: unwire (entry), discover, analyze, document, code (stub). 8 scripts plus
-  `shared/session/` (9 files), 256 Pester tests (plus 5 in `docs/screenshots`),
+- v0.5.0 on `master`, not pushed.
+  Skills: unwire (entry), discover, analyze, document, code. 9 scripts plus
+  `shared/session/` (9 files), 289 Pester tests (plus 5 in `docs/screenshots`),
   ScriptAnalyzer clean.
 - `Save-UnwireAsset`: webpack runtimes with one `if` per chunk and the automatic publicPath,
   `-Page`/`-Script` for paths built at runtime, `HttpAuth` for a 401 on the start page,
@@ -106,7 +114,8 @@ changing anything on the target. Client code for picked operations is planned (`
 ## Open
 
 
-- **`unwire:code` is a stub.** Open: language(s) and shape.
+- **`unwire:code` never ran on a real spec.** Next real run: pick a few operations of
+  `examples/juiceshop` or a mock, write the module, run it by hand against the testbed.
 - **D · Eval loop with the testbed** (tips 13 to 16): a checkable goal per target, a check
   separate from the run, a cap on runs and cost, results remembered between runs.
 - Socket.IO apps are a known limit, not handled (Uptime Kuma, no longer in the testbed).

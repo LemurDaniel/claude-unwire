@@ -97,6 +97,7 @@ unwire/<name>/
   candidates.json    # step 2: pre-filtered endpoint candidates
   openapi.json       # the spec, the contract for step 3
   API.html           # step 3: the clickable documentation, the primary output
+  module/<Name>/     # step 4, optional: PowerShell module of the picked operations
 ```
 
 ## Steps
@@ -110,7 +111,8 @@ unwire/<name>/
    GET, top open points) and end with the
    browser link of its step 4 (`FileUri` from the script output), then ask whether to open
    it in the browser (its step 5).
-4. **Code** (`unwire:code`) is not implemented yet: do not offer it. When the user asks for
-   client code, say that this step does not exist yet.
+4. **Code**, optional: after the browser question of step 3, offer a PowerShell module of
+   picked operations in one line. Only when the user wants it, run the `unwire:code` skill.
+   The agent never runs that module, the user does in their own terminal.
 
 Stop after each step when it fails, and report what is missing.
