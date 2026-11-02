@@ -40,49 +40,37 @@ somewhere in there.
      `name=value` from Application → Cookies and a `cookie:` header line still work.
    - Run the script with `-PromptSession` in a window the user types into, never in your
      own shell: the cookie stays in that window's memory, not on disk, not in the history.
-     Always guide first, the window never opens before the user answered:
+     The step-by-step guide is hard-coded in `data/login-guide.json` (`en`, `de`) and shown
+     by the script in that window, before the masked prompt. Never write your own version
+     of it in the chat, never announce it either: the texts below are the whole dialog.
 
-     **Step 1a, the guide as text.** Before the AskUserQuestion call, your message contains
-     these six steps, written out in full in the user's language with the real URL. A
-     sentence like "I'll explain how to log in" without the steps is wrong, the steps
-     themselves have to be in the message:
-     1. Open `<URL>` in your browser and log in. Stay on the page.
-     2. Press F12, open the **Network** tab, reload with F5.
-     3. Right-click the first request (the page itself, type `document`):
-        - Chrome / Edge: **Copy → Copy as cURL (bash)** or **(cmd)**, both work.
-        - Firefox: **Copy Value → Copy as cURL (POSIX)** or **(Windows)**.
-     4. Answer the question "Are you ready?" below. Never paste the cURL into the chat, it
-        holds your cookie.
-     5. A new PowerShell window opens with the prompt `Session cookie (...)`. Paste the cURL
-        there, all lines at once; the input stays masked (`****`).
-     6. The download runs in that window. When it is done, read any warning, then close
-        the window: Unwire continues only after that.
+     **Step 1, AskUserQuestion with the texts from the file.** Read
+     `${CLAUDE_PLUGIN_ROOT}/core/analyze/data/login-guide.json` and take the entry of the
+     user's language, `en` for any other language (translate its texts word by word then).
+     Copy them exactly, only `{URL}` replaced with the real URL:
+     - question: `question`
+     - option 1: `open.label`, description `open.description`
+     - option 2: `cancel.label`, description `cancel.description`
 
-     **Step 1b, then AskUserQuestion.** Only after the guide, with no other tool call before
-     the answer. The dialog may hide the text above it, so the question repeats the
-     essentials:
-     - question: "Are you ready? Logged in to `<URL>`, request copied as cURL (F12 → Network
-       → right-click the document request → Copy as cURL). The next step opens a window
-       with a masked prompt for it."
-     - option 1: "Ready, open the window"
-     - option 2: "Cancel": no window, no request with a session.
+     No other tool call between the Read and the answer. Only option 1 continues. A custom
+     answer is never the cURL itself: if it looks like one (`curl`, `cookie`, `=`), do not
+     repeat or use it, tell the user it was not stored and that the paste belongs into the
+     window, then ask again.
 
-     Only option 1 continues. A custom answer is never the cURL itself: if it looks like
-     one (`curl`, `cookie`, `=`), do not repeat or use it, tell the user it was not stored
-     and that the paste belongs into the window, then ask again.
-
-     **Step 2, after "Ready, open the window".** Open the window (Windows), one tool call that does
-     nothing else; add `-SkipCertificateCheck` only when the user agreed for this host:
+     **Step 2, after option 1.** Open the window (Windows), one tool call that does nothing
+     else. `-Language` is the key of step 1 (`de`, `en`), add `-SkipCertificateCheck` only
+     when the user agreed for this host:
      ```powershell
      Start-Process pwsh -Wait -WorkingDirectory $PWD -ArgumentList @(
          '-NoProfile', '-NoExit', '-File', '${CLAUDE_PLUGIN_ROOT}/core/analyze/scripts/Save-UnwireAsset.ps1',
-         '-Uri', '<URL>', '-OutputDirectory', './unwire/<name>/assets', '-PromptSession')
+         '-Uri', '<URL>', '-OutputDirectory', './unwire/<name>/assets', '-PromptSession', '-Language', '<de|en>')
      ```
      Then check `unwire-assets.json` in a separate call, never the window. No manifest
      means the run stopped before the crawl (bad paste, window closed early, certificate):
      ask the user what the window said (the error, never the cURL) and offer a new try.
-     Elsewhere (macOS, Linux, no desktop) give the command for the user's own terminal in
-     step 1 and ask "Done?" with AskUserQuestion after it ran, instead of opening a window.
+     Elsewhere (macOS, Linux, no desktop) give the command for the user's own terminal
+     instead of opening a window, it shows the same guide there, and ask "Done?" with
+     AskUserQuestion after it ran.
    - Never ask for the password, never log in, never ask the user to paste the cookie into
      the chat, never write it to a file.
    - `-UseSession` reads the cookie from `$env:UNWIRE_COOKIE` instead, for automation only.

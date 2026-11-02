@@ -45,6 +45,9 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
 - Examples and docs use generic hosts (`router.test`, `nas.example.test`), not the user's.
 
 ## Traps already hit
+- A skill rule "write these steps out in the chat" was ignored twice, the steps were only
+  announced. User-facing guides live hard-coded in `data/` and the script shows them
+  (see `data/login-guide.json`, `-PromptSession`).
 - Pester expands `<name>` in `It` titles: no `<base href>` or `</script>` in test names.
 - PowerShell unrolls single-element arrays: `@(@('a', 'b'))` is `@('a', 'b')`, use `,@(...)`.
 - An escape like backslash-u-003c written through a tool can arrive as `<`: build such

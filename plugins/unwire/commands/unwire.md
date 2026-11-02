@@ -59,8 +59,8 @@ Runs the Unwire chain for: `$ARGUMENTS`
   for every new host, the answer never carries over. Given in the arguments, it skips the
   question.
 - Code behind a login: the user logs in in their own browser and copies a request as cURL
-  (`unwire:analyze` has the guide: write all its steps out every time, before the
-  AskUserQuestion, never just announce them), `unwire:analyze` runs the download
+  (the step-by-step guide is hard-coded in `unwire:analyze` and shown in the window, the
+  chat only asks the question from its `data/login-guide.json`), `unwire:analyze` runs the download
   with `-PromptSession` in a separate window, they paste it at the masked prompt (scripts
   only). "with login" in the arguments skips the try without a session. Never ask for a
   password or for the cookie in the chat.

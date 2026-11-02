@@ -39,7 +39,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## State
 
-- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 109 Pester tests.
+- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 112 Pester tests.
 - Live runs: Grafana (webpack, base tag, 243 candidates), Gitea without and with login
   (full run to `API.html`: 471 documented + 47 derived operations, 0 spec findings).
 - `examples/testbed`: Juice Shop, Grafana, Gitea, Uptime Kuma on 127.0.0.1, not started yet.

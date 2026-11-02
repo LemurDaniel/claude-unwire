@@ -46,6 +46,8 @@ param ()
 #   prompt_multi_line      Reads a multi-line cURL paste completely, bash and cmd format.
 #   prompt_devtools_row    Turns a pasted DevTools cookie table row into name=value.
 #   prompt_bare_value      Fails early on a value without its name, shows only its shape.
+#   prompt_guide           Shows the login guide with the URL before the prompt, in -Language.
+#   prompt_guide_fallback  Falls back to the English guide for an unknown language.
 #
 
 BeforeAll {
@@ -383,7 +385,9 @@ Describe 'Save-UnwireAsset' {
         BeforeEach {
             $Site['http://router.test/']       = New-TestResponse -Content '<script src="/app.js"></script><iframe src="/panel"></iframe>'
             $Site['http://router.test/app.js'] = New-TestResponse -Content 'a()'
-            $PromptConfig = @{ PromptSession = $true; SkipSourceMapProbe = $true }
+            # The guide goes to the host: hidden here, read by the prompt_guide tests.
+            $PromptConfig = @{ PromptSession = $true; SkipSourceMapProbe = $true; InformationAction = 'Ignore' }
+            $GuideConfig  = @{ PromptSession = $true; SkipSourceMapProbe = $true; InformationAction = 'Continue' }
         }
 
         It 'prompt_session: asks for the cookie masked and sends it, no variable needed' {
@@ -464,6 +468,31 @@ Describe 'Save-UnwireAsset' {
             $thrown.Exception.Message | Should -BeLike "The session cookie must be 'name=value'*Got: 13 characters, no '='."
             $thrown.Exception.Message | Should -Not -Match 'PROMPT-SECRET'
             Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It 'prompt_guide: shows the login guide with the URL before the prompt, in <Language>' -ForEach @(
+            @{ Language = 'de'; Title = 'Unwire: Login f?r http://router.test/'; Step = '2. Dr?ck F12*'; PromptLike = 'Session-Cookie (*'; Done = 'Fertig.*' }
+            @{ Language = 'en'; Title = 'Unwire: login for http://router.test/'; Step = '2. Press F12*'; PromptLike = 'Session cookie (*'; Done = 'Done.*' }
+        ) {
+            Mock Read-Host { ConvertTo-SecureString -String 'i_like_gitea=PROMPT-SECRET' -AsPlainText -Force }
+
+            $output = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @GuideConfig -Language $Language 6>&1
+            $shown  = @($output | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } | ForEach-Object { "$($_.MessageData)" })
+
+            @($shown -LIKE $Title).Count                       | Should -Be 1
+            @($shown -LIKE '1. * http://router.test/ *').Count | Should -Be 1
+            @($shown -LIKE $Step).Count                        | Should -Be 1
+            $shown[-1]                                         | Should -BeLike $Done
+            Should -Invoke Read-Host -Times 1 -Exactly -ParameterFilter { $Prompt -LIKE $PromptLike }
+        }
+
+        It 'prompt_guide_fallback: falls back to the English guide for an unknown language' {
+            Mock Read-Host { ConvertTo-SecureString -String 'i_like_gitea=PROMPT-SECRET' -AsPlainText -Force }
+
+            $output = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @GuideConfig -Language 'fr' 6>&1
+            $shown  = @($output | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } | ForEach-Object { "$($_.MessageData)" })
+
+            $shown | Should -Contain 'Unwire: login for http://router.test/'
         }
     }
 }

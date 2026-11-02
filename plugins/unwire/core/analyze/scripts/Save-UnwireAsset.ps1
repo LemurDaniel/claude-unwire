@@ -6,9 +6,9 @@
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
 #   the start page and *.js, *.mjs, *.map files, never a page, frame, endpoint or redirect.
-#   -PromptSession asks for the cookie with a masked prompt (interactive, nothing on disk),
-#   -UseSession reads it from an environment variable (automation). The cookie never appears
-#   in output, logs or manifest.
+#   -PromptSession shows the login guide of data/login-guide.json in -Language, then asks for
+#   the cookie with a masked prompt (interactive, nothing on disk), -UseSession reads it from
+#   an environment variable (automation). The cookie never appears in output, logs or manifest.
 #
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
@@ -16,8 +16,9 @@
 #   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #
-#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession
-#     Session cookie (name=value): ****                   # copied from the browser after the login
+#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession -Language en
+#     Unwire: login for https://nas.local/gitea/        # the guide, then the masked prompt
+#     Session cookie (...): ****                        # "Copy as cURL" from the browser
 #
 #   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'
 #   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
@@ -30,6 +31,7 @@
 #     WRITE MANIFEST    Writes unwire-assets.json and returns a summary.
 #
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'The login guide is for the user in the PromptSession window, not pipeline output.')]
 [CmdletBinding(SupportsShouldProcess = $true)]
 param (
     <#
@@ -151,7 +153,18 @@ param (
         Mandatory = $false
     )]
     [switch]
-    $PromptSession
+    $PromptSession,
+
+    <#
+    [Optional]
+    Language of the login guide and prompt of PromptSession, a key of data/login-guide.json
+    ('en', 'de'). Default is en, an unknown language falls back to en.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [System.String]
+    $Language = 'en'
 )
 
 Set-StrictMode -Version 1.0
@@ -161,6 +174,8 @@ $ErrorActionPreference = 'Stop'
 . $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
 
 $MANIFEST_FILE     = 'unwire-assets.json'
+$LOGIN_GUIDE_FILE  = Join-Path -Path $PSScriptRoot -ChildPath '../data/login-guide.json'
+$DEFAULT_LANGUAGE  = 'en'
 $MAX_REDIRECTS     = 5
 $REDIRECT_CODES    = @(301, 302, 303, 307, 308)
 $SOURCE_MAP_HEADER = @('SourceMap', 'X-SourceMap')
@@ -501,11 +516,26 @@ if ($IsSessionMode -AND $null -NE (Get-UnwireSessionBlock -Target $StartUri -Sta
 $SessionCookie = $null
 # PromptSession -> masked prompt
 if ($PromptSession) {
+    # Hard-coded guide, so the steps reach the user even when the chat only announced them.
+    $guides = Get-Content -Path $LOGIN_GUIDE_FILE -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
+    if (-NOT $guides.ContainsKey($Language)) {
+        Write-Verbose "[Save-UnwireAsset] No login guide in '$Language' -> using '$DEFAULT_LANGUAGE'."
+    }
+    $LoginGuide = $guides[$(if ($guides.ContainsKey($Language)) { $Language } else { $DEFAULT_LANGUAGE })]
+
+    Write-Host ''
+    Write-Host $LoginGuide.title.Replace('{URL}', $StartUri.AbsoluteUri)
+    Write-Host ''
+    $LoginGuide.steps | ForEach-Object { Write-Host $_.Replace('{URL}', $StartUri.AbsoluteUri) }
+    Write-Host ''
+    Write-Host $LoginGuide.warning
+    Write-Host ''
+
     # A multi-line paste ("Copy as cURL" ends its lines with '\', '^' or '`') must be read
     # completely here: every line left unread would run as a command in the user's shell.
     $pastedLines = [System.Collections.Generic.List[System.String]]::new()
     do {
-        $prompt     = if ($pastedLines.Count -EQ 0) { 'Session cookie (name=value, cookie header or "Copy as cURL")' } else { '...' }
+        $prompt     = if ($pastedLines.Count -EQ 0) { $LoginGuide.prompt } else { '...' }
         $secureLine = Read-Host -Prompt $prompt -AsSecureString
         $pastedLine = [System.Net.NetworkCredential]::new('', $secureLine).Password
         $pastedLines.Add(($pastedLine -REPLACE $PASTE_CONTINUATION, ''))
@@ -772,6 +802,12 @@ if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
     }
     | ConvertTo-Json -Depth 5
     | Set-Content -Path $ManifestPath -Encoding utf8NoBOM
+}
+
+# Step 5 of the guide in PREPARE CRAWL: the user closes the window only after this line.
+if ($PromptSession) {
+    Write-Host ''
+    Write-Host $LoginGuide.done
 }
 
 return [PSCustomObject]@{
