@@ -1,0 +1,6 @@
+{
+  "description": "Paths and queries Unwire never requests with a session or as an endpoint: they may sign out, restart or change the target, also on GET.",
+  "pattern": "(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)",
+  "liveGetDescription": "Also never sent by the live GET (Test-UnwireGet): such GETs may create a token or return a credential. Not for assets, chunk names like 'token-selector.js' are code.",
+  "liveGetPattern": "(?i)(token|secret|credential|passw|private|backup|export|download|archive)"
+}

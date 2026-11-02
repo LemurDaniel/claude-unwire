@@ -40,6 +40,12 @@ Every change must keep this true, it is the reason the plugin may run against re
   values in memory only (user decision 2026-11-02, a test forbids fetch, forms and storage).
 - Every request to the target goes through the scripts (denylist, manifest), the skills
   forbid own `Invoke-WebRequest`/`curl` calls. A gap in a script is fixed in the script.
+- Live GET, the one exception (user decision 2026-11-02): `Test-UnwireGet.ps1`, last step of
+  `unwire:analyze`, sends GETs of the spec with `x-unwire-impact: read`, nothing on
+  `shared/data/request-denylist.json`, path parameters only with values the user gave, no
+  redirects; without session first, then optionally with the login window. Only after an
+  AskUserQuestion yes per run and target. Keeps status, media type and JSON keys and types,
+  never a body or a value.
 - A new mode that has to call the target (e.g. MCP `tools/list`) is a change of this rule:
   ask first, it was declined once for exactly that reason.
 

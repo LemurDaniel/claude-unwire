@@ -10,10 +10,10 @@
 | `assets/` | `icon.svg` (source, also the favicon `ConvertTo-UnwireHtml` embeds in every API.html) and `icon.png` (512 px, Claude directory `icon`, Codex `composerIcon` and `logo`). Re-render: `./docs/screenshots/New-UnwireScreenshot.ps1 -Path ./plugins/unwire/assets/icon.svg -OutputFile ./plugins/unwire/assets/icon.png -Width 512 -Height 512 -Scale 1`. |
 | `skills/unwire/` | `/unwire` (`unwire:unwire`), runs the chain; explains the Claude-only names for other agents. |
 | `skills/discover/` | Step 1: published docs (`Find-UnwireSpec`), Swagger 2.0 to OpenAPI 3 (`ConvertFrom-UnwireSwagger`). |
-| `skills/analyze/` | Step 2: static assets (`Save-UnwireAsset`), endpoint candidates (`Get-UnwireJsCandidate`). |
+| `skills/analyze/` | Step 2: static assets (`Save-UnwireAsset`), endpoint candidates (`Get-UnwireJsCandidate`), optional live GET of the safe operations (`Test-UnwireGet`). |
 | `skills/document/` | Step 3: openapi.json to API.html (`ConvertTo-UnwireHtml`). |
 | `skills/code/` | Step 4, not implemented yet: client code from picked operations. |
-| `shared/` | Used by several skills: `Test-UnwireTarget` (home network or public), `Test-UnwireSpec`, `ConvertTo-UnwireText`; `pwsh-check.md` with `data/pwsh-install.json` (PowerShell 7 check, asks before an install). |
+| `shared/` | Used by several skills: `Test-UnwireTarget` (home network or public), `Test-UnwireSpec`, `ConvertTo-UnwireText`; `session/` (`Session.ps1` loads the login of a pasted cURL or cookie, `Read-UnwireSession`); `data/request-denylist.json` (never requested: logout, reboot, delete, ...); `pwsh-check.md` with `data/pwsh-install.json` (PowerShell 7 check, asks before an install). |
 
 Every skill folder holds its `SKILL.md`, its `scripts/`, its `data/` or `templates/` and its
 Pester `tests/`. Scripts are plain PowerShell 7, no modules required.

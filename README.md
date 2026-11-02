@@ -25,12 +25,15 @@ Client code for the parts you need is planned (`unwire:code`, not implemented ye
 > as unverified (`x-unwire-verified: false`).
 
 **Read-only by design:** Unwire finds published documentation and analyzes the static
-frontend code. It never calls an API endpoint, never submits a form, never executes
-downloaded JavaScript.
+frontend code. It never submits a form, never executes downloaded JavaScript and calls no
+API endpoint, with one exception you opt into per run: the optional live GET at the end of
+analyze sends the safe GETs of the spec (read only, denylist, no redirects) and keeps only
+status codes and JSON keys, never a response body.
 
 ```
 1. Discover   swagger.json, openapi.json, /v3/api-docs, Swagger UI …   GET on well-known paths
 2. Analyze    HTML + JS bundles + source maps → openapi.json           static assets only
+              optional: live GET of the safe operations                after a yes per run
 3. Document   openapi.json → API.html (primary output)                 offline, no CDN
 4. Code       picked operations → client code                          not implemented yet
 ```

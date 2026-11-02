@@ -35,6 +35,8 @@
     ],
     "warning": "Never paste the cURL into the chat, it holds your session.",
     "prompt": "Session (\"Copy as cURL\")",
+    "retry": "No usable session in this paste: {REASON}\nTry another entry: a POST request after the login, or a Fetch/XHR request of the signed-in app (filter 'Fetch/XHR', e.g. one that loads your user data). Copy it as cURL and paste it again.",
+    "cookieOnly": "This paste carries only a cookie. Many apps send the login of their API requests as an 'Authorization' header instead.\nBetter: filter 'Fetch/XHR' or method:POST, click something in the signed-in app, copy one of these requests as cURL and paste it here.\nPress Enter without a paste to go on with the cookie.",
     "done": "Done. Read any warning above, then close this window."
   },
   "de": {
@@ -73,6 +75,8 @@
     ],
     "warning": "Füg den cURL nie in den Chat ein, er enthält deine Session.",
     "prompt": "Session (\"Als cURL kopieren\")",
+    "retry": "In diesem Paste steckt keine brauchbare Session: {REASON}\nNimm einen anderen Eintrag: einen POST-Request nach dem Login oder einen Fetch/XHR-Request der angemeldeten App (Filter 'Fetch/XHR', z.B. einer, der deine Benutzerdaten lädt). Kopier ihn als cURL und füg ihn noch einmal ein.",
+    "cookieOnly": "In diesem Paste steckt nur ein Cookie. Viele Apps schicken den Login ihrer API-Requests stattdessen als 'Authorization'-Header.\nBesser: Filter 'Fetch/XHR' oder method:POST, klick in der angemeldeten App auf etwas, kopier einen dieser Requests als cURL und füg ihn hier ein.\nDrück Enter ohne Eingabe, um mit dem Cookie weiterzumachen.",
     "done": "Fertig. Lies die Warnungen oben und schließ dann dieses Fenster."
   }
 }

@@ -42,7 +42,9 @@ from Claude Code:
   - A local folder needs no check, nothing is requested.
 - Unwire never changes anything on the target. Only GET requests to well-known documentation
   paths and to static assets (HTML, JS, source maps) are allowed. Never call an API endpoint
-  found in the code, never submit a form, never execute downloaded JavaScript.
+  found in the code, never submit a form, never execute downloaded JavaScript. The one
+  exception is the live GET of `unwire:analyze` (its step 7): safe GETs of the spec, only
+  after the user said yes through AskUserQuestion for this run and this target.
 - Every request to the target goes through the Unwire scripts, never an own
   `Invoke-WebRequest`, `curl` or fetch. A script that cannot do what the target needs is
   an open point to report, never a reason to work around it.
@@ -99,7 +101,8 @@ unwire/<name>/
 1. **Discover** with the `unwire:discover` skill. If a complete spec is found, show it to the
    user and ask whether to skip step 2.
 2. **Analyze** with the `unwire:analyze` skill: static code analysis into `openapi.json`,
-   open points in the spec.
+   open points in the spec, then its optional live GET (step 7, asks first). When step 2
+   was skipped for a complete published spec, offer only that live GET.
 3. **Document** with the `unwire:document` skill: `API.html`. Give the user a short
    summary (operations per confidence, write operations, top open points) and end with the
    browser link of its step 4 (`FileUri` from the script output), then ask whether to open

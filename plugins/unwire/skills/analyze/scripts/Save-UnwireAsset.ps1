@@ -231,6 +231,7 @@ $ErrorActionPreference = 'Stop'
 . $PSScriptRoot/../../../shared/ConvertTo-UnwireText.ps1
 . $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
 . $PSScriptRoot/../../../shared/Invoke-UnwireWebRequest.ps1
+. $PSScriptRoot/../../../shared/session/Session.ps1
 
 $MANIFEST_FILE     = 'unwire-assets.json'
 $LOGIN_GUIDE_FILE  = Join-Path -Path $PSScriptRoot -ChildPath '../data/login-guide.json'
@@ -249,8 +250,6 @@ $HTML_FRAME_REF    = '<i?frame\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_IMPORT_REF   = '\bimport\s*(?:\(\s*|[\w$*{}\s,]+?\s*from\s*)?["''](?<ref>[^"''\s]+\.m?js)["'']'
 # Script file names of a login page: login.js, box-login.js, signin.mjs (not catalog.js)
 $LOGIN_SCRIPT_NAME = '(?i)(?<![a-z])(log-?in|sign-?in)'
-# Session value of SessionParameter: URL-safe characters only, it goes into the query
-$SESSION_VALUE     = '^[\w.~%-]+$'
 # //# sourceMappingURL=app.js.map (last one wins, bundlers append it at the end)
 $JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
 # 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`, not a name fragment like ".0a1b2c3d.js"
@@ -279,19 +278,8 @@ $JS_STRING_ASSIGNMENT = '(?<head>\b(?:var|let|const)\s+[\w$]+\s*=\s*)(?<q>["''])
 $JS_PROPERTY_STRING = '(?<head>(?:"[\w$-]+"|''[\w$-]+''|\b[\w$]+)\s*:\s*)(?<q>["''])(?<value>(?:\\.|(?!\k<q>)[^\\\r\n])*)\k<q>'
 # Property values kept for the analysis: plain paths without a query, '/api/status', './x.js'
 $JS_PATH_VALUE      = '^\.{0,2}/[\w./-]*$'
-# Session values shorter than this are no secret (lang=de) and are not scrubbed
-$MIN_SECRET_LENGTH  = 6
-$SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)'
-# Headers of a pasted cURL that carry a session: Authorization, X-Auth-Token, X-CSRF-Token, X-Api-Key
-$SESSION_HEADER    = '^(?i)(authorization|x-[\w-]*(auth|token|session|api-?key)[\w-]*)$'
-# Session token in the URL path of a pasted cURL:
-# - own segment:   '/cgi-bin/ui/;stok=abc/admin'  => prefix '/cgi-bin/ui/', token 'stok=abc'
-# - appended:      '/app/home.jsp;jsessionid=abc' => token 'jsessionid=abc'
-$PATH_TOKEN_SEGMENT = '^(?<prefix>/(?:[^/;]+/)*);(?<token>[\w.-]+=[^/;]+)(?:/|$)'
-$PATH_TOKEN_SUFFIX  = '[^/;]+;(?<token>[\w.-]+=[^/;]+)$'
-# Line continuations of a pasted cURL command: bash '\', cmd '^', PowerShell '`'
-$PASTE_CONTINUATION = '\s[\\^`]\s*$'
-$MAX_PASTE_LINES    = 200
+# Never requested in session mode: logout, reboot, delete, ... (shared with Test-UnwireGet)
+$SESSION_DENYLIST  = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../../../shared/data/request-denylist.json') -Raw | ConvertFrom-Json).pattern
 
 # ===========================================================================
 # ===============================   HELPERS   ===============================
@@ -300,13 +288,7 @@ $MAX_PASTE_LINES    = 200
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
 #   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
 #   Get-UnwireInlineScript         Inline script code of a page, string values redacted.
-#   ConvertTo-UnwireRedactedText   Text with every session value replaced.
-#   ConvertFrom-UnwireCurlSession  Cookie, auth headers and path token of a pasted cURL.
-#   ConvertTo-UnwireCookieHeader   Cookie header from the other copy formats of a browser.
-#   ConvertTo-UnwireSessionValue   Value of the session URL parameter from pasted text.
-#   Get-UnwireRequestUri           URI with the session token and parameter added.
 #   Get-UnwireCleanUri             URI with the session token and parameter removed.
-#   Get-UnwireCookieShape          Describes pasted text without showing its content.
 #   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
 #   Get-UnwireAssetFile            Local file path of an asset, always inside the root.
 #   Find-UnwireAssetReference      Scripts, frames, chunks and source maps of a text.
@@ -374,170 +356,6 @@ function Get-UnwireInlineScript {
         })
 }
 
-function ConvertTo-UnwireRedactedText {
-    param (
-        [System.String]   $Text,
-        [System.String[]] $Secrets
-    )
-
-    # Last line of defense before a file is written: a session value never reaches the disk,
-    # wherever the page or script put it.
-    $redacted = $Text
-    foreach ($secret in $Secrets) {
-        $redacted = $redacted.Replace($secret, '<redacted>')
-    }
-    return $redacted
-}
-
-function ConvertFrom-UnwireCurlSession {
-    param (
-        [System.String] $Text
-    )
-
-    <#
-        Every session form a browser's "Copy as cURL" can carry, bash and cmd (^"...^") quoting:
-        > -b / --cookie, else the cookie: header   -> Cookie
-        > Authorization header                     -> Headers, as it is (Basic, Bearer, own
-                                                      schemes); Digest is rejected, its answer
-                                                      is valid for one URL and nonce only
-        > Auth headers (X-Auth-Token, ...)         -> Headers, as they are
-        > ';name=value' in the URL path            -> PathToken, with PathPrefix when it is a
-                                                      segment of its own
-        Other headers (accept, user-agent, ...) are dropped.
-    #>
-
-    $value = $Text.Trim()
-    # cmd format escapes with '^': -b ^"a=b; c=d^" => -b "a=b; c=d"
-    if ($value.Contains('^"')) {
-        $value = $value -REPLACE '\^(.)', '$1'
-    }
-    $session = [PSCustomObject]@{ Cookie = $null; Headers = [ordered]@{}; PathToken = $null; PathPrefix = $null }
-
-    # -b / --cookie, else the cookie: header
-    $cookie = [System.Text.RegularExpressions.Regex]::Match($value, '(?:-b|--cookie)\s+(?<q>[''"])(?<value>.*?)\k<q>')
-    if (-NOT $cookie.Success) {
-        $cookie = [System.Text.RegularExpressions.Regex]::Match($value, '-H\s+(?<q>[''"])(?i:cookie):\s*(?<value>.*?)\k<q>')
-    }
-    if ($cookie.Success) {
-        $session.Cookie = $cookie.Groups['value'].Value.Trim()
-    }
-
-    # Authorization and auth headers
-    foreach ($header in [System.Text.RegularExpressions.Regex]::Matches($value, '-H\s+(?<q>[''"])(?<name>[\w-]+):\s*(?<value>.*?)\k<q>')) {
-        $headerName = $header.Groups['name'].Value
-        if ($headerName -NOTMATCH $SESSION_HEADER) {
-            continue
-        }
-        if ($header.Groups['value'].Value -MATCH '^(?i)Digest\s') {
-            throw [System.ArgumentException]::new("The session must not be HTTP Digest: its Authorization header is valid for one URL only. Save the UI in the browser ('Save page as') and analyze the local folder instead.")
-        }
-        $session.Headers[$headerName] = $header.Groups['value'].Value.Trim()
-    }
-
-    # ';name=value' in the URL path
-    $url = [System.Text.RegularExpressions.Regex]::Match($value, '^curl\s+(?:--url\s+)?(?<q>[''"])(?<url>[^''"]+)\k<q>')
-    $curlUri = $null
-    if ($url.Success -AND [System.Uri]::TryCreate($url.Groups['url'].Value, [System.UriKind]::Absolute, [ref] $curlUri)) {
-        $segment = [System.Text.RegularExpressions.Regex]::Match($curlUri.AbsolutePath, $PATH_TOKEN_SEGMENT)
-        $suffix  = [System.Text.RegularExpressions.Regex]::Match($curlUri.AbsolutePath, $PATH_TOKEN_SUFFIX)
-        if ($segment.Success) {
-            $session.PathToken  = $segment.Groups['token'].Value
-            $session.PathPrefix = $segment.Groups['prefix'].Value
-        }
-        elseif ($suffix.Success) {
-            $session.PathToken = $suffix.Groups['token'].Value
-        }
-    }
-    return $session
-}
-
-function ConvertTo-UnwireCookieHeader {
-    param (
-        [System.String] $Text
-    )
-
-    <#
-        > Header line ("cookie: a=b")   -> everything after 'cookie:'
-        > DevTools table row            -> 'name<TAB>value<TAB>domain...' => 'name=value'
-        > Anything else                 -> trimmed as it is, 'a=b; c=d' stays a list
-        A cURL goes to ConvertFrom-UnwireCurlSession.
-    #>
-
-    $value = $Text.Trim()
-
-    # Header line ("cookie: a=b")
-    if ($value -MATCH '^(?i)cookie:\s*') {
-        return ($value -REPLACE '^(?i)cookie:\s*', '').Trim()
-    }
-
-    # DevTools table row
-    if ($value.Contains("`t")) {
-        $fields = $value.Split("`t")
-        return "$($fields[0].Trim())=$($fields[1].Trim())"
-    }
-
-    # Anything else
-    return $value
-}
-
-function ConvertTo-UnwireSessionValue {
-    param (
-        [System.String] $Text,
-        [System.String] $Name
-    )
-
-    <#
-        > Text with 'name=value'   -> the value of the first one: the URL query or the --data
-                                      body of a cURL (bash and cmd quoting), a cookie list
-        > Anything else            -> trimmed as it is, the bare value
-    #>
-
-    $value = $Text.Trim()
-    # cmd format escapes with '^': ^"sid=abc^" => "sid=abc"
-    if ($value.Contains('^"')) {
-        $value = $value -REPLACE '\^(.)', '$1'
-    }
-
-    # Text with 'name=value': '...?sid=abc&lang=de', "--data-raw 'sid=abc&page='" => 'abc'
-    $parameter = [System.Text.RegularExpressions.Regex]::Match($value, "(?<![\w-])$([System.Text.RegularExpressions.Regex]::Escape($Name))=(?<value>[^&;\s'`"]+)")
-    if ($parameter.Success) {
-        return $parameter.Groups['value'].Value
-    }
-
-    # Anything else
-    return $value
-}
-
-function Get-UnwireRequestUri {
-    param (
-        [System.Uri]    $Uri,
-        [System.String] $Query,
-        [System.String] $PathToken,
-        [System.String] $PathPrefix
-    )
-
-    <#
-        > PathToken with PathPrefix   -> inserted after the prefix, only below it:
-                                         '/ui/admin' => '/ui/;stok=abc/admin', '/static/a.js' stays
-        > PathToken without prefix    -> appended to the path: '/a.js' => '/a.js;jsessionid=abc'
-        > Query                       -> appended to the query: '?v=2' => '?v=2&sid=abc'
-    #>
-
-    $builder = [System.UriBuilder]::new($Uri)
-    if (-NOT [System.String]::IsNullOrEmpty($PathToken) -AND -NOT [System.String]::IsNullOrEmpty($PathPrefix)) {
-        if ($builder.Path.StartsWith($PathPrefix, [System.StringComparison]::Ordinal)) {
-            $builder.Path = "$PathPrefix;$PathToken/$($builder.Path.Substring($PathPrefix.Length))"
-        }
-    }
-    elseif (-NOT [System.String]::IsNullOrEmpty($PathToken)) {
-        $builder.Path = "$($builder.Path);$PathToken"
-    }
-    if (-NOT [System.String]::IsNullOrEmpty($Query)) {
-        $builder.Query = if ($builder.Query.Length -GT 1) { "$($builder.Query.Substring(1))&$Query" } else { $Query }
-    }
-    return $builder.Uri
-}
-
 function Get-UnwireCleanUri {
     param (
         [System.Uri]    $Uri,
@@ -561,24 +379,6 @@ function Get-UnwireCleanUri {
         $builder.Query = ($builder.Query.Substring(1).Split('&') | Where-Object { $_ -NE $Query }) -join '&'
     }
     return $builder.Uri
-}
-
-function Get-UnwireCookieShape {
-    param (
-        [System.String] $Text
-    )
-
-    # Only the shape: length and structure, never a single character of the value.
-    $traits = @(
-        "$($Text.Length) characters"
-        if ($Text.Contains('=')) { "contains '='" } else { "no '='" }
-        if ($Text.Contains(';')) { "contains ';'" }
-        if ($Text.Contains("`t")) { 'contains tabs' }
-        if ($Text -MATCH '\s') { 'contains spaces' }
-        if ($Text.TrimStart() -MATCH '^curl\s') { "starts with 'curl'" }
-        if ($Text.TrimStart() -MATCH '^[''"{\[]') { 'starts with a quote or bracket' }
-    )
-    return $traits -join ', '
 }
 
 function Invoke-UnwireAssetRequest {
@@ -840,117 +640,24 @@ if (-NOT $IsSessionMode -AND -NOT [System.String]::IsNullOrEmpty($SessionParamet
     throw [System.ArgumentException]::new("SessionParameter '$SessionParameter' must be used with PromptSession or UseSession.")
 }
 
-<#
-    The session value never goes into a message, a log line or the manifest.
-    Order of precedence:
-    - PromptSession  -> masked prompt
-    - UseSession     -> environment variable SessionVariable
-    - neither        -> no session
-    Then SessionParameter decides the form: the value of that URL parameter, else a cookie.
-#>
-$SessionText = $null
-# PromptSession -> masked prompt
-if ($PromptSession) {
-    # Hard-coded guide, so the steps reach the user even when the chat only announced them.
-    $guides = Get-Content -Path $LOGIN_GUIDE_FILE -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
-    if (-NOT $guides.ContainsKey($Language)) {
-        Write-Verbose "[Save-UnwireAsset] No login guide in '$Language' -> using '$DEFAULT_LANGUAGE'."
-    }
-    $LoginGuide = $guides[$(if ($guides.ContainsKey($Language)) { $Language } else { $DEFAULT_LANGUAGE })]
-
-    Write-Host ''
-    Write-Host $LoginGuide.title.Replace('{URL}', $StartUri.AbsoluteUri)
-    Write-Host ''
-    $LoginGuide.steps | ForEach-Object { Write-Host $_.Replace('{URL}', $StartUri.AbsoluteUri) }
-    Write-Host ''
-    Write-Host $LoginGuide.warning
-    Write-Host ''
-
-    # A multi-line paste ("Copy as cURL" ends its lines with '\', '^' or '`') must be read
-    # completely here: every line left unread would run as a command in the user's shell.
-    $pastedLines = [System.Collections.Generic.List[System.String]]::new()
-    do {
-        $prompt     = if ($pastedLines.Count -EQ 0) { $LoginGuide.prompt } else { '...' }
-        $secureLine = Read-Host -Prompt $prompt -AsSecureString
-        $pastedLine = [System.Net.NetworkCredential]::new('', $secureLine).Password
-        $pastedLines.Add(($pastedLine -REPLACE $PASTE_CONTINUATION, ''))
-    } while ($pastedLine -MATCH $PASTE_CONTINUATION -AND $pastedLines.Count -LT $MAX_PASTE_LINES)
-
-    $SessionText = $pastedLines -join ' '
+# The session value never goes into a message, a log line or the manifest: cookie, auth
+# headers, path token and URL parameter, whatever the paste carries (shared/session).
+$SessionConfig = @{
+    PromptSession    = $PromptSession
+    UseSession       = $UseSession
+    SessionVariable  = $SessionVariable
+    SessionParameter = $SessionParameter
+    Uri              = $StartUri
+    GuideFile        = $LOGIN_GUIDE_FILE
+    Language         = $Language
 }
-# UseSession -> environment variable SessionVariable
-elseif ($UseSession) {
-    $SessionText = [System.Environment]::GetEnvironmentVariable($SessionVariable)
-    if ([System.String]::IsNullOrWhiteSpace($SessionText)) {
-        throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'session_id=<VALUE>'.")
-    }
-}
+$Session = Read-UnwireSession @SessionConfig
 
-$SessionCookie  = $null
-$SessionHeaders = [ordered]@{}     # Authorization and auth headers of a cURL
-$UriSession     = @{ Query = $null; PathToken = $null; PathPrefix = $null }     # added on the wire in DOWNLOAD ASSETS
-$IsCurlPaste    = $IsSessionMode -AND $SessionText.TrimStart() -MATCH '^curl\s'
-
-<#
-    > cURL                -> cookie, auth headers and path token, whatever it carries
-    > SessionParameter    -> plus the value of that URL parameter, from the cURL or the
-                             pasted 'name=value' or bare value
-    > Anything else       -> a cookie in one of the other copy formats
-#>
-# cURL
-if ($IsCurlPaste) {
-    $curlSession             = ConvertFrom-UnwireCurlSession -Text $SessionText
-    $SessionCookie           = $curlSession.Cookie
-    $SessionHeaders          = $curlSession.Headers
-    $UriSession.PathToken    = $curlSession.PathToken
-    $UriSession.PathPrefix   = $curlSession.PathPrefix
-    if ($null -NE $UriSession.PathToken -AND $UriSession.PathToken -NOTMATCH '^[\w.-]+=[\w.~%+-]+$') {
-        throw [System.ArgumentException]::new("The session token in the cURL path must be 'name=value' with URL-safe characters. Got: $(Get-UnwireCookieShape -Text $UriSession.PathToken).")
-    }
-}
-# SessionParameter
-if ($IsSessionMode -AND -NOT [System.String]::IsNullOrEmpty($SessionParameter)) {
-    $sessionValue = ConvertTo-UnwireSessionValue -Text $SessionText -Name $SessionParameter
-    if ($sessionValue -NOTMATCH $SESSION_VALUE) {
-        throw [System.ArgumentException]::new("The session must be a 'Copy as cURL' with '$SessionParameter=' in its URL or data, '$SessionParameter=<VALUE>' or the bare value, URL-safe characters only. Got: $(Get-UnwireCookieShape -Text $sessionValue).")
-    }
-    $UriSession.Query = "$SessionParameter=$sessionValue"
-}
-# Anything else
-elseif ($IsSessionMode -AND -NOT $IsCurlPaste) {
-    $SessionCookie = ConvertTo-UnwireCookieHeader -Text $SessionText
-    # A bare value without its name is the most common copy mistake.
-    if ($SessionCookie -NOTMATCH '^[^=\s;]+=\S') {
-        throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'sid=<VALUE>' or 'session_id=<VALUE>', with the name from the browser's cookie list (a cURL without a cookie: the UI may keep its session in a URL parameter, see -SessionParameter). Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
-    }
-}
-
-# A cURL without any session is the wrong request (the reload before the POST, a script).
-if ($IsCurlPaste -AND $null -EQ $SessionCookie -AND $SessionHeaders.Count -EQ 0 -AND $null -EQ $UriSession.PathToken -AND $null -EQ $UriSession.Query) {
-    throw [System.ArgumentException]::new("The cURL must carry a session: a cookie, an Authorization or auth header (X-Auth-Token, ...) or a ';name=value' token in its path; a session in a form field needs -SessionParameter. Copy the first POST of type 'document' after the reload, else the reload itself. Got: $(Get-UnwireCookieShape -Text $SessionText).")
-}
-
-$IsUriSession = $null -NE $UriSession.Query -OR $null -NE $UriSession.PathToken
-# Names only, for the log and the manifest: 'cookie', 'header:Authorization', 'path-token', 'query:sid'
-$SessionKinds = @(
-    if ($null -NE $SessionCookie) { 'cookie' }
-    $SessionHeaders.Keys | ForEach-Object { "header:$_" }
-    if ($null -NE $UriSession.PathToken) { 'path-token' }
-    if ($null -NE $UriSession.Query) { "query:$SessionParameter" }
-)
-
+$UriSession     = if ($null -NE $Session) { $Session.UriSession } else { @{ Query = $null; PathToken = $null; PathPrefix = $null } }     # added on the wire in DOWNLOAD ASSETS
+$IsUriSession   = $null -NE $Session -AND $Session.IsUriSession
+$SessionKinds   = if ($null -NE $Session) { $Session.Kinds } else { @() }
 # Every session value, scrubbed from each text before it is written in DOWNLOAD ASSETS.
-# 'sid=abc123; lang=de' => 'abc123' ('de' is too short to be a secret)
-# 'Basic dXNlcjpwdw==' => 'Basic dXNlcjpwdw==', 'dXNlcjpwdw=='
-$SessionSecrets = @(
-    if ($null -NE $UriSession.Query) { $UriSession.Query.Substring($UriSession.Query.IndexOf('=') + 1) }
-    if ($null -NE $UriSession.PathToken) { $UriSession.PathToken.Substring($UriSession.PathToken.IndexOf('=') + 1) }
-    if ($null -NE $SessionCookie) { $SessionCookie.Split(';') | ForEach-Object { $_.Substring($_.IndexOf('=') + 1).Trim() } }
-    foreach ($headerValue in $SessionHeaders.Values) {
-        $headerValue
-        if ($headerValue.Contains(' ')) { $headerValue.Substring($headerValue.IndexOf(' ') + 1).Trim() }
-    }
-) | Where-Object { $_.Length -GE $MIN_SECRET_LENGTH }
+$SessionSecrets = if ($null -NE $Session) { $Session.Secrets } else { @() }
 
 # ---------------------------------------------------------------------------
 # Queue
@@ -967,15 +674,8 @@ $RequestConfig = @{
     SkipHttpErrorCheck   = $true
     SkipCertificateCheck = $SkipCertificateCheck.IsPresent
 }
-$sessionRequestHeaders = [ordered]@{}
-if ($null -NE $SessionCookie) {
-    $sessionRequestHeaders.Cookie = $SessionCookie
-}
-foreach ($headerName in $SessionHeaders.Keys) {
-    $sessionRequestHeaders[$headerName] = $SessionHeaders[$headerName]
-}
-if ($sessionRequestHeaders.Count -GT 0) {
-    $RequestConfig.Headers = @{} + $sessionRequestHeaders
+if ($null -NE $Session -AND $Session.RequestHeaders.Count -GT 0) {
+    $RequestConfig.Headers = @{} + $Session.RequestHeaders
 }
 if ($IsSessionMode) {
     Write-Verbose "[Save-UnwireAsset] Session mode: $($SessionKinds -join ', ') from $(if ($PromptSession) { 'the prompt' } else { "'$SessionVariable'" }), only the start page, *.htm pages and *.js, *.mjs, *.map."
@@ -1279,8 +979,9 @@ if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
 
 # Last step of the guide in PREPARE CRAWL: the user closes the window only after this line.
 if ($PromptSession) {
+    $guides = Get-Content -Path $LOGIN_GUIDE_FILE -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
     Write-Host ''
-    Write-Host $LoginGuide.done
+    Write-Host $guides[$(if ($guides.ContainsKey($Language)) { $Language } else { $DEFAULT_LANGUAGE })].done
 }
 
 # Scripts or maps that answer 401/403 even with a Referer: the code is behind a login.
