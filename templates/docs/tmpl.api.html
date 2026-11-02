@@ -212,6 +212,7 @@
             <button class="chip" type="button" data-filter="low" aria-pressed="false">Low</button>
             <button class="chip" type="button" data-filter="write" aria-pressed="false">Write only</button>
             <button class="chip" type="button" data-filter="open" aria-pressed="false">Open points</button>
+            <button class="chip" type="button" data-filter="derived" aria-pressed="false">Derived only</button>
             <span class="result-count" id="result-count"></span>
         </div>
     </div>
@@ -320,6 +321,8 @@
                         id:         `op-${slug(operation.operationId ?? `${method}-${path}`)}`,
                         confidence: operation['x-unwire-confidence'] ?? 'unknown',
                         isWrite:    operation['x-unwire-impact'] === 'write' || WRITE_METHODS.includes(method),
+                        // 'discover:swagger.v1.json' => published by the target, anything else derived from code
+                        isDocumented: String(operation['x-unwire-source'] ?? spec['x-unwire-source'] ?? '').startsWith('discover:'),
                         open,
                         parameters: [...(pathItem.parameters ?? []), ...(operation.parameters ?? [])].map(resolveDeep),
                     }
@@ -436,6 +439,7 @@
                 el('span', { className: 'summary-text' }, operation.summary ?? ''),
                 el('span', { className: 'badge', title: 'Confidence' }, el('span', { className: `dot ${confidence}` }), confidence),
                 isWrite ? el('span', { className: 'badge write', title: 'Changes data on the target' }, 'write') : null,
+                entry.isDocumented ? null : el('span', { className: 'badge', title: 'Derived from the frontend code, not documented by the target' }, 'derived'),
                 open.length > 0 ? el('span', { className: 'badge open' }, `${open.length} open`) : null,
             )
 
@@ -474,23 +478,34 @@
         //   Title, version, description, notice and stats.
         // ---------------------------------------------------------------------------
 
-        const countBy   = predicate => operations.filter(predicate).length
-        const rootOpen  = Array.isArray(spec['x-unwire-open']) ? spec['x-unwire-open'] : []
-        const openTotal = operations.reduce((sum, entry) => sum + entry.open.length, 0) + rootOpen.length
+        const countBy         = predicate => operations.filter(predicate).length
+        const rootOpen        = Array.isArray(spec['x-unwire-open']) ? spec['x-unwire-open'] : []
+        const openTotal       = operations.reduce((sum, entry) => sum + entry.open.length, 0) + rootOpen.length
+        const documentedCount = countBy(entry => entry.isDocumented)
+        const derivedCount    = operations.length - documentedCount
+
+        // Where the operations come from decides what the notice may claim.
+        // - only documented  => taken from the target's own documentation
+        // - only derived     => derived from the frontend code
+        // - both             => one sentence per source with its count
+        const notice = documentedCount > 0 && derivedCount > 0
+            ? `${documentedCount} operations come from documentation the target publishes, ${derivedCount} were derived statically from its frontend code. Nothing was executed against the target.`
+            : documentedCount > 0
+                ? 'Taken from documentation the target publishes. Nothing was executed against the target.'
+                : 'Derived statically by Unwire from the frontend code. Nothing was executed against the target, every operation is a well-founded guess.'
 
         document.getElementById('page-header').append(
             el('h1', {}, spec.info?.title ?? 'API'),
             el('div', { className: 'version' }, `Version ${spec.info?.version ?? '?'} · OpenAPI ${spec.openapi ?? '?'}`),
             spec.info?.description ? el('p', { className: 'description' }, spec.info.description) : null,
-            countBy(entry => entry.operation['x-unwire-verified'] !== true) > 0
-                ? el('div', { className: 'notice' }, 'Derived statically by Unwire from the frontend code. Nothing was executed against the target, every operation is a well-founded guess.')
-                : null,
+            countBy(entry => entry.operation['x-unwire-verified'] !== true) > 0 ? el('div', { className: 'notice' }, notice) : null,
             el('div', { className: 'stats' },
                 el('span', { className: 'stat' }, el('strong', {}, operations.length), ' operations'),
                 el('span', { className: 'stat' }, el('span', { className: 'dot high' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'high')), ' high'),
                 el('span', { className: 'stat' }, el('span', { className: 'dot medium' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'medium')), ' medium'),
                 el('span', { className: 'stat' }, el('span', { className: 'dot low' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'low')), ' low'),
                 el('span', { className: 'stat' }, el('strong', {}, countBy(entry => entry.isWrite)), ' write'),
+                documentedCount > 0 && derivedCount > 0 ? el('span', { className: 'stat' }, el('strong', {}, derivedCount), ' derived') : null,
                 openTotal > 0 ? el('a', { className: 'stat', href: '#open-points' }, el('strong', {}, openTotal), ' open points') : null,
             ),
         )
@@ -568,6 +583,7 @@
             > Confidence chips -> any pressed confidence matches (OR between them)
             > Write only       -> only write operations
             > Open points      -> only operations with open points
+            > Derived only     -> only operations not documented by the target
             Groups and nav headings without a visible operation are hidden too.
         */
 
@@ -587,6 +603,7 @@
                     && (confidences.length === 0 || confidences.includes(entry.confidence))
                     && (!pressed.has('write') || entry.isWrite)
                     && (!pressed.has('open') || entry.open.length > 0)
+                    && (!pressed.has('derived') || !entry.isDocumented)
                 entry.card.classList.toggle('hidden', !isVisible)
                 entry.navItem.classList.toggle('hidden', !isVisible)
                 if (isVisible) visibleCount++

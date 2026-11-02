@@ -60,6 +60,12 @@ somewhere in there.
      Add `-IncludeVendor` only when the API client lives in a vendor package.
    - `IsLiteralTarget: false`: follow the variable in the code, else it is an open point.
    - Candidates are hints, not endpoints: drop noise like `/api/` in a help text.
+   - Navigation is no API call: `window.location.assign(...)`, `href`, `window.open`, RSS
+     links stay out of the spec. Calls through a request helper (`GET(`, `POST(`, a minified
+     `X(` that returns a response) and form actions go in. Count what was left out in the
+     root `x-unwire-open`.
+   - The method comes from the helper's name (`POST(...)`) or the call's options. A generic
+     click handler (`link-action` with `data-url`) is an assumed POST: say so in `x-unwire-open`.
 3. **Analyze** every candidate with its surrounding code:
    - **Method and path**: merge variants into templates (`/api/devices/12` → `/api/devices/{id}`).
    - **Parameters**: query, path and body fields, from the code that builds the request.
@@ -99,4 +105,8 @@ somewhere in there.
 - Nothing is dropped silently: what cannot be resolved becomes an open point.
 - Write operations (`POST`, `PUT`, `PATCH`, `DELETE`, and GETs with verbs like `reboot`,
   `reset`, `delete`, `apply` in path or query) get `x-unwire-impact: "write"`.
-- A spec from `unwire-discover` wins on conflicts, the analysis only adds to it.
+- A spec from `unwire-discover` wins on conflicts, the analysis only adds to it. Never
+  overwrite an existing operation: check that path and method are free before adding one.
+- Tag derived operations so the reader sees they are internal (e.g. `Web · Issues`), and
+  set `x-unwire-source` to the file and line, never to `discover:...`: the page tells
+  documented and derived operations apart by it.

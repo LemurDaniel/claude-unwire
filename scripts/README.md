@@ -5,6 +5,7 @@ The skills call them with `pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/scripts/
 | File | Step | Content |
 | --- | --- | --- |
 | `Find-UnwireSpec.ps1` | Discover | Probes well-known documentation paths with GET (Swagger, OpenAPI, Gitea's `swagger.v1.json`, ...), saves found specs. |
+| `ConvertFrom-UnwireSwagger.ps1` | Discover | Converts a published Swagger 2.0 spec into OpenAPI 3 with the `x-unwire-*` extensions. |
 | `Save-UnwireAsset.ps1` | Analyze | Downloads the page, frames, same-origin scripts, webpack chunks and source maps, writes `unwire-assets.json`. `-PromptSession` (masked prompt) or `-UseSession` (env variable) for code behind a login: scripts only. |
 | `Get-UnwireJsCandidate.ps1` | Analyze | Pre-filters JS, HTML and source maps for endpoint candidates. |
 | `Test-UnwireSpec.ps1` | Analyze | Validates openapi.json: structure, path parameters, operationIds, `$ref` targets, `x-unwire-*`. |
