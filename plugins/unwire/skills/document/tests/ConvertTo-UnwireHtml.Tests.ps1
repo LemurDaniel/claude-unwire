@@ -20,7 +20,8 @@ param ()
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
 #   favicon                Embeds the plugin icon as base64 SVG favicon.
 #   no_network             The page never sends a request itself, it only builds commands.
-#   try_it                 Builds PowerShell and cURL commands, session values never stored.
+#   try_it                 Builds PowerShell and cURL commands, session values never stored,
+#                          cookie names editable.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
 #   invalid_json           Fails early on invalid JSON.
 #   missing_file           Fails early on a missing file.
@@ -146,6 +147,16 @@ Describe 'ConvertTo-UnwireHtml' {
         $script | Should -Match "\['x-unwire-value-prefix'\]"
         $script | Should -Match "return 'Bearer '"
         $script | Should -Match "return 'Basic '"
+        # The filled-in alternative wins over the first one of the spec.
+        $script | Should -Match 'every\(name => trySettings\.secrets\[name\]\)'
+        # The cookie name is editable, the spec may only guess it.
+        $script | Should -Match "className: 'cookie-name'"
+        $script | Should -Match 'trySettings\.cookieNames\[name\] = cookieName\.value'
+        $script | Should -Match '\$\{cookieNameOf\(name, scheme\)\}=\$\{value\}'
+        # Basic takes user and password, the page encodes them UTF-8 safe.
+        $script | Should -Match "className: 'basic-user'"
+        $script | Should -Match 'toBase64\(`\$\{user\.value\}:\$\{input\.value\}`\)'
+        $script | Should -Match 'btoa\(Array\.from\(new TextEncoder\(\)\.encode\(text\)'
         $script | Should -Not -Match 'localStorage|sessionStorage|indexedDB|document\.cookie'
     }
 

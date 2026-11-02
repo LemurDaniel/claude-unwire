@@ -329,6 +329,7 @@
         .try textarea { min-height: 7em; resize: vertical; }
         .try-settings .prefixed { display: flex; gap: 8px; align-items: center; }
         .try-settings .prefixed code { flex: none; white-space: pre; font-family: var(--mono); font-size: 0.85rem; }
+        .try-settings .prefixed .cookie-name, .try-settings .prefixed .basic-user { flex: 0 0 12rem; min-width: 0; font-family: var(--mono); }
         .try .warn { margin: 0 0 10px; padding: 8px 12px; border-radius: 6px; background: var(--warn-bg); border: 1px solid var(--warn-border); font-size: 0.88rem; }
         .try .warn label { display: block; margin-top: 6px; font-weight: 600; }
         .try .command { position: relative; margin: 8px 0 0; }
@@ -4342,8 +4343,11 @@
         // ===========================   BUILD COMMANDS   ============================
         // ===========================================================================
         //
-        //   trySettings          Base URL, certificate switch and session values, in memory only.
+        //   trySettings          Base URL, certificate switch, session values and cookie names,
+        //                        in memory only.
         //   valuePrefixOf        Fixed text before a session value: 'Bearer ', 'Basic ', 'SID '.
+        //   cookieNameOf         Name of a session cookie: edited in the settings, else the spec's.
+        //   toBase64             Base64 of a UTF-8 text, for user and password of Basic.
         //   quotePwsh            Single-quoted PowerShell string.
         //   quoteBash            Single-quoted bash string.
         //   bodySkeleton         Editable body text from a schema: 'name=' lines or JSON.
@@ -4360,6 +4364,8 @@
             baseUrl:         String(spec.servers?.[0]?.url ?? '').replace(/\/$/, ''),
             skipCertificate: false,
             secrets:         {},
+            // The spec may only guess a cookie name ('session'), the user corrects it here.
+            cookieNames:     {},
         }
         const SETTINGS_EVENT = 'unwire-try-settings'
 
@@ -4368,15 +4374,23 @@
             > x-unwire-value-prefix in the scheme    -> as it is ('SID ')
             > http basic                             -> 'Basic '
             > http bearer, oauth2, openIdConnect     -> 'Bearer '
-            > apiKey in cookie                       -> '<name>='
             > anything else                          -> none
+            The name of a cookie is no prefix: it is editable (cookieNameOf).
         */
         function valuePrefixOf(scheme) {
             if (null != scheme?.['x-unwire-value-prefix']) return String(scheme['x-unwire-value-prefix'])
             if (scheme?.type === 'http' && String(scheme.scheme).toLowerCase() === 'basic') return 'Basic '
             if (scheme?.type === 'http' || scheme?.type === 'oauth2' || scheme?.type === 'openIdConnect') return 'Bearer '
-            if (scheme?.type === 'apiKey' && scheme.in === 'cookie') return `${scheme.name}=`
             return ''
+        }
+
+        function cookieNameOf(schemeName, scheme) {
+            return trySettings.cookieNames[schemeName]?.trim() || String(scheme?.name ?? schemeName)
+        }
+
+        // UTF-8 safe, btoa alone fails on 'ä': 'admin:pass' => 'YWRtaW46cGFzcw=='
+        function toBase64(text) {
+            return btoa(Array.from(new TextEncoder().encode(text), byte => String.fromCharCode(byte)).join(''))
         }
 
         function quotePwsh(text) {
@@ -4406,11 +4420,13 @@
         }
 
         /*
-            The request of an operation, session from the first security alternative:
+            The request of an operation, session from the first security alternative whose
+            values are all filled in (else the first one, with placeholders):
             > apiKey in header          -> header
             > apiKey in query           -> the body field of that name when the form has one,
                                            else a query parameter
-            > apiKey in cookie          -> Cookie header
+            > apiKey in cookie          -> '<name>=<value>' in the Cookie header, several
+                                           joined with '; ', name from cookieNameOf
             > http, oauth2, oidc        -> Authorization header
             Every value gets its prefix (valuePrefixOf): 'Bearer ' + 'abc' => 'Bearer abc'.
             An empty session value stays a '<scheme>' placeholder in the command.
@@ -4425,8 +4441,12 @@
                 return separator < 0 ? [line.trim(), ''] : [line.slice(0, separator).trim(), line.slice(separator + 1)]
             }) : []
 
-            const security    = Array.isArray(entry.operation.security) ? entry.operation.security : (spec.security ?? [])
-            const requirement = security.find(alternative => Object.keys(alternative ?? {}).length > 0) ?? {}
+            // Session: the first alternative with every value filled in, else the first one.
+            const security     = Array.isArray(entry.operation.security) ? entry.operation.security : (spec.security ?? [])
+            const alternatives = security.filter(alternative => Object.keys(alternative ?? {}).length > 0)
+            const requirement  = alternatives.find(alternative => Object.keys(alternative).every(name => trySettings.secrets[name]))
+                ?? alternatives[0]
+                ?? {}
             for (const name of Object.keys(requirement)) {
                 const scheme = resolveDeep(spec.components?.securitySchemes?.[name]) ?? {}
                 const value  = `${valuePrefixOf(scheme)}${trySettings.secrets[name] || `<${name}>`}`
@@ -4434,7 +4454,7 @@
                 if (scheme.type === 'apiKey' && scheme.in === 'header') headers[scheme.name] = value
                 else if (scheme.type === 'apiKey' && scheme.in === 'query' && null != field) { if (field[1] === '') field[1] = value }
                 else if (scheme.type === 'apiKey' && scheme.in === 'query') query.push([scheme.name, value])
-                else if (scheme.type === 'apiKey' && scheme.in === 'cookie') headers.Cookie = value
+                else if (scheme.type === 'apiKey' && scheme.in === 'cookie') headers.Cookie = [headers.Cookie, `${cookieNameOf(name, scheme)}=${value}`].filter(Boolean).join('; ')
                 else headers.Authorization = value
             }
 
@@ -4560,14 +4580,40 @@
             const skip = el('input', { type: 'checkbox' })
             skip.addEventListener('change', () => { trySettings.skipCertificate = skip.checked; notify() })
 
-            // The value prefix of a scheme stands fixed in front of its field: 'Bearer ' [ abc ]
+            /*
+                One field per scheme:
+                > http basic         -> user and password, encoded here: 'Basic ' [ admin ] : [ *** ]
+                > apiKey in cookie   -> editable name, '=', value: [ session ] = [ abc ]
+                > with a prefix      -> the prefix fixed in front: 'Bearer ' [ abc ]
+                > anything else      -> the value alone
+            */
             const schemes = Object.entries(spec.components?.securitySchemes ?? {}).map(([name, scheme]) => {
                 const resolved = resolveDeep(scheme) ?? {}
                 const prefix   = valuePrefixOf(resolved)
                 const input    = el('input', { type: 'password', autocomplete: 'off', 'aria-label': name })
                 input.addEventListener('input', () => { trySettings.secrets[name] = input.value; notify() })
-                // Basic: the value is base64 of 'user:password', the page does not encode it.
-                const hint = [resolved.description, prefix === 'Basic ' ? 'Value: base64 of user:password.' : null].filter(Boolean).join(' ')
+                const hint = resolved.description ?? ''
+
+                if (prefix === 'Basic ') {
+                    const user = el('input', { type: 'text', className: 'basic-user', autocomplete: 'off', spellcheck: 'false', placeholder: 'user', 'aria-label': `${name} user` })
+                    input.placeholder = 'password'
+                    // The secret is base64 of 'user:password', empty while both fields are empty.
+                    const encode = () => {
+                        trySettings.secrets[name] = user.value !== '' || input.value !== '' ? toBase64(`${user.value}:${input.value}`) : ''
+                        notify()
+                    }
+                    user.addEventListener('input', encode)
+                    input.addEventListener('input', encode)
+                    const basicHint = [hint, 'Encoded to base64 in this tab, the command carries it.'].filter(Boolean).join(' ')
+                    return field(name, el('div', { className: 'prefixed' }, el('code', {}, prefix), user, el('code', {}, ':'), input), basicHint)
+                }
+
+                if (resolved.type === 'apiKey' && resolved.in === 'cookie') {
+                    const cookieName = el('input', { type: 'text', className: 'cookie-name', value: cookieNameOf(name, resolved), spellcheck: 'false', 'aria-label': `${name} cookie name` })
+                    cookieName.addEventListener('input', () => { trySettings.cookieNames[name] = cookieName.value; notify() })
+                    const cookieHint = [hint, 'Cookie name editable: take it from the cURL of your browser.'].filter(Boolean).join(' ')
+                    return field(name, el('div', { className: 'prefixed' }, cookieName, el('code', {}, `=${prefix}`), input), cookieHint)
+                }
                 return field(name, prefix !== '' ? el('div', { className: 'prefixed' }, el('code', {}, prefix), input) : input, hint || null)
             })
 
