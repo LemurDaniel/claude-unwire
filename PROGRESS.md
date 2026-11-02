@@ -12,87 +12,78 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Decisions, and why
 
-- **Read-only, no exceptions without asking** (2026-11-01). Only GET on documentation paths
-  and static assets, never an endpoint. It is what makes running against real devices safe.
-  No crawler, no probing, no capture proxy: too risky and too much work for the user.
+- **Read-only, one opt-in exception** (2026-11-01, exception 2026-11-02). Only GET on
+  documentation paths and static assets. It is what makes running against real devices safe.
+  No crawler, no probing, no capture proxy. The exception is the live GET below.
+- **Live GET, asked per run and target** (2026-11-02, user decision). `Test-UnwireGet`, last
+  step of `unwire:analyze`: only GET with `x-unwire-impact: read`, nothing on
+  `shared/data/request-denylist.json` (`pattern`, plus `liveGetPattern`: token, secret,
+  backup paths may create one), path parameters only with values the user gave, no
+  redirects. Without session first, then optionally with the login window. Keeps status,
+  media type and JSON keys and types (data keys like mails become `additionalProperties`),
+  never a body. Sets `x-unwire-verified`, fills only empty schemas, one `Live GET` open point
+  per operation. `-Plan` sends nothing; the skill asks with the counts before any request.
 - **Discover, then analyze, then document** (2026-11-01). A published spec beats any analysis
   (Gitea publishes `swagger.v1.json`); code analysis fills the gaps; open points record what
-  stays unknown instead of guessing.
-- **The documentation is the primary output, as one HTML page** (2026-11-02). Every operation
-  is unverified, a module would look finished when it is not. The page is self-contained
-  (no CDN), writes spec values only as text, and tells documented from derived operations.
+  stays unknown instead of guessing. Published and derived routes under different bases: the
+  common root is the server, the API paths get their prefix (`/api/v1/...`).
+- **The documentation is the primary output, as one HTML page** (2026-11-02). Self-contained
+  (no CDN), writes spec values only as text, tells documented from derived operations. "Try
+  it" only builds PowerShell and cURL commands, cookie names and Basic user/password editable.
 - **The spec is the contract** (2026-11-02). `openapi.json` with `x-unwire-source`,
-  `-confidence`, `-verified`, `-impact`, `-open`; the page (and later the code) is a view of
-  it, and `Test-UnwireSpec` checks it before.
-- **Step 4 is `unwire:code`, not implemented** (2026-11-02). The PowerShell module generator
-  never ran: renamed, emptied to a stub, templates removed (still in the git history before
-  this commit). The plugin promises only what works.
-- **Session mode loads code only** (2026-11-02). Cookie from a masked prompt in the user's
-  terminal (or an env variable for automation), then only the start page, `*.htm`/`*.html`
-  pages and frames (since 2026-11-02, user decision: frame-based router UIs keep their API
-  calls there), `*.js`, `*.mjs`, `*.map`. Pages are read, never saved, only their inline
-  scripts with string values redacted. Bearer tokens and MCP servers were
-  declined: an MCP server documents itself, `tools/list` would break the read-only rule.
+  `-confidence`, `-verified`, `-impact`, `-open`; `Test-UnwireSpec` checks it (since
+  2026-11-02 also that `servers` is a list).
+- **Step 4 is `unwire:code`, not implemented** (2026-11-02). The plugin promises only what works.
+- **Sessions only from a paste, in a window** (2026-11-02). `shared/session/`: a pasted cURL
+  gives cookie, `Authorization` and auth headers, path token or URL parameter; the masked
+  prompt asks again (up to 3 pastes) with the reason and a Fetch/XHR or POST hint, and the
+  live GET asks once more when a paste carries only a cookie (Juice Shop sends its login as
+  a Bearer header). Session values never reach a file, a log or the chat. Asset session mode
+  loads code only (start page, `*.htm`, `*.js`, `*.mjs`, `*.map`), pages read, never saved.
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
-  Scripts do the mechanics (download, pre-filter, convert, validate, render); Claude reads
-  the candidates, names operations, writes the spec.
-- **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`
-  runs before the first script (Bash tool, PS >= 7), then AskUserQuestion: install yourself
-  (recommended), Claude runs winget/brew (not on Linux, sudo), or cancel. No 5.1 fallback.
-- **The login question is asked, never decided** (2026-11-02). A router served its login
-  page with 200 and all scripts with the Referer, the skill had no trigger and analyzed
-  only the login page. `Save-UnwireAsset` reports `LoginForm` (password field on the start
-  page), the skill then asks with AskUserQuestion: with login, without, cancel.
-- **Referer like a browser, 401/403 means login** (2026-11-02). A TP-Link router answered
-  403 to its scripts without a Referer; the agent guessed and fetched them by hand.
-  `Save-UnwireAsset` now sends the loading page as Referer and reports `AccessDenied`, which
-  leads to the login question; own requests past the scripts are forbidden.
-- **Marketplace layout like Infrastructure-as-Skills** (2026-11-02). `plugins/unwire/skills/<skill>/`
-  with its own scripts, data or templates and tests; `shared/` for what several skills use.
+- **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`.
+- **The login question is asked, never decided; Referer like a browser** (2026-11-02).
+  `LoginForm` and `AccessDenied` lead to the question, own requests past the scripts are
+  forbidden.
 - **One plugin for every agent with skills** (2026-11-02). Claude Code, Copilot CLI, Codex and
-  Gemini CLI install the same folder: `core/` became `skills/` (the convention all of them
-  read), `/unwire` became the skill `skills/unwire/`, three manifests and two marketplaces.
-  Without AskUserQuestion the confirmation is a question in the chat (user approved).
+  Gemini CLI install the same folder; three manifests, two marketplaces.
 
 ## State
 
-- v0.3.0 on `master`. Skills: unwire (entry), discover, analyze, document, code (stub). 7 scripts, 136 Pester
-  tests (plus 5 in `docs/screenshots`). The hand-over ends with a
-  `file:///` link to `API.html` (`FileUri` from `ConvertTo-UnwireHtml`), then asks to open
-  it in the default browser (`Invoke-Item`).
-- `API.html`: light default with a dark toggle, summary cards, group tiles, views Operations,
-  Open points and Authentication. `examples/juiceshop/` is the reference page, re-rendered
-  with every template change (a test checks), README screenshot from `docs/screenshots/`.
-- Live runs: Grafana (webpack, base tag, 243 candidates), Gitea without and with login
-  (full run to `API.html`: 471 documented + 47 derived operations, 0 spec findings).
-- `examples/testbed`: Juice Shop, Grafana, Gitea, Uptime Kuma on 127.0.0.1, not started yet.
+- v0.3.0 on `master` (manifests not bumped for the live GET yet). Skills: unwire (entry),
+  discover, analyze, document, code (stub). 8 scripts plus `shared/session/` (9 files),
+  210 Pester tests (plus 5 in `docs/screenshots`), ScriptAnalyzer clean.
+- `Save-UnwireAsset` reads webpack runtimes with one `if` per chunk and the automatic
+  publicPath (Gitea: 48 assets instead of 4); `-Script` loads runtime-built module paths.
+- Live runs on 2026-11-02:
+  - Gitea (`/unwire/gitea/`, not committed): 406 published + 35 derived web routes, live GET
+    46 of 226 GETs without values, 17 verified (API v1 needs a token, a browser cookie is
+    not enough: 27 × 401 with and without session).
+  - Juice Shop (`examples/juiceshop/`, committed): live GET 33 of 46, 30 of 89 operations
+    verified, 8 more answered 200 with the Bearer header; open: `order-history/orders` 403
+    (admin role), `country-mapping` and `security-question` 500.
+- `examples/testbed` runs on 127.0.0.1 (Juice Shop :3000, Gitea :3003).
 
 ## Open
 
-- **Auth per operation: one run, not yet from scratch** (2026-11-02). Juice Shop re-run:
-  main.js byte-identical, so the 88 derived operations were taken over from the previous run
-  and only `security` + `x-unwire-auth` were derived fresh (route guards, isLoggedIn(), bid
-  from the login): 34 public, 47 bearer, 7 unclear with an open point, 0 spec findings.
-  A full run on a new target (Grafana, Gitea) still has to show the rule works end to end.
-- **`unwire:code` is a stub.** Open: which language(s), what shape; the old PowerShell
-  module design (SKILL.md, templates) is in the history of `core/module/`.
-- **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
-  like"). The Grafana example in `examples/` was dropped on 2026-11-02 at the user's
-  request (git history has it). If wanted: a small reference spec in
-  `skills/analyze/references/` and the skills pointing at it.
-- **D · Eval loop with the testbed** (tips 13 to 16). A checkable goal per target (e.g. Juice
-  Shop: these endpoints must be found), a check separate from the run, a cap on runs and cost,
-  results remembered between runs, like `evals/` in Infrastructure-as-Skills.
-- Install through the marketplace (`/plugin marketplace add LemurDaniel/claude-unwire`) and
-  `claude plugin validate` were not run, the CLI is not on PATH in the desktop app shell.
-- **Copilot CLI, Codex, Gemini CLI never ran Unwire** (2026-11-02). Manifests follow their docs
-  only. Unconfirmed: whether they replace `${CLAUDE_PLUGIN_ROOT}` in SKILL.md (the skills fall
-  back to two folders above the SKILL.md), whether the Codex CLI reads `.claude-plugin/`.
-- The analysis of candidates into operations was done by hand with a scratch script in the
-  Gitea run; whether `unwire:analyze` alone gets there is untested.
+- **Version bump** for the live GET: all three manifests and the README notice (v0.3.0).
+- **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
+  50 × 404, then MaxGuessMisses. Harmless, but noise.
+- **Path values for the live GET** come only from the user. Gitea: `owner`, `repo`, `org`,
+  `username` would raise 46 to 129 planned GETs.
+- **`unwire:code` is a stub.** Open: language(s) and shape.
+- **C · Reference output inside the plugin** (Claude Code tip 3): a small reference spec in
+  `skills/analyze/references/`, if wanted.
+- **D · Eval loop with the testbed** (tips 13 to 16): a checkable goal per target, a check
+  separate from the run, a cap on runs and cost, results remembered between runs.
+- Marketplace install and `claude plugin validate` not run; Copilot CLI, Codex, Gemini CLI
+  never ran Unwire (manifests follow their docs only).
+- The Gitea analysis of candidates into operations used a scratch merge script; whether
+  `unwire:analyze` alone gets there is untested.
 - Socket.IO apps (Uptime Kuma) are a known limit, not handled.
 
 ## Next
 
-Start a fresh session: bring up the testbed, create the Gitea admin, run the full chain
-against the local Gitea up to `API.html` and compare it with the published `swagger.v1.json`.
+Bump the version for the live GET (three manifests, README), then run the live GET against
+Gitea with `-Value 'owner=…,repo=…'` of a test repository and an API token pasted as cURL
+(`Authorization: token …`), to see the 401s of the published API turn into 200.
