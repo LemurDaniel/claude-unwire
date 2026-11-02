@@ -1,0 +1,73 @@
+{
+  "target": "http://127.0.0.1:3010",
+  "testedAt": "2026-11-02T14:37:38.0803940+01:00",
+  "sessionKinds": null,
+  "requests": 5,
+  "operations": [
+    {
+      "operationId": "getStatus",
+      "path": "/api/status",
+      "uri": "http://127.0.0.1:3010/api/status",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": null
+    },
+    {
+      "operationId": "getWifi",
+      "path": "/api/wifi",
+      "uri": "http://127.0.0.1:3010/api/wifi",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": null
+    },
+    {
+      "operationId": "listDevices",
+      "path": "/api/devices",
+      "uri": "http://127.0.0.1:3010/api/devices",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": null
+    },
+    {
+      "operationId": "getLogs",
+      "path": "/api/logs",
+      "uri": "http://127.0.0.1:3010/api/logs",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": null
+    },
+    {
+      "operationId": "getConfig",
+      "path": "/cgi-bin/config.cgi",
+      "uri": "http://127.0.0.1:3010/cgi-bin/config.cgi",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": null
+    }
+  ]
+}

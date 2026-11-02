@@ -1,0 +1,32 @@
+{
+  "startUri": "http://127.0.0.1:3015/ui/",
+  "session": false,
+  "sessionParameter": "",
+  "sessionKinds": null,
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3015/ui/",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "ui/index.html",
+      "FoundIn": null
+    },
+    {
+      "Uri": "http://127.0.0.1:3015/js/login.path.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/login.path.js",
+      "FoundIn": "http://127.0.0.1:3015/ui/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3015/js/login.path.js.map",
+      "Kind": "map",
+      "Status": "failed",
+      "Reason": "HTTP 401",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3015/js/login.path.js"
+    }
+  ]
+}

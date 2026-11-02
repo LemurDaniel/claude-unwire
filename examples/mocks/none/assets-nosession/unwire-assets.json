@@ -1,0 +1,64 @@
+{
+  "startUri": "http://127.0.0.1:3010/",
+  "session": false,
+  "sessionParameter": "",
+  "sessionKinds": null,
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3010/",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "index.html",
+      "FoundIn": null
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/menu.htm",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "menu.htm",
+      "FoundIn": "http://127.0.0.1:3010/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/main.htm",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "main.htm",
+      "FoundIn": "http://127.0.0.1:3010/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/js/app.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/app.js",
+      "FoundIn": "http://127.0.0.1:3010/menu.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/js/auth.none.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/auth.none.js",
+      "FoundIn": "http://127.0.0.1:3010/main.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/js/app.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3010/js/app.js"
+    },
+    {
+      "Uri": "http://127.0.0.1:3010/js/auth.none.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3010/js/auth.none.js"
+    }
+  ]
+}

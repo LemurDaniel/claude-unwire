@@ -1,0 +1,559 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "0.1.0",
+    "description": "Derived from the static code of the testbed mock router (sid). Draft, AI-derived.",
+    "title": "MockSid"
+  },
+  "servers": [
+    {
+      "description": "Mock router root",
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Web · Status"
+        ],
+        "summary": "Get router status",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "uptime": {
+                      "type": "integer"
+                    },
+                    "wan": {
+                      "type": "object",
+                      "properties": {
+                        "isConnected": {
+                          "type": "boolean"
+                        },
+                        "ip": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/status.htm.inline.js:1",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Response: the UI reads version and wan.ip.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
+      }
+    },
+    "/api/wifi": {
+      "get": {
+        "tags": [
+          "Web · Wi-Fi"
+        ],
+        "summary": "Get Wi-Fi settings",
+        "operationId": "getWifi",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isEnabled": {
+                      "type": "boolean"
+                    },
+                    "ssid": {
+                      "type": "string"
+                    },
+                    "channel": {
+                      "type": "integer"
+                    },
+                    "security": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/wifi.htm.inline.js:1",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · Wi-Fi"
+        ],
+        "summary": "Set Wi-Fi settings",
+        "operationId": "setWifi",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/wifi.htm.inline.js:5",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ssid": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "integer"
+                  },
+                  "isEnabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/devices": {
+      "get": {
+        "tags": [
+          "Web · Devices"
+        ],
+        "summary": "List connected devices",
+        "operationId": "listDevices",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "devices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "mac": {
+                            "type": "string"
+                          },
+                          "ip": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/views/devices.js:4",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Response: the UI reads devices[].name and devices[].ip.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
+      }
+    },
+    "/api/devices/{mac}/block": {
+      "post": {
+        "tags": [
+          "Web · Devices"
+        ],
+        "summary": "Block a device",
+        "operationId": "blockDevice",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/views/devices.js:14",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isBlocked": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "description": "MAC address, URL-encoded by the UI.",
+            "name": "mac",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "tags": [
+          "Web · System"
+        ],
+        "summary": "Get logs",
+        "operationId": "getLogs",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "level": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "time": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:29",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": false,
+            "description": "Log level, the UI sends warn.",
+            "name": "level",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/reboot": {
+      "post": {
+        "tags": [
+          "Web · System"
+        ],
+        "summary": "Restart the router",
+        "operationId": "reboot",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/system.htm.inline.js:6",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Found in an onclick attribute of pages/system.htm, kept in the inline code of the signed-in page."
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/cgi-bin/config.cgi": {
+      "get": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Get a config section",
+        "operationId": "getConfig",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "values": {
+                      "type": "object",
+                      "properties": {
+                        "netmask": {
+                          "type": "string"
+                        },
+                        "dhcp": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "section": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:34",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": false,
+            "description": "Config section, the UI sends lan.",
+            "name": "section",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Set a config section",
+        "operationId": "setConfig",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:41",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query).",
+        "x-unwire-open": [
+          "Body: form fields from the values object of the caller, no caller found, keys unknown."
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "required": false,
+            "description": "Config section.",
+            "name": "section",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Log in",
+        "operationId": "login",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads it with r.json().",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets-nosession/js/login.sid.js:16",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Login page, called logged out.",
+        "x-unwire-open": [
+          "Returns the session (sidAuth)."
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sidAuth": {
+        "in": "query",
+        "type": "apiKey",
+        "name": "sid"
+      }
+    }
+  },
+  "x-unwire-open": [
+    "Pages: loadPage builds 'pages/' + name + '.htm' (assets/js/app.js:45); names from menuPages in menu.htm, loaded with -Page.",
+    "Views: loadView imports './views/' + name + '.js' (assets/js/app.js:52); devices loaded with -Script.",
+    "Auth: URL parameter sid: js/auth.sid.js adds it to every API URL (api.url merges auth.query)."
+  ]
+}

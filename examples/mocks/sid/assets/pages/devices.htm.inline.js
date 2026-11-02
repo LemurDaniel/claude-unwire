@@ -1,0 +1,1 @@
+loadView('devices').then(function (view) { view.render(document.getElementById('devices')); });

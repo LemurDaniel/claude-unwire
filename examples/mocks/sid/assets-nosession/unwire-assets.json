@@ -1,0 +1,32 @@
+{
+  "startUri": "http://127.0.0.1:3014/",
+  "session": false,
+  "sessionParameter": "",
+  "sessionKinds": null,
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3014/",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "index.html",
+      "FoundIn": null
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/login.sid.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/login.sid.js",
+      "FoundIn": "http://127.0.0.1:3014/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/login.sid.js.map",
+      "Kind": "map",
+      "Status": "failed",
+      "Reason": "HTTP 401",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/js/login.sid.js"
+    }
+  ]
+}

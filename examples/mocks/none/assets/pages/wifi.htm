@@ -1,0 +1,17 @@
+<h1>Wi-Fi</h1>
+<form id="wifi" class="card">
+  <label>Network name</label>
+  <input name="ssid">
+  <label>Channel</label>
+  <input name="channel" type="number">
+  <label><input name="isEnabled" type="checkbox"> Enabled</label>
+  <button type="button">Save</button>
+</form>
+<script>
+api.get('/api/wifi').then(function (wifi) {
+  document.querySelector('#wifi [name=ssid]').value = wifi.ssid;
+});
+function setWifi(ssid, channel, isEnabled) {
+  return api.post('/api/wifi', { ssid: ssid, channel: channel, isEnabled: isEnabled });
+}
+</script>

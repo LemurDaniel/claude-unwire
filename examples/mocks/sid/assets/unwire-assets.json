@@ -1,0 +1,152 @@
+{
+  "startUri": "http://127.0.0.1:3014/",
+  "session": true,
+  "sessionParameter": "sid",
+  "sessionKinds": "query:sid",
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3014/",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": null
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/status.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "-Page"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/status.htm (inline scripts)",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": "session mode: inline script code, string values redacted",
+      "File": "pages/status.htm.inline.js",
+      "FoundIn": "http://127.0.0.1:3014/pages/status.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/wifi.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "-Page"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/wifi.htm (inline scripts)",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": "session mode: inline script code, string values redacted",
+      "File": "pages/wifi.htm.inline.js",
+      "FoundIn": "http://127.0.0.1:3014/pages/wifi.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/devices.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "-Page"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/devices.htm (inline scripts)",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": "session mode: inline script code, string values redacted",
+      "File": "pages/devices.htm.inline.js",
+      "FoundIn": "http://127.0.0.1:3014/pages/devices.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/system.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "-Page"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/pages/system.htm (inline scripts)",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": "session mode: inline script code, string values redacted",
+      "File": "pages/system.htm.inline.js",
+      "FoundIn": "http://127.0.0.1:3014/pages/system.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/views/devices.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/views/devices.js",
+      "FoundIn": "-Script"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/menu.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/menu.htm (inline scripts)",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": "session mode: inline script code, string values redacted",
+      "File": "menu.htm.inline.js",
+      "FoundIn": "http://127.0.0.1:3014/menu.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/main.htm",
+      "Kind": "html",
+      "Status": "read",
+      "Reason": "session mode: page read for scripts and frames, not saved",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/views/devices.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/js/views/devices.js"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/app.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/app.js",
+      "FoundIn": "http://127.0.0.1:3014/menu.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/auth.sid.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/auth.sid.js",
+      "FoundIn": "http://127.0.0.1:3014/main.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/app.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/js/app.js"
+    },
+    {
+      "Uri": "http://127.0.0.1:3014/js/auth.sid.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3014/js/auth.sid.js"
+    }
+  ]
+}

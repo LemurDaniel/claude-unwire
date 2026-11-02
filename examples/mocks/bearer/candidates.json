@@ -1,0 +1,154 @@
+{
+  "sources": [
+    "js/views/devices.js",
+    "js/app.js",
+    "js/auth.bearer.js",
+    "pages/devices.htm.inline.js",
+    "pages/status.htm.inline.js",
+    "pages/system.htm.inline.js",
+    "pages/wifi.htm.inline.js",
+    "menu.htm.inline.js"
+  ],
+  "candidates": [
+    {
+      "File": "js/views/devices.js",
+      "Line": 4,
+      "Column": 13,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "/api/devices",
+      "IsLiteralTarget": true,
+      "Snippet": "// Devices view: lists the connected devices and blocks one. export function render(table) { return api.get('/api/devices').then(function (result) { result.devices.forEach(function (device) { var row = table.insertRow(); row.i"
+    },
+    {
+      "File": "js/views/devices.js",
+      "Line": 14,
+      "Column": 13,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "/api/devices/",
+      "IsLiteralTarget": true,
+      "Snippet": "e.name; row.insertCell().textContent = device.ip; }); }); } export function blockDevice(mac) { return api.post('/api/devices/' + encodeURIComponent(mac) + '/block', { isBlocked: true }); }"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 13,
+      "Column": 12,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "api.url",
+      "IsLiteralTarget": false,
+      "Snippet": "+ path + (search ? '?' + search : ''); }, get: function (path, params) { var auth = window.mockAuth; return fetch(api.url(path, params), { headers: auth.headers() }).then(api.read); }, post: function (path, body) { var auth = window."
+    },
+    {
+      "File": "js/app.js",
+      "Line": 18,
+      "Column": 12,
+      "Kind": "fetch",
+      "Method": "POST",
+      "Target": "api.url",
+      "IsLiteralTarget": false,
+      "Snippet": "= window.mockAuth; var headers = Object.assign({ 'Content-Type': 'application/json' }, auth.headers()); return fetch(api.url(path), { method: 'POST', headers: headers, body: JSON.stringify(body) }) .then(api.read); }, // A 401 ends th"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 29,
+      "Column": 13,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "/api/logs",
+      "IsLiteralTarget": true,
+      "Snippet": "nUnauthorized) { window.mockAuth.onUnauthorized(); } return r.json(); } }; function getLogs(level) { return api.get('/api/logs', { level: level }); } function getConfig(section) { var xhr = new XMLHttpRequest(); xhr.open('GET', api.url('/cgi-"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 34,
+      "Column": 6,
+      "Kind": "xhr",
+      "Method": "GET",
+      "Target": "api.url",
+      "IsLiteralTarget": false,
+      "Snippet": "return api.get('/api/logs', { level: level }); } function getConfig(section) { var xhr = new XMLHttpRequest(); xhr.open('GET', api.url('/cgi-bin/config.cgi', { section: section })); xhr.send(); return xhr; } function setConfig(section, values) { v"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 34,
+      "Column": 27,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/cgi-bin/config.cgi",
+      "IsLiteralTarget": true,
+      "Snippet": "/logs', { level: level }); } function getConfig(section) { var xhr = new XMLHttpRequest(); xhr.open('GET', api.url('/cgi-bin/config.cgi', { section: section })); xhr.send(); return xhr; } function setConfig(section, values) { var xhr = new XMLHttpRe"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 41,
+      "Column": 6,
+      "Kind": "xhr",
+      "Method": "POST",
+      "Target": "api.url",
+      "IsLiteralTarget": false,
+      "Snippet": "ection })); xhr.send(); return xhr; } function setConfig(section, values) { var xhr = new XMLHttpRequest(); xhr.open('POST', api.url('/cgi-bin/config.cgi', { section: section })); xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencode"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 41,
+      "Column": 28,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/cgi-bin/config.cgi",
+      "IsLiteralTarget": true,
+      "Snippet": "(); return xhr; } function setConfig(section, values) { var xhr = new XMLHttpRequest(); xhr.open('POST', api.url('/cgi-bin/config.cgi', { section: section })); xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.send(new UR"
+    },
+    {
+      "File": "js/app.js",
+      "Line": 50,
+      "Column": 6,
+      "Kind": "xhr",
+      "Method": "GET",
+      "Target": "pages/",
+      "IsLiteralTarget": true,
+      "Snippet": "d by XHR into the main frame: \"pages/\" + name + \".htm\" function loadPage(name) { var xhr = new XMLHttpRequest(); xhr.open('GET', 'pages/' + name + '.htm' + location.search); xhr.onload = function () { var mainDocument = top.frames['main'].document;"
+    },
+    {
+      "File": "pages/status.htm.inline.js",
+      "Line": 1,
+      "Column": 4,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "/api/status",
+      "IsLiteralTarget": true,
+      "Snippet": "api.get('/api/status').then(function (status) { document.getElementById('version').textContent = status.version; document.getElementById("
+    },
+    {
+      "File": "pages/system.htm.inline.js",
+      "Line": 6,
+      "Column": 4,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "/api/reboot",
+      "IsLiteralTarget": true,
+      "Snippet": "gs) { document.getElementById('logs').textContent = JSON.stringify(logs.entries, null, 2); }); getConfig('lan'); ; api.post('/api/reboot', {})"
+    },
+    {
+      "File": "pages/wifi.htm.inline.js",
+      "Line": 1,
+      "Column": 4,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "/api/wifi",
+      "IsLiteralTarget": true,
+      "Snippet": "api.get('/api/wifi').then(function (wifi) { document.querySelector('#wifi [name=ssid]').value = wifi.ssid; }); function setWifi(ssid, cha"
+    },
+    {
+      "File": "pages/wifi.htm.inline.js",
+      "Line": 5,
+      "Column": 13,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "/api/wifi",
+      "IsLiteralTarget": true,
+      "Snippet": "ment.querySelector('#wifi [name=ssid]').value = wifi.ssid; }); function setWifi(ssid, channel, isEnabled) { return api.post('/api/wifi', { ssid: ssid, channel: channel, isEnabled: isEnabled }); }"
+    }
+  ]
+}

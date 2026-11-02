@@ -62,15 +62,24 @@ changing anything on the target. Client code for picked operations is planned (`
   - Juice Shop (`examples/juiceshop/`, committed): live GET 33 of 46, 30 of 89 operations
     verified, 8 more answered 200 with the Bearer header; open: `order-history/orders` 403
     (admin role), `country-mapping` and `security-question` 500.
-- `examples/testbed` runs on 127.0.0.1 (Juice Shop :3000, Gitea :3003).
+  - Mock router (`/unwire/mock-*/`, not committed): Basic, cookie, `sid`, path token and
+    Bearer sessions all load the code, Digest is rejected, 0 session values in any file,
+    inline `var`/object values redacted; live GET 5 of 5 verified per variant (401 without,
+    200 with session). Pages by `-Page`, the view by `-Script` load in every variant.
+  - Fixed from that run (2026-11-02): a 401 with `WWW-Authenticate` on the start page is
+    reported as `HttpAuth` (Basic leads to the login question, Digest to the local folder);
+    session mode keeps the code of `onclick` and `javascript:` links; the method of a
+    generic call comes only from its own arguments; guessed paths no longer count as
+    `AccessDenied`.
+- `examples/testbed` (2026-11-02): Juice Shop :3000, mock router :3010-3016
+  (`mock-router/`, one port per login method). Gitea, Uptime Kuma and Grafana removed (user decision).
 
 ## Open
 
 - **Version bump** for the live GET: all three manifests and the README notice (v0.3.0).
 - **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
   50 × 404, then MaxGuessMisses. Harmless, but noise.
-- **Path values for the live GET** come only from the user. Gitea: `owner`, `repo`, `org`,
-  `username` would raise 46 to 129 planned GETs.
+- **Path values for the live GET** come only from the user (Gitea: 46 to 129 planned GETs).
 - **`unwire:code` is a stub.** Open: language(s) and shape.
 - **C · Reference output inside the plugin** (Claude Code tip 3): a small reference spec in
   `skills/analyze/references/`, if wanted.
@@ -78,12 +87,10 @@ changing anything on the target. Client code for picked operations is planned (`
   separate from the run, a cap on runs and cost, results remembered between runs.
 - Marketplace install and `claude plugin validate` not run; Copilot CLI, Codex, Gemini CLI
   never ran Unwire (manifests follow their docs only).
-- The Gitea analysis of candidates into operations used a scratch merge script; whether
-  `unwire:analyze` alone gets there is untested.
-- Socket.IO apps (Uptime Kuma) are a known limit, not handled.
+- Socket.IO apps are a known limit, not handled (Uptime Kuma, no longer in the testbed).
 
 ## Next
 
-Bump the version for the live GET (three manifests, README), then run the live GET against
-Gitea with `-Value 'owner=…,repo=…'` of a test repository and an API token pasted as cURL
-(`Authorization: token …`), to see the 401s of the published API turn into 200.
+Bump the version (live GET, mock router fixes): all three manifests and the README notice.
+Then run the whole `/unwire` chain in the chat against one mock variant (e.g. :3014) to see
+whether `unwire:analyze` alone, without a scratch script, gets to the same spec.

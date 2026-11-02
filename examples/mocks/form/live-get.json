@@ -1,0 +1,93 @@
+{
+  "target": "http://127.0.0.1:3013",
+  "testedAt": "2026-11-02T14:37:41.2044649+01:00",
+  "sessionKinds": "cookie",
+  "requests": 10,
+  "operations": [
+    {
+      "operationId": "getStatus",
+      "path": "/api/status",
+      "uri": "http://127.0.0.1:3013/api/status",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getWifi",
+      "path": "/api/wifi",
+      "uri": "http://127.0.0.1:3013/api/wifi",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "listDevices",
+      "path": "/api/devices",
+      "uri": "http://127.0.0.1:3013/api/devices",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getLogs",
+      "path": "/api/logs",
+      "uri": "http://127.0.0.1:3013/api/logs",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getConfig",
+      "path": "/cgi-bin/config.cgi",
+      "uri": "http://127.0.0.1:3013/cgi-bin/config.cgi",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "startUri": "http://127.0.0.1:3016/",
+  "session": false,
+  "sessionParameter": "",
+  "sessionKinds": null,
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3016/",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "index.html",
+      "FoundIn": null
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/login.bearer.htm",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "login.bearer.htm",
+      "FoundIn": "-Page"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/menu.htm",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "menu.htm",
+      "FoundIn": "http://127.0.0.1:3016/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/main.htm",
+      "Kind": "html",
+      "Status": "saved",
+      "Reason": null,
+      "File": "main.htm",
+      "FoundIn": "http://127.0.0.1:3016/"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/login.bearer.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/login.bearer.js",
+      "FoundIn": "http://127.0.0.1:3016/login.bearer.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/app.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/app.js",
+      "FoundIn": "http://127.0.0.1:3016/menu.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/auth.bearer.js",
+      "Kind": "js",
+      "Status": "saved",
+      "Reason": null,
+      "File": "js/auth.bearer.js",
+      "FoundIn": "http://127.0.0.1:3016/main.htm"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/login.bearer.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3016/js/login.bearer.js"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/app.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3016/js/app.js"
+    },
+    {
+      "Uri": "http://127.0.0.1:3016/js/auth.bearer.js.map",
+      "Kind": "map",
+      "Status": "not-found",
+      "Reason": "HTTP 404 on a guessed path",
+      "File": null,
+      "FoundIn": "http://127.0.0.1:3016/js/auth.bearer.js"
+    }
+  ]
+}

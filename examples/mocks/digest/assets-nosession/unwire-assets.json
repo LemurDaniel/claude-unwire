@@ -1,0 +1,16 @@
+{
+  "startUri": "http://127.0.0.1:3012/",
+  "session": false,
+  "sessionParameter": "",
+  "sessionKinds": null,
+  "assets": [
+    {
+      "Uri": "http://127.0.0.1:3012/",
+      "Kind": "html",
+      "Status": "failed",
+      "Reason": "HTTP 401",
+      "File": null,
+      "FoundIn": null
+    }
+  ]
+}
