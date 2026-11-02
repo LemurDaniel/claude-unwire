@@ -937,10 +937,12 @@
   "components": {
     "securitySchemes": {
       "pathToken": {
-        "in": "header",
         "type": "apiKey",
-        "name": "X-Unwire-Path-Token",
-        "description": "Not a header: the token is a path segment /ui/;tok=\u003cVALUE>/ (js/auth.path.js). OpenAPI has no scheme for it."
+        "in": "query",
+        "name": "tok",
+        "x-unwire-in": "path",
+        "x-unwire-path-prefix": "/ui/",
+        "description": "Not a query parameter: the token is a path segment /ui/;tok=\u003cVALUE>/ (js/auth.path.js), x-unwire-in path."
       }
     }
   },
@@ -1149,6 +1151,7 @@
         //   valuePrefixOf        Fixed text before a session value: 'Bearer ', 'Basic ', 'SID '.
         //   cookieNameOf         Name of a session cookie: edited in the settings, else the spec's.
         //   toBase64             Base64 of a UTF-8 text, for user and password of Basic.
+        //   addPathToken         A session token in the URL path: '/ui/;tok=abc/api/x'.
         //   quotePwsh            Single-quoted PowerShell string.
         //   quoteBash            Single-quoted bash string.
         //   bodySkeleton         Editable body text from a schema: 'name=' lines or JSON.
@@ -1209,6 +1212,21 @@
             return btoa(Array.from(new TextEncoder().encode(text), byte => String.fromCharCode(byte)).join(''))
         }
 
+        /*
+            A session token in the URL path (x-unwire-in 'path'), like Get-UnwireRequestUri:
+            > with x-unwire-path-prefix   -> inserted after the prefix, only below it:
+                                             'http://r.test/ui/api/x' => 'http://r.test/ui/;tok=abc/api/x'
+            > without                     -> appended to the path: '/a/x' => '/a/x;tok=abc'
+        */
+        function addPathToken(url, scheme, token) {
+            const prefix = String(scheme['x-unwire-path-prefix'] ?? '')
+            // 'http://r.test/ui/x?a=1' => ['http://r.test', '/ui/x', '?a=1']
+            const [, origin = '', path = '', rest = ''] = /^([a-z][a-z0-9+.-]*:\/\/[^/?#]*)?([^?#]*)(.*)$/i.exec(url) ?? []
+            if (prefix === '') return `${origin}${path};${token}${rest}`
+            if (!path.startsWith(prefix)) return url
+            return `${origin}${prefix};${token}/${path.slice(prefix.length)}${rest}`
+        }
+
         function quotePwsh(text) {
             return `'${String(text).replaceAll("'", "''")}'`
         }
@@ -1238,6 +1256,7 @@
         /*
             The request of an operation, session from the first security alternative whose
             values are all filled in (else the first one, with placeholders):
+            > x-unwire-in path          -> ';<name>=<value>' in the URL path (addPathToken)
             > apiKey in header          -> header
             > apiKey in query           -> the body field of that name when the form has one,
                                            else a query parameter
@@ -1248,9 +1267,10 @@
             An empty session value stays a '<scheme>' placeholder in the command.
         */
         function buildRequest(entry, values, mediaType, bodyText) {
-            const headers = {}
-            const query   = []
-            const isForm  = mediaType === 'application/x-www-form-urlencoded'
+            const headers    = {}
+            const query      = []
+            const pathTokens = []
+            const isForm     = mediaType === 'application/x-www-form-urlencoded'
             // 'a=1\nb=' => [['a', '1'], ['b', '']]
             const fields  = isForm ? bodyText.split('\n').filter(line => line.trim() !== '').map(line => {
                 const separator = line.indexOf('=')
@@ -1267,7 +1287,8 @@
                 const scheme = resolveDeep(spec.components?.securitySchemes?.[name]) ?? {}
                 const value  = `${valuePrefixOf(scheme)}${trySettings.secrets[name] || `<${name}>`}`
                 const field  = fields.find(([key]) => key === scheme.name)
-                if (scheme.type === 'apiKey' && scheme.in === 'header') headers[scheme.name] = value
+                if (scheme['x-unwire-in'] === 'path') pathTokens.push([scheme, `${scheme.name ?? name}=${value}`])
+                else if (scheme.type === 'apiKey' && scheme.in === 'header') headers[scheme.name] = value
                 else if (scheme.type === 'apiKey' && scheme.in === 'query' && null != field) { if (field[1] === '') field[1] = value }
                 else if (scheme.type === 'apiKey' && scheme.in === 'query') query.push([scheme.name, value])
                 else if (scheme.type === 'apiKey' && scheme.in === 'cookie') headers.Cookie = [headers.Cookie, `${cookieNameOf(name, scheme)}=${value}`].filter(Boolean).join('; ')
@@ -1288,9 +1309,10 @@
             const body   = isForm
                 ? fields.map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`).join('&')
                 : bodyText.trim()
+            const url    = pathTokens.reduce((current, [scheme, token]) => addPathToken(current, scheme, token), `${trySettings.baseUrl}${path}${search ? `?${search}` : ''}`)
             return {
                 method:      entry.method.toUpperCase(),
-                url:         `${trySettings.baseUrl}${path}${search ? `?${search}` : ''}`,
+                url,
                 headers,
                 contentType: null != mediaType && body !== '' ? mediaType : null,
                 body:        body !== '' ? body : null,
@@ -1441,7 +1463,8 @@
                 const prefix   = valuePrefixOf(resolved)
                 const input    = el('input', { type: 'password', autocomplete: 'off', 'aria-label': name })
                 input.addEventListener('input', () => { trySettings.secrets[name] = input.value; notify() })
-                const hint = resolved.description ?? ''
+                const pathHint = resolved['x-unwire-in'] === 'path' ? `Goes into the URL path: ${resolved['x-unwire-path-prefix'] ?? '…'};${resolved.name ?? name}=<value>${resolved['x-unwire-path-prefix'] ? '/…' : ''}, also in the browser link.` : ''
+                const hint     = [resolved.description, pathHint].filter(Boolean).join(' ')
 
                 if (prefix === 'Basic ') {
                     const user = el('input', { type: 'text', className: 'basic-user', autocomplete: 'off', spellcheck: 'false', placeholder: 'user', 'aria-label': `${name} user` })
@@ -1765,6 +1788,7 @@
         // One line per scheme type, as a client would send it.
         // - http bearer JWT         => 'HTTP bearer (JWT) · Authorization: Bearer <token>'
         // - apiKey in header X-Key  => 'API key in header X-Key'
+        // - token in the URL path   => 'Token in URL path · /ui/;tok=<value>/'
         // - oauth2 with two flows   => 'OAuth 2 · authorizationCode, clientCredentials'
         const describeScheme = scheme => {
             const type = String(scheme?.type ?? 'unknown')
@@ -1773,6 +1797,7 @@
                 const header = name === 'bearer' ? ' · Authorization: Bearer <token>' : name === 'basic' ? ' · Authorization: Basic <base64 user:password>' : ''
                 return `HTTP ${name}${scheme.bearerFormat ? ` (${scheme.bearerFormat})` : ''}${header}`
             }
+            if (type === 'apiKey' && scheme['x-unwire-in'] === 'path') return `Token in URL path · ${scheme['x-unwire-path-prefix'] ?? '…'};${scheme.name ?? '?'}=<value>${scheme['x-unwire-path-prefix'] ? '/' : ''}`
             if (type === 'apiKey') return `API key in ${scheme.in ?? '?'} ${scheme.name ?? '?'}`
             if (type === 'oauth2') return `OAuth 2 · ${Object.keys(scheme.flows ?? {}).join(', ') || 'no flows'}`
             if (type === 'openIdConnect') return `OpenID Connect · ${scheme.openIdConnectUrl ?? '?'}`

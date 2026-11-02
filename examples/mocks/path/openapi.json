@@ -550,10 +550,12 @@
   "components": {
     "securitySchemes": {
       "pathToken": {
-        "in": "header",
         "type": "apiKey",
-        "name": "X-Unwire-Path-Token",
-        "description": "Not a header: the token is a path segment /ui/;tok=<VALUE>/ (js/auth.path.js). OpenAPI has no scheme for it."
+        "in": "query",
+        "name": "tok",
+        "x-unwire-in": "path",
+        "x-unwire-path-prefix": "/ui/",
+        "description": "Not a query parameter: the token is a path segment /ui/;tok=<VALUE>/ (js/auth.path.js), x-unwire-in path."
       }
     }
   },

@@ -29,6 +29,7 @@ param ()
 #   security_set            Accepts [] and a defined scheme on every operation.
 #   security_unknown        Rejects a scheme missing in components.securitySchemes.
 #   security_not_list       Rejects a security that is no list of objects.
+#   path_token              Accepts a path token scheme, rejects a wrong one or prefix.
 #   security_inherited      Warns once on derived operations without their own security.
 #   errors_first            Returns errors before warnings.
 #   missing_file            Fails early on a missing file.
@@ -265,6 +266,25 @@ Describe 'Test-UnwireSpec' {
             $findings.Count       | Should -Be 1
             $findings[0].Location | Should -Be 'security'
             $findings[0].Severity | Should -Be 'Error'
+        }
+
+        It 'path_token: accepts a path token scheme, rejects <Case>' -ForEach @(
+            @{ Case = 'no x-unwire-in';    Scheme = @{ type = 'apiKey'; in = 'query'; name = 'tok'; 'x-unwire-path-prefix' = '/ui/' };                       Message = 'A path token scheme must be*' }
+            @{ Case = 'a header scheme';   Scheme = @{ type = 'apiKey'; in = 'header'; name = 'tok'; 'x-unwire-in' = 'path' };                               Message = 'A path token scheme must be*' }
+            @{ Case = 'a relative prefix'; Scheme = @{ type = 'apiKey'; in = 'query'; name = 'tok'; 'x-unwire-in' = 'path'; 'x-unwire-path-prefix' = 'ui' };  Message = "x-unwire-path-prefix must be*'ui'*" }
+        ) {
+            $Login['security']   = @()
+            $Devices['security'] = @(@{ bearerAuth = @() })
+            $Spec['components'].securitySchemes.pathToken = @{ type = 'apiKey'; in = 'query'; name = 'tok'; 'x-unwire-in' = 'path'; 'x-unwire-path-prefix' = '/ui/' }
+            $valid = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+            $Spec['components'].securitySchemes.pathToken = $Scheme
+
+            $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+
+            $valid.Count          | Should -Be 0
+            $findings.Count       | Should -Be 1
+            $findings[0].Location | Should -Be 'components.securitySchemes.pathToken'
+            $findings[0].Message  | Should -BeLike $Message
         }
 
         It 'security_inherited: warns once on derived operations without their own security' {

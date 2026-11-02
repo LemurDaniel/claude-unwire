@@ -231,6 +231,23 @@ if ($Spec.Contains('security')) {
     Test-UnwireSecurity -Security $Spec['security'] -Location 'security' -SchemeNames $SchemeNames
 }
 
+# A session token in the URL path has no OpenAPI location: apiKey in query plus
+# x-unwire-in 'path', x-unwire-path-prefix the folder it follows ('/ui/' => '/ui/;tok=<value>/').
+foreach ($name in $SchemeNames) {
+    $scheme   = $SecuritySchemes[$name]
+    $location = "components.securitySchemes.$name"
+    if ($scheme -isnot [System.Collections.IDictionary] -OR -NOT ($scheme.Contains('x-unwire-in') -OR $scheme.Contains('x-unwire-path-prefix'))) {
+        continue
+    }
+    if ($scheme['x-unwire-in'] -NE 'path' -OR $scheme['type'] -NE 'apiKey' -OR $scheme['in'] -NE 'query' -OR [System.String]::IsNullOrEmpty($scheme['name'])) {
+        Add-UnwireFinding -Severity Error -Location $location -Rule 'security' -Message 'A path token scheme must be { "type": "apiKey", "in": "query", "name": "<token name>", "x-unwire-in": "path" }.'
+    }
+    $prefix = $scheme['x-unwire-path-prefix']
+    if ($null -NE $prefix -AND ($prefix -isnot [System.String] -OR $prefix -NOTMATCH '^/(?:[^/;?#]+/)*$')) {
+        Add-UnwireFinding -Severity Error -Location $location -Rule 'security' -Message "x-unwire-path-prefix must be a path that starts and ends with '/', e.g. '/ui/', got '$prefix'."
+    }
+}
+
 # ---------------------------------------------------------------------------
 # Operations
 #   Path parameters, operationId, responses, x-unwire-* and security.

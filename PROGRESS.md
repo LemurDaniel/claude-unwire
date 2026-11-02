@@ -59,6 +59,16 @@ changing anything on the target. Client code for picked operations is planned (`
   `Test-UnwireCoverage`: each candidate needs its position in an `x-unwire-source`, a matching
   path or its position in an open point, else the agent adds the operation or says why not.
   A call that nothing calls is `medium` (no caller found), not `low`.
+- **Path values for the live GET are asked, never taken** (2026-11-02, user decision).
+  `-Plan` names them in `Needs`, step 7.2 asks in the same AskUserQuestion call, the
+  values go in with `-Value`. Not from the code, the spec examples or another answer.
+- **Path token as apiKey with `x-unwire-in: path`** (2026-11-02, user decision). `in: query`,
+  `name`, `x-unwire-path-prefix` like `PathToken`/`PathPrefix` of the session; API.html
+  builds `/ui/;tok=<value>/...` for "Try it" and the browser link, `Test-UnwireSpec` checks
+  the shape. Other tools only see `?tok=`.
+- **Less crawl noise** (2026-11-02). Chunk guesses skip webpack module ids
+  (`./node_modules/...`) and object keys; `<script>.map` probes stop after 10 misses while
+  none found a map and no longer use up `MaxGuessMisses` (a router run: 50 × 404, all probes).
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`.
 - **The login question is asked, never decided; Referer like a browser** (2026-11-02).
@@ -74,7 +84,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 - v0.4.0 on `master`, not pushed.
   Skills: unwire (entry), discover, analyze, document, code (stub). 8 scripts plus
-  `shared/session/` (9 files), 223 Pester tests (plus 5 in `docs/screenshots`),
+  `shared/session/` (9 files), 256 Pester tests (plus 5 in `docs/screenshots`),
   ScriptAnalyzer clean.
 - `Save-UnwireAsset`: webpack runtimes with one `if` per chunk and the automatic publicPath,
   `-Page`/`-Script` for paths built at runtime, `HttpAuth` for a 401 on the start page,
@@ -95,12 +105,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
-- **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
-  50 × 404, then MaxGuessMisses. Harmless, but noise.
-- **Path values for the live GET** come only from the user: GETs with path parameters stay
-  skipped without `-Value`.
-- **Path token in OpenAPI**: no scheme fits a `/;tok=<VALUE>/` segment; the mock spec uses
-  a placeholder header, so "Try it" and the browser button cannot build that URL.
+
 - **`unwire:code` is a stub.** Open: language(s) and shape.
 - **D · Eval loop with the testbed** (tips 13 to 16): a checkable goal per target, a check
   separate from the run, a cap on runs and cost, results remembered between runs.

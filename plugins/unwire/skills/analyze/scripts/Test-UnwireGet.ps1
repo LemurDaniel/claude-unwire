@@ -17,7 +17,8 @@
 #   tested operation. Writes live-get.json next to the spec with every planned, skipped and
 #   tested operation.
 #
-#   -Plan lists what would be sent and why the rest is skipped, without any request.
+#   -Plan lists what would be sent and why the rest is skipped, without any request;
+#   Needs names the parameters a skipped operation lacks, so the user can give them.
 #   A progress bar shows every request. -Window (or -PromptSession) ends with a line that
 #   tells the user to close the window.
 #
@@ -408,6 +409,7 @@ foreach ($pathKey in $Spec['paths'].Keys) {
         Uri         = $null
         Status      = 'skipped'
         Reason      = $null
+        Needs       = @()     # parameter names without a value, asked in step 7.2 of the skill
         Anonymous   = $null
         Session     = $null
         Operation   = $operation
@@ -442,6 +444,7 @@ foreach ($pathKey in $Spec['paths'].Keys) {
     $missing = @([System.Text.RegularExpressions.Regex]::Matches($pathKey, $PATH_PARAMETER) | ForEach-Object { $_.Groups['name'].Value } | Where-Object { -NOT $Values.ContainsKey($_) })
     if ($missing.Count -GT 0) {
         $entry.Reason = "needs a value for $(($missing | ForEach-Object { "'$_'" }) -join ', ')"
+        $entry.Needs  = $missing
         continue
     }
 
@@ -450,6 +453,7 @@ foreach ($pathKey in $Spec['paths'].Keys) {
     $missing         = @($queryParameters | Where-Object { $_['required'] -EQ $true -AND -NOT $Values.ContainsKey($_['name']) } | ForEach-Object { $_['name'] })
     if ($missing.Count -GT 0) {
         $entry.Reason = "needs a value for the query $(($missing | ForEach-Object { "'$_'" }) -join ', ')"
+        $entry.Needs  = $missing
         continue
     }
 
@@ -467,7 +471,7 @@ $Planned = @($Operations | Where-Object Status -EQ 'planned')
 Write-Verbose "[Test-UnwireGet] $($Planned.Count) of $($Operations.Count) GET operations planned."
 
 if ($Plan) {
-    return $Operations | Select-Object -Property OperationId, Path, Uri, Status, Reason
+    return $Operations | Select-Object -Property OperationId, Path, Uri, Status, Reason, Needs
 }
 
 # ===========================================================================

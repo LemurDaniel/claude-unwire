@@ -22,6 +22,9 @@ param ()
 #   frames                 Follows frames as pages.
 #   base_href              Resolves scripts and chunks against the base tag of the page.
 #   guess_limit            Reports guessed paths as not-found and stops guessing at the limit.
+#   module_ids             Never guesses webpack module ids or object keys as chunks.
+#   map_probe_limit        Stops probing '<script>.map' after 10 misses, keeps the chunk budget.
+#   map_probe_found        Keeps probing once a probe found a source map.
 #   duplicate_content      Saves pages with the same content only once.
 #   redirect_same_origin   Follows a redirect within the origin.
 #   redirect_cross_origin  Never follows a redirect to another origin.
@@ -219,6 +222,43 @@ Describe 'Save-UnwireAsset' {
         $summary.NotFound                  | Should -Be 2
         $manifest.assets[-1].Reason        | Should -Be 'MaxGuessMisses 2 reached'
         Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/c.js' }
+    }
+
+    It 'module_ids: never guesses webpack module ids or object keys as chunks' {
+        $Site['http://router.test/']       = New-TestResponse -Content '<script src="/app.js"></script>'
+        $Site['http://router.test/app.js'] = New-TestResponse -Content 'r("./node_modules/dayjs/locale/de.js"); r("../node_modules/x/y.js"); var m = {"./de.js": 42}; l("lazy.js"); l("/node_modules/.vite/deps/vue.js")'
+
+        $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
+
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -LIKE '/node_modules/dayjs/*' -OR $Uri.AbsolutePath -LIKE '*/x/y.js' -OR $Uri.AbsolutePath -EQ '/de.js' }
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/lazy.js' }
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/node_modules/.vite/deps/vue.js' }
+    }
+
+    It 'map_probe_limit: stops probing script.map after 10 misses, keeps the chunk budget' {
+        $scripts = 1..12 | ForEach-Object { "<script src=`"/s$_.js`"></script>" }
+        $Site['http://router.test/'] = New-TestResponse -Content ($scripts -join '')
+        1..12 | ForEach-Object { $Site["http://router.test/s$_.js"] = New-TestResponse -Content "x($_)" }
+
+        $summary  = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -MaxGuessMisses 1
+        $manifest = Get-Content -Path $summary.Manifest -Raw | ConvertFrom-Json
+        $stopped  = @($manifest.assets | Where-Object Reason -EQ 'source map probes stopped: 10 missed, none found')
+
+        $summary.Saved   | Should -Be 13
+        $summary.NotFound | Should -Be 10
+        $stopped.Count   | Should -Be 2
+        Should -Invoke Invoke-WebRequest -Times 10 -Exactly -ParameterFilter { $Uri.AbsolutePath -LIKE '*.js.map' }
+    }
+
+    It 'map_probe_found: keeps probing once a probe found a source map' {
+        $scripts = 1..12 | ForEach-Object { "<script src=`"/s$_.js`"></script>" }
+        $Site['http://router.test/']         = New-TestResponse -Content ($scripts -join '')
+        1..12 | ForEach-Object { $Site["http://router.test/s$_.js"] = New-TestResponse -Content "x($_)" }
+        $Site['http://router.test/s1.js.map'] = New-TestResponse -Content '{"version":3,"sources":["a.ts"],"mappings":""}'
+
+        $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory
+
+        Should -Invoke Invoke-WebRequest -Times 12 -Exactly -ParameterFilter { $Uri.AbsolutePath -LIKE '*.js.map' }
     }
 
     It 'duplicate_content: saves pages with the same content only once' {

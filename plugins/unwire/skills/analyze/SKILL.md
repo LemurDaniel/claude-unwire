@@ -203,6 +203,11 @@ Analyze every candidate with its surrounding code:
   A fixed text before the value of an API key (`Authorization: SID <value>`) goes into
   the scheme as `"x-unwire-value-prefix": "SID "`: the "Try it" block of API.html
   shows it and puts it in front of what the user types.
+  A token in the URL path (`/ui/;tok=<value>/api/...`, `/page;jsessionid=<value>`) has no
+  OpenAPI location: `"type": "apiKey", "in": "query", "name": "tok"` plus
+  `"x-unwire-in": "path"` and, when it follows a folder, `"x-unwire-path-prefix": "/ui/"`
+  (without one it is appended to the path). API.html builds the URL from it; say in the
+  `description` that it is a path segment, other tools read only `in: query`.
 - **Names**: `operationId` from the calling function or UI context
   (`getConnectedDevices`).
 
@@ -306,8 +311,8 @@ Work through every entry of `Missing` until the list is empty:
 Optional, last step, only for a URL target, never for a local folder: sends the safe
 GETs of the spec to the target. Safe means GET with `x-unwire-impact: read`, nothing on
 `shared/data/request-denylist.json` (also no token, secret or backup path, they may
-create one), no path parameter: Unwire never guesses a value, an operation with one is
-skipped. No redirect is followed. Of each answer only the status code, the media type
+create one), path parameters only with values the user gives in 7.2: Unwire never
+guesses a value, not from the code, not from another answer. No redirect is followed. Of each answer only the status code, the media type
 and the JSON keys and types are kept, never a body.
 
 #### 7.1 Plan
@@ -316,8 +321,9 @@ No request:
 pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/analyze/scripts/Test-UnwireGet.ps1" `
     -Path './unwire/<name>/openapi.json' -Uri '<URL>' -Plan
 ```
-Count the `planned` entries and group the `skipped` ones by `Reason`
-(`needs a value for 'owner'` is the common one, it stays skipped).
+Count the `planned` entries and group the `skipped` ones by `Reason`. Collect the
+distinct names of every `Needs` (`bid`, `id`), with the paths that use them: the common
+reason, 7.2 asks for them.
 
 #### 7.2 Ask
 With the **AskUserQuestion** tool, never send without this answer:
@@ -333,6 +339,18 @@ Only option 1 or 2 sends, any other answer cancels. An answer that looks like a 
 (`cookie`, `curl`, a token) is never used: say it was not stored and that a login goes
 through the window of option 1. The answer counts for this run and this target only.
 
+When `Needs` named parameters, ask in the same AskUserQuestion call a second question:
+- question: "Values for the path parameters? `<name>` (`<path>`), ... Leave them out and
+  these `<K>` GETs stay skipped. Type `name=value, ...` under Other, only values of your
+  own data (a basket, a device), never a session or a password."
+- option 1: "Leave them skipped".
+- option 2: "Values in the chat": ask for `name=value, ...` in the chat, then go on.
+
+Take only names that `Needs` listed and values the user typed in this answer, never one
+from the code, the spec or an earlier answer. A value that looks like a session is never
+used, as above. Run 7.1 again with `-Value '<name=value,...>'` and tell the user how many
+GETs it adds.
+
 #### 7.3 Send
 Both options run in a window the user watches, with a progress bar per request. Open it
 as in the login window of step 1, one tool call that does nothing else. The last
@@ -346,7 +364,7 @@ Start-Process pwsh -Wait -WorkingDirectory $PWD -ArgumentList @(
     '-Path', './unwire/<name>/openapi.json', '-Uri', '<URL>', '-Language', '<de|en>', '<-PromptSession|-Window>')
 ```
 Add `-SessionParameter` (option 1 only) and `-SkipCertificateCheck` as in the runs
-before. Then read `live-get.json` in a separate call, never the window. Elsewhere
+before, and `'-Value', '<name=value,...>'` with the values of 7.2. Then read `live-get.json` in a separate call, never the window. Elsewhere
 (macOS, Linux, no desktop) give the command for the user's own terminal and ask "Done?"
 with AskUserQuestion.
 

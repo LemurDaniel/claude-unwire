@@ -137,8 +137,9 @@ param (
 
     <#
     [Optional]
-    Guessed paths (chunk strings in scripts, '<script>.map' probes) that may answer 404
-    before guessing stops. Default is 50.
+    Guessed chunk paths (chunk strings in scripts) that may answer 404 before guessing
+    stops. Default is 50. '<script>.map' probes have their own limit: they stop after 10
+    misses when none of them found a source map (production builds deploy none).
     #>
     [Parameter(
         Mandatory = $false
@@ -258,7 +259,13 @@ $LOGIN_SCRIPT_NAME = '(?i)(?<![a-z])(log-?in|sign-?in)'
 # //# sourceMappingURL=app.js.map (last one wins, bundlers append it at the end)
 $JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
 # 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`, not a name fragment like ".0a1b2c3d.js"
-$JS_CHUNK_REF      = '[''"`](?!\.[\w-])(?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`]'
+# and not an object key like {"./de.js": 42} (a webpack context map of module ids)
+$JS_CHUNK_REF      = '[''"`](?!\.[\w-])(?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`](?!\s*:)'
+# Webpack module ids, no files on the server: "./node_modules/dayjs/locale/de.js"
+# (Vite serves '/node_modules/.vite/deps/x.js' from the root, that one stays)
+$JS_MODULE_ID      = '^(?:\.{1,2}/)?node_modules/'
+# '<script>.map' probes that may miss before probing stops, as long as none was found
+$MAX_MAP_PROBE_MISSES = 10
 # Webpack runtime, the file name of a lazy chunk built from two maps:
 # - ""+({123:"SupportBundles"}[e]||e)+"."+{123:"cbbdd876417c6516e99c"}[e]+".js"   => SupportBundles.cbbdd876417c6516e99c.js
 # - "static/js/"+e+"."+{45:"0a1b2c3d"}[e]+".chunk.js"                              => static/js/45.0a1b2c3d.chunk.js
@@ -478,7 +485,8 @@ function Find-UnwireAssetReference {
                    publicPath (against the runtime's folder), else to the runtime's folder
                 -> chunk paths as js: './x.js', '../x.js', '/x.js' relative to the script,
                    bare 'static/js/x.js' relative to the base of the page that loaded
-                   the script (webpack publicPath)
+                   the script (webpack publicPath); no module ids ('./node_modules/...')
+                   and no object keys
         Every reference carries the PageBase its own references resolve against, and
         whether it is Guessed (chunk strings may be any '*.js' text, not a real file).
     #>
@@ -561,7 +569,10 @@ function Find-UnwireAssetReference {
     # JS: chunks
     foreach ($chunkMatch in [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_REF)) {
         $chunkRef = $chunkMatch.Groups['ref'].Value
-        $baseUri  = if ($chunkRef -MATCH '^(\.{1,2})?/') { $AssetUri } else { $PageBase }
+        if ($chunkRef -MATCH $JS_MODULE_ID) {
+            continue
+        }
+        $baseUri  =if ($chunkRef -MATCH '^(\.{1,2})?/') { $AssetUri } else { $PageBase }
         $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($baseUri, $chunkRef); Kind = 'js'; Data = $null; PageBase = $PageBase; Guessed = $true })
     }
     return $references
@@ -729,13 +740,14 @@ foreach ($scriptUri in $ExtraScripts) {
 <#
     > Already visited                       -> skip silently
     > Cross-origin, blocked in session      -> record as skipped, nothing is requested
-      mode, MaxAssets or MaxGuessMisses
-      reached
+      mode, MaxAssets, MaxGuessMisses or
+      the map probe limit reached
     > Guessed path or source map answers    -> record as not-found, count the miss when
-      404                                      guessed
-    > Request fails or not HTTP 200         -> record as failed (the start page throws)
+      404                                      guessed (map probes on their own count)
+    > Request fails or not HTTP 200         -> record as failed (the start page throws),
+                                               a map probe counts a miss
     > Script that is HTML (SPA fallback)    -> record as skipped
-    > Map that is no source map             -> record as skipped
+    > Map that is no source map             -> record as skipped, a map probe counts a miss
     > Same content as a saved asset         -> record as skipped (iframes that only differ
                                                in the query string)
     > Page in session mode                  -> record as read, queue its scripts, not saved
@@ -746,6 +758,9 @@ foreach ($scriptUri in $ExtraScripts) {
 
 $SavedCount  = 0
 $GuessMisses = 0
+# '<script>.map' probes: stop after MAX_MAP_PROBE_MISSES misses while none found a map.
+$MapProbeMisses = 0
+$MapProbeHits   = 0
 $IsLoginForm  = $false     # reported in WRITE MANIFEST
 $HttpAuth     = $null      # scheme of a 401 on the start page (Basic, Digest), reported in WRITE MANIFEST
 $AccessDenied = 0          # scripts and maps named in the code that answer 401/403, reported in WRITE MANIFEST
@@ -764,8 +779,9 @@ $AccessDenied = 0          # scripts and maps named in the code that answer 401/
     }
     $record = [PSCustomObject]@{ Uri = $key; Kind = $item.Kind; Status = 'skipped'; Reason = $null; File = $null; FoundIn = $item.FoundIn }
     $Records.Add($record)
+    $isMapProbe = $item.Guessed -AND $item.Kind -EQ 'map'
 
-    # Cross-origin, blocked in session mode, MaxAssets or MaxGuessMisses reached
+    # Cross-origin, blocked in session mode, MaxAssets, MaxGuessMisses or the map probe limit reached
     if (-NOT (Test-UnwireSameOrigin -Left $item.Uri -Right $StartUri)) {
         $record.Reason = 'cross-origin'
         Write-Verbose "[Save-UnwireAsset] '$key' is cross-origin -> skipping."
@@ -781,7 +797,11 @@ $AccessDenied = 0          # scripts and maps named in the code that answer 401/
         $record.Reason = "MaxAssets $MaxAssets reached"
         continue CRAWL
     }
-    if ($item.Guessed -AND $GuessMisses -GE $MaxGuessMisses) {
+    if ($isMapProbe -AND $MapProbeHits -EQ 0 -AND $MapProbeMisses -GE $MAX_MAP_PROBE_MISSES) {
+        $record.Reason = "source map probes stopped: $MAX_MAP_PROBE_MISSES missed, none found"
+        continue CRAWL
+    }
+    if ($item.Guessed -AND -NOT $isMapProbe -AND $GuessMisses -GE $MaxGuessMisses) {
         $record.Reason = "MaxGuessMisses $MaxGuessMisses reached"
         continue CRAWL
     }
@@ -834,13 +854,19 @@ $AccessDenied = 0          # scripts and maps named in the code that answer 401/
         # A map named in sourceMappingURL but not deployed is common in production builds.
         $record.Status = 'not-found'
         $record.Reason = if ($item.Guessed) { 'HTTP 404 on a guessed path' } else { 'HTTP 404, source map referenced but not deployed' }
-        if ($item.Guessed) {
+        if ($isMapProbe) {
+            $MapProbeMisses++
+        }
+        elseif ($item.Guessed) {
             $GuessMisses++
         }
         continue CRAWL
     }
     if ($null -EQ $result.Response -OR $result.Response.StatusCode -NE 200) {
         $record.Status = 'failed'
+        if ($isMapProbe) {
+            $MapProbeMisses++
+        }
         $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
         Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
 
@@ -879,6 +905,9 @@ $AccessDenied = 0          # scripts and maps named in the code that answer 401/
     # Map that is no source map
     if ($item.Kind -EQ 'map' -AND -NOT ((Test-Json -Json $text -ErrorAction SilentlyContinue) -AND $text -MATCH '"(sources|mappings)"\s*:')) {
         $record.Reason = 'not a source map'
+        if ($isMapProbe) {
+            $MapProbeMisses++
+        }
         Write-Verbose "[Save-UnwireAsset] '$key' is no source map -> skipping."
         continue CRAWL
     }
@@ -944,6 +973,9 @@ $AccessDenied = 0          # scripts and maps named in the code that answer 401/
     Write-Verbose "[Save-UnwireAsset] Saved '$key' as '$($record.File)'."
 
     if ($item.Kind -EQ 'map') {
+        if ($isMapProbe) {
+            $MapProbeHits++
+        }
         continue CRAWL
     }
 

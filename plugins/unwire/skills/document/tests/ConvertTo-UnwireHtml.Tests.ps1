@@ -158,6 +158,9 @@ Describe 'ConvertTo-UnwireHtml' {
         $script | Should -Match "className: 'basic-user'"
         $script | Should -Match 'toBase64\(`\$\{user\.value\}:\$\{input\.value\}`\)'
         $script | Should -Match 'btoa\(Array\.from\(new TextEncoder\(\)\.encode\(text\)'
+        # A path token goes into the URL, after its prefix: '/ui/;tok=abc/api/x'.
+        $script | Should -Match "if \(scheme\['x-unwire-in'\] === 'path'\) pathTokens\.push"
+        $script | Should -Match ([System.Text.RegularExpressions.Regex]::Escape('return `${origin}${prefix};${token}/${path.slice(prefix.length)}${rest}`'))
         $script | Should -Not -Match 'localStorage|sessionStorage|indexedDB|document\.cookie'
     }
 

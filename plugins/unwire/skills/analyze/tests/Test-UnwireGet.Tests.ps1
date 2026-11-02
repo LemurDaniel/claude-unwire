@@ -15,7 +15,7 @@ param ()
 #   read_get_only           Plans only GET with impact read, never a write operation.
 #   denylist                Never plans a path or a value on the denylist.
 #   live_denylist           Never plans a GET that may create a token or return a credential.
-#   path_values             Needs a value for every path parameter, escapes it in the URI.
+#   path_values             Needs a value for every path parameter, names it, escapes it in the URI.
 #   required_query          Needs a value for a required query, sends given query values.
 #   anonymous_pass          Sends every planned GET once without a session, no redirect.
 #   session_pass            Sends a second time with the session, never writes its value.
@@ -153,7 +153,7 @@ Describe 'Test-UnwireGet' {
         $plan.Reason | Should -Be @('may create a token or return a credential (token, secret, backup, ...)', 'may create a token or return a credential (token, secret, backup, ...)')
     }
 
-    It 'path_values: needs a value for every path parameter, escapes it in the URI' {
+    It 'path_values: needs a value for every path parameter, names it, escapes it in the URI' {
         $operation = New-TestOperation -OperationId 'getRepo' -Parameters @(@{ name = 'owner'; in = 'path'; required = $true }, @{ name = 'repo'; in = 'path'; required = $true })
         $file      = Set-TestSpec -Spec (New-TestSpec -Paths @{ '/repos/{owner}/{repo}' = @{ get = $operation } })
 
@@ -161,7 +161,9 @@ Describe 'Test-UnwireGet' {
         $with    = @(& $SCRIPT_PATH -Path $file -Uri $TARGET_URI -Value 'owner=me,repo=my notes' -Plan)
 
         $without.Reason          | Should -Be @("needs a value for 'repo'")
+        $without[0].Needs        | Should -Be @('repo')
         $with.Status             | Should -Be @('planned')
+        $with[0].Needs           | Should -BeNullOrEmpty
         $with[0].Uri.AbsoluteUri | Should -Be 'http://router.test/api/repos/me/my%20notes'
     }
 
@@ -173,6 +175,7 @@ Describe 'Test-UnwireGet' {
         $with    = @(& $SCRIPT_PATH -Path $file -Uri $TARGET_URI -Value 'q=lamp', 'limit=5' -Plan)
 
         $without.Reason          | Should -Be @("needs a value for the query 'q'")
+        $without[0].Needs        | Should -Be @('q')
         $with[0].Uri.AbsoluteUri | Should -Be 'http://router.test/api/search?q=lamp&limit=5'
     }
 
