@@ -5,7 +5,7 @@
 #   Edge runs with a throwaway profile per frame, a running Edge is not touched.
 #
 #   ./docs/teaser/New-UnwireTeaser.ps1
-#   ./docs/teaser/New-UnwireTeaser.ps1 -FrameMs 50 -ThrottleLimit 8
+#   ./docs/teaser/New-UnwireTeaser.ps1 -FrameMs 50 -ThrottleLimit 8 -Scale 2
 
 #
 #   Chapters:
@@ -36,6 +36,17 @@ param (
     [ValidateRange(1, 32)]
     [System.Int32]
     $ThrottleLimit = 6,
+
+    <#
+    [Optional]
+    Pixels per CSS pixel: 1.5 renders the 720x360 page as 1080x540. Default is 1.5.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidateRange(1.0, 3.0)]
+    [System.Double]
+    $Scale = 1.5,
 
     <#
     [Optional]
@@ -82,6 +93,8 @@ if (-NOT (Test-Path -Path $EdgePath -PathType Leaf)) {
 $WorkPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "unwire-teaser-$([System.Guid]::NewGuid().ToString('N'))"
 $null     = New-Item -ItemType Directory -Path $WorkPath
 $PageUri  = ([System.Uri] (Join-Path -Path $PSScriptRoot -ChildPath 'teaser.html')).AbsoluteUri
+# '1.5', not '1,5' on a German system
+$ScaleText = $Scale.ToString([System.Globalization.CultureInfo]::InvariantCulture)
 
 $Times = @(for ($t = 0; $t -LT $DURATION_MS; $t += $FrameMs) { $t })
 Write-Verbose "[New-UnwireTeaser] Rendering $($Times.Count) frames into '$WorkPath'."
@@ -92,7 +105,7 @@ try {
         $profilePath = Join-Path -Path $using:WorkPath -ChildPath "profile-$_"
         $arguments   = @(
             '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run'
-            '--force-device-scale-factor=1'
+            "--force-device-scale-factor=$($using:ScaleText)"
             "--window-size=$($using:WIDTH),$($using:HEIGHT)"
             "--user-data-dir=`"$profilePath`""
             "--screenshot=`"$frameFile`""

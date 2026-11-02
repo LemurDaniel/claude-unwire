@@ -3,6 +3,8 @@ Claude Code plugin that reverse engineers the undocumented HTTP API of a web UI 
 smart home device, web app) into an OpenAPI spec and a clickable HTML documentation.
 Client code for the parts you need is planned (`unwire:code`, not implemented yet).
 
+<img src="docs/teaser/teaser.gif" width="720" alt="Unwire teaser: /unwire on a router in the home network, discover, analyze and document into API.html (illustration, AI generated)">
+
 > [!CAUTION]
 > **ONLY USE FOR HOME SYSTEMS YOU OWN.** Run Unwire only against devices and services that
 > belong to you, or that you are explicitly allowed to analyze, such as the local
@@ -102,5 +104,6 @@ Step 4, `unwire:code`, is not implemented yet.
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
 ./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
+| `docs/teaser/` | The README teaser: `teaser.html` and the GIF rendered from it, see [docs/teaser/README.md](docs/teaser/README.md). |
 claude --plugin-dir ./plugins/unwire      # load the plugin locally
 ```
