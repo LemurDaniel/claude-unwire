@@ -160,7 +160,8 @@ somewhere in there.
    - The method comes from the helper's name (`POST(...)`) or the call's options. A generic
      click handler (`link-action` with `data-url`) is an assumed POST: say so in `x-unwire-open`.
 3. **Analyze** every candidate with its surrounding code:
-   - **Method and path**: merge variants into templates (`/api/devices/12` → `/api/devices/{id}`).
+   - **Method and path**: merge variants into templates (`/api/devices/12` → `/api/devices/{id}`),
+     path parameters named as in step 4.
    - **Parameters**: query, path and body fields, from the code that builds the request.
    - **Response**: from the code that reads the result (`res.data.items`, `if (r.status === 'ok')`).
    - **Auth**: login endpoint, token or session handling, headers set on every request.
@@ -183,10 +184,25 @@ somewhere in there.
    | Extension | Value |
    | --- | --- |
    | `x-unwire-source` | `"assets/app.4f2a.js:1842"`, where it was found |
-   | `x-unwire-confidence` | `high` (literal path and body), `medium` (derived), `low` (guessed) |
+   | `x-unwire-confidence` | `high`, `medium` or `low`, by the rule below |
    | `x-unwire-verified` | `false`; only `Test-UnwireGet.ps1` (step 7) sets `true` after a 2xx |
    | `x-unwire-impact` | `write` for operations that change data, else `read` |
    | `x-unwire-open` | list of open points of this operation |
+
+   **Confidence**, the first line that fits:
+   - `low`: a part of the path or the method is guessed (values of a runtime variable
+     from strings nearby, a generic click handler as POST).
+   - `medium`: the path is assembled from parts (`'/api/devices/' + mac + '/block'`), the
+     URL comes from a helper (`api.url(path)`, a raw XHR wrapper), or the body is an
+     object passed through whose keys are not in the code.
+   - `high`: method, path and every body field stand literally at the call
+     (`fetch('/api/status')`, `post('/api/wifi', { ssid, channel })`); a call without a body
+     counts as complete.
+   Say in `x-unwire-open` why an operation is not `high`.
+
+   **Path parameters** are named after the variable of the code that fills them
+   (`'/rest/basket/' + bid` → `{bid}`, `continueCode` → `{continueCode}`). `{id}` only when
+   the code calls it `id`.
 
    At the root `x-unwire-target`: the URL Unwire ran against, as the user gave it
    (`"http://192.168.178.1/"`), never with a session in it; left out for a local folder.
@@ -279,6 +295,15 @@ somewhere in there.
         Elsewhere (macOS, Linux, no desktop) give the command for the user's own terminal
         and ask "Done?" with AskUserQuestion.
       - option 2: "Done": the run ends without a session pass.
+
+   5. **Apply the hints**: the live GET only notes when an answer contradicts `security`,
+      it never changes it. Read every `Live GET` open point with a hint and fix the spec:
+      - "It answered without a session, security may be []": a 2xx without session is
+        evidence. Set `security: []` and write it into `x-unwire-auth` ("Live GET: 200
+        without session."). A 2xx that only returns an empty or error object is no
+        evidence: keep the scheme and say so.
+      - "It refused without a session although security is []": set the scheme, same note.
+      Count the changes in the summary of step 3 of `unwire/SKILL.md`.
 
    A verified operation answered once, it is not proven correct: keep presenting the spec
    as a draft. Run `Test-UnwireSpec.ps1` again after this step.

@@ -14,6 +14,7 @@ param ()
 #   valid_spec         Every reference passes Test-UnwireSpec without a finding.
 #   marked             Every reference carries x-unwire-reference and a target.
 #   no_vendor          No product or vendor name in a reference.
+#   no_testbed_overlap No path, operationId or scheme shared with a testbed example.
 #   named_in_skill     SKILL.md names every reference file.
 #   hard_case          The hard reference shows a session, a guess and a write.
 #
@@ -48,6 +49,19 @@ Describe 'Reference specs' {
 
     It 'no_vendor: <Name> names no product or vendor' -ForEach $References {
         Get-Content -Path $File -Raw | Should -Not -Match $VENDOR_NAMES
+    }
+
+    It 'no_testbed_overlap: <Name> shares no path, operationId or scheme with a testbed example' -ForEach $References {
+        # The testbed measures what the agent finds in the code: a shared path would hand it over.
+        $exampleRoot = Join-Path -Path $PSScriptRoot -ChildPath '../../../../../examples'
+        $examples    = Get-ChildItem -Path $exampleRoot -Recurse -Filter 'openapi.json' | ForEach-Object { Get-Content -Path $_.FullName -Raw | ConvertFrom-Json -AsHashtable }
+        $spec        = Get-Content -Path $File -Raw | ConvertFrom-Json -AsHashtable
+        $idsOf       = { param ($s) $s['paths'].Values | ForEach-Object { $_.Values } | ForEach-Object { $_['operationId'] } }
+
+        $examples.Count | Should -BeGreaterThan 0
+        @($spec['paths'].Keys | Where-Object { $_ -IN @($examples | ForEach-Object { $_['paths'].Keys }) }) | Should -HaveCount 0
+        @(& $idsOf $spec | Where-Object { $_ -IN @($examples | ForEach-Object { & $idsOf $_ }) }) | Should -HaveCount 0
+        @(@($spec['components']?['securitySchemes']?.Keys) | Where-Object { $null -NE $_ -AND $_ -IN @($examples | ForEach-Object { $_['components']?['securitySchemes']?.Keys }) }) | Should -HaveCount 0
     }
 
     It 'named_in_skill: SKILL.md names <Name>' -ForEach $References {

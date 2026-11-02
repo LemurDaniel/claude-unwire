@@ -5,8 +5,10 @@ paths, names or values. Both are marked with `"x-unwire-reference": true`.
 
 | File | Content |
 | --- | --- |
-| `reference.simple.openapi.json` | A UI without login: literal paths, `security: []`, a query parameter, a write with a body, a live GET note. |
-| `reference.hard.openapi.json` | Code behind a login: session scheme in the query, the login call, a path parameter, a call from an `onclick` attribute, a form body with unknown keys, a low-confidence guess with its reasons, root open points. |
+| `reference.simple.openapi.json` | A storage UI without login: literal paths, `security: []`, a query parameter with its values, a write with a body, a live GET note. |
+| `reference.hard.openapi.json` | Code behind a login: a token header scheme, the sign-in call, a path parameter named after the code's variable, a call from an `onclick` attribute, a body passed through (`medium`), a guessed GET that starts something (`low`, marked write), root open points. |
 
-Generic wording only, no product or vendor names: the agent would read them as hints. A
-Pester test (`tests/References.Tests.ps1`) checks both against `Test-UnwireSpec`.
+Both describe an invented device. No path, operation or scheme may match a testbed target
+(`examples/`): the testbed checks what the agent finds in the code, a reference that shares
+its paths would hand over the answer. Generic wording only, no product or vendor names.
+`tests/References.Tests.ps1` checks all of it.

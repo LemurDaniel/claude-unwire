@@ -607,12 +607,14 @@
           }
         },
         "x-unwire-source": "assets/js/views/devices.js:14",
-        "x-unwire-confidence": "high",
+        "x-unwire-confidence": "medium",
         "x-unwire-verified": false,
         "x-unwire-impact": "write",
         "security": [],
         "x-unwire-auth": "No login: the UI has no login page and sends no session (assets/js/auth.none.js).",
-        "x-unwire-open": [],
+        "x-unwire-open": [
+          "Path assembled from three parts, the {mac} template is derived."
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -776,12 +778,13 @@
           }
         },
         "x-unwire-source": "assets/js/app.js:34",
-        "x-unwire-confidence": "high",
+        "x-unwire-confidence": "medium",
         "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
         "x-unwire-auth": "No login: the UI has no login page and sends no session (assets/js/auth.none.js).",
         "x-unwire-open": [
+          "Raw XHR helper with the URL built by api.url, no caller reads the answer.",
           "Live GET 2026-11-02: without session HTTP 200 application/json, with session not sent. Response schema from the live answer: keys and types only, check it."
         ],
         "parameters": [
@@ -813,12 +816,13 @@
           }
         },
         "x-unwire-source": "assets/js/app.js:41",
-        "x-unwire-confidence": "high",
+        "x-unwire-confidence": "medium",
         "x-unwire-verified": false,
         "x-unwire-impact": "write",
         "security": [],
         "x-unwire-auth": "No login: the UI has no login page and sends no session (assets/js/auth.none.js).",
         "x-unwire-open": [
+          "Raw XHR helper with the URL built by api.url, the form body has no caller.",
           "Body: form fields from the values object of the caller, no caller found, keys unknown."
         ],
         "requestBody": {

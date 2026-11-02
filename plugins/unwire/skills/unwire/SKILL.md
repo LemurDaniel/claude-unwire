@@ -40,18 +40,20 @@ from Claude Code:
     Only option 2 continues. Any other answer, no answer or a custom text cancels: send no
     request. Ask again for every new public target, a confirmation never carries over.
   - A local folder needs no check, nothing is requested.
-- Unwire never changes anything on the target. Only GET requests to well-known documentation
-  paths and to static assets (HTML, JS, source maps) are allowed. Never call an API endpoint
-  found in the code, never submit a form, never execute downloaded JavaScript. The one
-  exception is the live GET of `unwire:analyze` (its step 7): safe GETs of the spec, only
-  after the user said yes through AskUserQuestion for this run and this target.
-- Every request to the target goes through the Unwire scripts, never an own
-  `Invoke-WebRequest`, `curl` or fetch. A script that cannot do what the target needs is
-  an open point to report, never a reason to work around it.
-- Report what was observed (status codes, file names, code), not a guess about the vendor
-  or product ("typical for ..."): such a guess is no evidence and steers the analysis.
-- Unwire is a prototype and its specs are AI-derived: present every result as a draft to
-  review, with its open points, never as verified fact.
+- **Read-only.** Unwire never changes anything on the target. Only GET requests to
+  well-known documentation paths and to static assets (HTML, JS, source maps) are allowed.
+  Never call an API endpoint found in the code, never submit a form, never execute
+  downloaded JavaScript. The one exception is the live GET of `unwire:analyze` (its
+  step 7): safe GETs of the spec, only after the user said yes through AskUserQuestion for
+  this run and this target.
+- **Only through the scripts.** Every request to the target goes through the Unwire
+  scripts, never an own `Invoke-WebRequest`, `curl` or fetch. A script that cannot do what
+  the target needs is an open point to report, never a reason to work around it.
+- **Evidence, not guesses.** Report what was observed (status codes, file names, code),
+  not a guess about the vendor or product ("typical for ..."): such a guess is no evidence
+  and steers the analysis.
+- **Results are drafts.** Unwire is a prototype and its specs are AI-derived: present
+  every result as a draft to review, with its open points, never as verified fact.
 
 ## Input
 - `<url>`: base URI of the web UI, e.g. `http://192.168.178.1`.
@@ -104,7 +106,8 @@ unwire/<name>/
    open points in the spec, then its optional live GET (step 7, asks first). When step 2
    was skipped for a complete published spec, offer only that live GET.
 3. **Document** with the `unwire:document` skill: `API.html`. Give the user a short
-   summary (operations per confidence, write operations, top open points) and end with the
+   summary (operations per confidence, write operations, `security` changed by the live
+   GET, top open points) and end with the
    browser link of its step 4 (`FileUri` from the script output), then ask whether to open
    it in the browser (its step 5).
 4. **Code** (`unwire:code`) is not implemented yet: do not offer it. When the user asks for

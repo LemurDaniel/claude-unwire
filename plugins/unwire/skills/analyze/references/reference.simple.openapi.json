@@ -3,7 +3,7 @@
   "info": {
     "title": "ReferenceSimple",
     "version": "0.1.0",
-    "description": "Reference for unwire:analyze, the simple case: a UI without login, literal paths in its scripts. Copy the shape of this spec, never its paths, names or values. Draft, AI-derived."
+    "description": "Reference for unwire:analyze, the simple case: a storage UI without login, literal paths in its scripts. Copy the shape of this spec, never its paths, names or values. Draft, AI-derived."
   },
   "x-unwire-reference": true,
   "servers": [
@@ -12,35 +12,38 @@
       "description": "Web UI root"
     }
   ],
-  "x-unwire-target": "http://router.test/",
+  "x-unwire-target": "http://nas.example.test/",
   "x-unwire-open": [
-    "Pages: loadPage builds 'pages/' + name + '.htm' (assets/js/app.js:50); the names come from menuPages in menu.htm, loaded with -Page.",
-    "Auth: no login page, no session in any request (assets/js/auth.js:2); every operation has security []."
+    "Views: showView builds 'views/' + view + '.html' (assets/js/main.js:31); the names come from the NAV list in main.js:5, loaded with -Page.",
+    "Auth: no login page, no session in any request (assets/js/main.js:12); every operation has security []."
   ],
   "paths": {
-    "/api/status": {
+    "/api/v1/system/info": {
       "get": {
         "tags": [
-          "Web · Status"
+          "Web · System"
         ],
-        "summary": "Get the status",
-        "operationId": "getStatus",
+        "summary": "Get the system info",
+        "operationId": "getSystemInfo",
         "responses": {
           "200": {
-            "description": "JSON, the UI reads version and wan.ip.",
+            "description": "JSON, the UI reads model and disks[].temperature.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "version": {
+                    "model": {
                       "type": "string"
                     },
-                    "wan": {
-                      "type": "object",
-                      "properties": {
-                        "ip": {
-                          "type": "string"
+                    "disks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "temperature": {
+                            "type": "integer"
+                          }
                         }
                       }
                     }
@@ -50,44 +53,48 @@
             }
           }
         },
-        "x-unwire-source": "assets/pages/status.htm:4",
+        "x-unwire-source": "assets/views/overview.html:7",
         "x-unwire-confidence": "high",
         "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "The UI has no login, status.htm calls it on load.",
+        "x-unwire-auth": "The UI has no login, overview.html calls it on load.",
         "x-unwire-open": [
           "Live GET 2026-11-02: without session HTTP 200 application/json, with session -. Response schema from the live answer: keys and types only, check it."
         ]
       }
     },
-    "/api/logs": {
+    "/api/v1/shares": {
       "get": {
         "tags": [
-          "Web · System"
+          "Web · Shares"
         ],
-        "summary": "Get the log",
-        "operationId": "getLogs",
+        "summary": "List the shares",
+        "operationId": "listShares",
         "parameters": [
           {
-            "name": "level",
+            "name": "protocol",
             "in": "query",
             "required": false,
-            "description": "Log level, the UI sends 'warn' (assets/pages/system.htm:4).",
+            "description": "Filter, the UI sends 'smb' or 'nfs' from the tab bar (assets/js/shares.js:18).",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "smb",
+                "nfs"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "JSON, the UI reads entries.",
+            "description": "JSON, the UI reads items[].name.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "entries": {
+                    "items": {
                       "type": "array",
                       "items": {}
                     }
@@ -97,22 +104,20 @@
             }
           }
         },
-        "x-unwire-source": "assets/js/app.js:29",
+        "x-unwire-source": "assets/js/shares.js:22",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
         "x-unwire-impact": "read",
         "security": [],
         "x-unwire-auth": "The UI has no login.",
         "x-unwire-open": []
-      }
-    },
-    "/api/wifi": {
+      },
       "post": {
         "tags": [
-          "Web · Wi-Fi"
+          "Web · Shares"
         ],
-        "summary": "Set the Wi-Fi settings",
-        "operationId": "setWifi",
+        "summary": "Create a share",
+        "operationId": "createShare",
         "requestBody": {
           "required": true,
           "content": {
@@ -120,13 +125,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "ssid": {
+                  "name": {
                     "type": "string"
                   },
-                  "channel": {
-                    "type": "integer"
+                  "path": {
+                    "type": "string"
                   },
-                  "isEnabled": {
+                  "isReadOnly": {
                     "type": "boolean"
                   }
                 }
@@ -135,23 +140,30 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "JSON, the UI does not read it.",
+          "201": {
+            "description": "JSON, the UI reads id.",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
         },
-        "x-unwire-source": "assets/pages/wifi.htm:10",
+        "x-unwire-source": "assets/js/shares.js:40",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
         "x-unwire-impact": "write",
         "security": [],
         "x-unwire-auth": "The UI has no login.",
         "x-unwire-open": [
-          "Response body unknown: the caller ignores it."
+          "Status 201 from the caller's check (r.status === 201), not observed."
         ]
       }
     }
