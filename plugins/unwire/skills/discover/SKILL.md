@@ -19,7 +19,9 @@ before the first request. `RequiresConfirmation: true` (public or unresolvable) 
 and get an explicit "continue at my own risk" through the AskUserQuestion tool, exactly as
 `unwire/SKILL.md` describes, or send nothing.
 
-Only GET requests to the paths in `data/spec-paths.json` of this skill. No POST, also not for a
+Only GET requests to the paths in `data/spec-paths.json` of this skill, plus, on a Swagger UI
+page, its same-origin init scripts and the spec URL they name. A redirect is followed only
+when it adds a trailing slash (`/api-docs` → `/api-docs/`). No POST, also not for a
 GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an open point.
 
 ## Steps
@@ -38,7 +40,8 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
    | `OpenApi` | JSON spec, saved in `discover/` | Copy to `openapi.json` |
    | `Swagger` | Swagger 2.0, saved in `discover/` | Convert with `ConvertFrom-UnwireSwagger.ps1` (below) |
    | `OpenApiYaml` | YAML spec, saved in `discover/` | Convert to `openapi.json` |
-   | `SwaggerUi`, `ReDoc` | Documentation page | Find the spec URL in the page (`url:` / `spec-url`), probe it with `-Path` |
+   | `SwaggerUi` | Documentation page | The script already read its init scripts: an embedded spec comes as an extra `OpenApi`/`Swagger` hit (`…#swaggerDoc`), a same-origin `url:` is probed. No extra hit: find the spec URL in the page yourself and probe it with `-Path` |
+   | `ReDoc` | Documentation page | Find the spec URL in the page (`spec-url`), probe it with `-Path` |
    | `GraphQLUi` | GraphiQL or Playground | Note as open point, schema needs introspection (POST) |
 
    Swagger 2.0 to OpenAPI 3, with the x-unwire-* extensions set on every operation:

@@ -16,6 +16,10 @@ param ()
 #   swagger_ui              Reports a Swagger UI page as documentation.
 #   redirect_ignored        Ignores redirects, they usually lead to a login page.
 #   redirect_error_skipped  Skips a redirect pwsh reports as an error.
+#   slash_redirect          Follows a redirect that only adds a trailing slash.
+#   other_redirect          Never follows a redirect to another path.
+#   embedded_spec           Reads and saves a spec a Swagger UI script embeds as swaggerDoc.
+#   swagger_ui_url          Probes a spec URL of the same origin, never another origin.
 #   no_hits                 Returns nothing and warns when no path has docs.
 #   saves_specs             Saves found specs into OutputDirectory.
 #   get_only                Never sends anything but GET.
@@ -29,9 +33,12 @@ BeforeAll {
     $BASE_URI    = 'http://router.test'
 
     function New-TestResponse {
-        param ([System.Int32] $StatusCode, [System.String] $Content = '')
-        return [PSCustomObject]@{ StatusCode = $StatusCode; Content = $Content }
+        param ([System.Int32] $StatusCode, [System.String] $Content = '', [System.Collections.Hashtable] $Headers = @{})
+        return [PSCustomObject]@{ StatusCode = $StatusCode; Content = $Content; Headers = $Headers }
     }
+
+    # A Swagger UI page under /api-docs/ that loads its configuration script.
+    $SWAGGER_PAGE = '<div id="swagger-ui"></div><script src="./swagger-ui-bundle.js"></script><script src="./swagger-ui-init.js"></script>'
 }
 
 Describe 'Find-UnwireSpec' {
@@ -92,6 +99,55 @@ Describe 'Find-UnwireSpec' {
 
         $hits.Count   | Should -Be 1
         $hits[0].Path | Should -Be 'v3/api-docs'
+    }
+
+    It 'slash_redirect: follows a redirect that only adds a trailing slash' {
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 301 -Headers @{ Location = @('/api-docs/') } } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs' }
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content $SWAGGER_PAGE } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/' }
+
+        $hits = @(& $SCRIPT_PATH -Uri $BASE_URI -Path 'api-docs')
+
+        $hits.Count   | Should -Be 1
+        $hits[0].Kind | Should -Be 'SwaggerUi'
+        $hits[0].Uri  | Should -Be 'http://router.test/api-docs/'
+    }
+
+    It 'other_redirect: never follows a redirect to another path' {
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 302 -Headers @{ Location = @('/login?next=/api-docs/') } } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs' }
+
+        $hits = @(& $SCRIPT_PATH -Uri $BASE_URI -Path 'api-docs' -WarningAction SilentlyContinue)
+
+        $hits.Count | Should -Be 0
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/login' }
+    }
+
+    It 'embedded_spec: reads the spec a Swagger UI script embeds as swaggerDoc and saves it' {
+        $init = 'window.onload = function() { var options = { "swaggerDoc": { "openapi": "3.0.0", "info": { "title": "B2B API", "description": "braces } in a string {" }, "paths": {} }, "customOptions": {} }; }'
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content $SWAGGER_PAGE } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/' }
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content $init } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/swagger-ui-init.js' }
+        $outputDirectory = Join-Path -Path $TestDrive -ChildPath 'embedded'
+
+        $hits = @(& $SCRIPT_PATH -Uri $BASE_URI -Path 'api-docs/' -OutputDirectory $outputDirectory)
+        $spec = Get-Content -Path $hits[1].SavedFile -Raw | ConvertFrom-Json
+
+        $hits.Kind         | Should -Be @('SwaggerUi', 'OpenApi')
+        $hits[1].Path      | Should -Be 'api-docs/swagger-ui-init.js#swaggerDoc'
+        $hits[1].Title     | Should -Be 'B2B API'
+        $spec.info.description | Should -Be 'braces } in a string {'
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/swagger-ui-bundle.js' }
+    }
+
+    It 'swagger_ui_url: probes a spec URL of the same origin, never one of another origin' {
+        $init = 'window.ui = SwaggerUIBundle({ urls: [{ url: "/v1/openapi.json", name: "v1" }, { url: "https://petstore.swagger.io/v2/swagger.json", name: "demo" }] })'
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content $SWAGGER_PAGE } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/' }
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content $init } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs/swagger-ui-init.js' }
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content '{"openapi":"3.1.0","info":{"title":"V1"}}' } -ParameterFilter { $Uri.AbsolutePath -EQ '/v1/openapi.json' }
+
+        $hits = @(& $SCRIPT_PATH -Uri $BASE_URI -Path 'api-docs/')
+
+        $hits.Kind    | Should -Be @('SwaggerUi', 'OpenApi')
+        $hits[1].Path | Should -Be 'v1/openapi.json'
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.Host -EQ 'petstore.swagger.io' }
     }
 
     It 'no_hits: returns nothing and warns when no path has docs' {

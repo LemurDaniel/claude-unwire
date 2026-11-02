@@ -94,9 +94,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
-- **Embedded Swagger UI spec**: `/api-docs/swagger-ui-init.js` carries the spec as
-  `swaggerDoc`; `Find-UnwireSpec` misses it and finds only the Petstore default (Juice Shop
-  B2B lost in the second run, 88 instead of 89).
 - **`examples/juiceshop/`** has three wrong `security` values (`/api/Quantitys/`,
   `/rest/chatbot/status`, `/rest/user/whoami`: 200 without session, still `bearerAuth`),
   from the run before the live GET hint rule.
@@ -113,6 +110,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Next
 
-Embedded Swagger UI spec in `Find-UnwireSpec` (Juice Shop B2B: `swagger-ui-init.js` in the first
-run, `swagger-initializer.js` in the second), then a fresh Juice Shop run: it should reach 89
-operations with `Test-UnwireCoverage` empty, and replace `examples/juiceshop/`.
+A fresh Juice Shop run in a new session (`/unwire http://localhost:3000 -Name JuiceShop`): it
+should now find the embedded B2B spec (`Find-UnwireSpec` follows `/api-docs` → `/api-docs/` and
+reads `swagger-ui-init.js`), reach 89 operations with `Test-UnwireCoverage` empty, and replace
+`examples/juiceshop/`.
