@@ -9,6 +9,9 @@ The documentation is what the user reads first: what exists, how sure it is, wha
 Client code (`unwire:code`) is planned, not implemented yet.
 
 ## Ground rule
+Outside Claude Code: `${CLAUDE_PLUGIN_ROOT}` and AskUserQuestion as in "Outside Claude
+Code" of `unwire/SKILL.md` (plugin root: two folders above this `SKILL.md`).
+
 PowerShell 7: run the check of `${CLAUDE_PLUGIN_ROOT}/shared/pwsh-check.md` before the
 first script, unless it already passed in this session.
 
@@ -27,7 +30,7 @@ first script, unless it already passed in this session.
    ```
 3. **Render**:
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/document/scripts/ConvertTo-UnwireHtml.ps1" -Path './unwire/<name>/openapi.json'
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/document/scripts/ConvertTo-UnwireHtml.ps1" -Path './unwire/<name>/openapi.json'
    ```
    Writes `unwire/<name>/API.html` next to the spec. The page works offline, no CDN.
    It returns `OutputFile` and `FileUri`, the `file:///` link to the page.

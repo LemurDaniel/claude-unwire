@@ -1,0 +1,20 @@
+{
+  "name": "claude-unwire",
+  "interface": {
+    "displayName": "Unwire"
+  },
+  "plugins": [
+    {
+      "name": "unwire",
+      "source": {
+        "source": "local",
+        "path": "./plugins/unwire"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

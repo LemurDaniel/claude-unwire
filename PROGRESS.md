@@ -37,12 +37,16 @@ changing anything on the target. Client code for picked operations is planned (`
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`
   runs before the first script (Bash tool, PS >= 7), then AskUserQuestion: install yourself
   (recommended), Claude runs winget/brew (not on Linux, sudo), or cancel. No 5.1 fallback.
-- **Marketplace layout like Infrastructure-as-Skills** (2026-11-02). `plugins/unwire/core/<skill>/`
+- **Marketplace layout like Infrastructure-as-Skills** (2026-11-02). `plugins/unwire/skills/<skill>/`
   with its own scripts, data or templates and tests; `shared/` for what several skills use.
+- **One plugin for every agent with skills** (2026-11-02). Claude Code, Copilot CLI, Codex and
+  Gemini CLI install the same folder: `core/` became `skills/` (the convention all of them
+  read), `/unwire` became the skill `skills/unwire/`, three manifests and two marketplaces.
+  Without AskUserQuestion the confirmation is a question in the chat (user approved).
 
 ## State
 
-- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 129 Pester
+- v0.3.0 on `master`. Skills: unwire (entry), discover, analyze, document, code (stub). 7 scripts, 136 Pester
   tests (plus 5 in `docs/screenshots`). The hand-over ends with a
   `file:///` link to `API.html` (`FileUri` from `ConvertTo-UnwireHtml`), then asks to open
   it in the default browser (`Invoke-Item`).
@@ -65,12 +69,15 @@ changing anything on the target. Client code for picked operations is planned (`
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
   like"). The Grafana example in `examples/` was dropped on 2026-11-02 at the user's
   request (git history has it). If wanted: a small reference spec in
-  `core/analyze/references/` and the skills pointing at it.
+  `skills/analyze/references/` and the skills pointing at it.
 - **D · Eval loop with the testbed** (tips 13 to 16). A checkable goal per target (e.g. Juice
   Shop: these endpoints must be found), a check separate from the run, a cap on runs and cost,
   results remembered between runs, like `evals/` in Infrastructure-as-Skills.
 - Install through the marketplace (`/plugin marketplace add LemurDaniel/claude-unwire`) and
   `claude plugin validate` were not run, the CLI is not on PATH in the desktop app shell.
+- **Copilot CLI, Codex, Gemini CLI never ran Unwire** (2026-11-02). Manifests follow their docs
+  only. Unconfirmed: whether they replace `${CLAUDE_PLUGIN_ROOT}` in SKILL.md (the skills fall
+  back to two folders above the SKILL.md), whether the Codex CLI reads `.claude-plugin/`.
 - The analysis of candidates into operations was done by hand with a scratch script in the
   Gitea run; whether `unwire:analyze` alone gets there is untested.
 - Socket.IO apps (Uptime Kuma) are a known limit, not handled.

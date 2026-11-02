@@ -7,15 +7,21 @@ sessions: read it first, rewrite it last. `README.md` holds the pitch and the st
 ## What this repo is
 A Claude Code **marketplace** with one plugin, **Unwire**: it reverse engineers the
 undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`; client code
-(`unwire:code`) is planned, not implemented. Skills live in `plugins/unwire/core/<skill>/`
+(`unwire:code`) is planned, not implemented. Skills live in `plugins/unwire/skills/<skill>/`
 with their own scripts, data or templates and Pester tests; `plugins/unwire/shared/` holds what several skills use.
+The same plugin installs in Copilot CLI, Codex and Gemini CLI: three plugin manifests
+(`.claude-plugin/plugin.json`, `plugin.json`, `gemini-extension.json`) and two marketplaces
+(`.claude-plugin/`, `.agents/plugins/`), kept in sync by `PluginManifest.Tests.ps1`. The
+entry point is the skill `skills/unwire/`, not a command, so every agent gets it.
 
 ## Ground rule: own home systems, read-only
 Every change must keep this true, it is the reason the plugin may run against real devices.
 - Only for home systems the user owns or may analyze. `shared/Test-UnwireTarget.ps1`
   classifies the target before the first request; public or unresolvable targets need a
   warning and an explicit "own risk" answer through AskUserQuestion, per target, never
-  carried over. The README carries the notices (own systems only, prototype, AI-generated):
+  carried over. Agents without that tool ask the same question in the chat, only the
+  user's own reply naming the option counts (approved 2026-11-02, "Outside Claude Code" in
+  `skills/unwire/SKILL.md`). The README carries the notices (own systems only, prototype, AI-generated):
   keep them when editing it.
 - Only GET on well-known documentation paths and on static assets (HTML, JS, source maps).
   Never call an endpoint found in the code, never submit a form, never execute downloaded JS.
@@ -30,7 +36,7 @@ Every change must keep this true, it is the reason the plugin may run against re
 ```powershell
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
-./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json
+./plugins/unwire/skills/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json
 ```
 Throwaway targets to run Unwire against, even with write calls: `examples/testbed/`
 (`docker compose up -d`, reset with `docker compose down`).
@@ -49,7 +55,13 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
   no test checks that one.
 - Examples and docs use generic hosts (`router.test`, `nas.example.test`), not the user's.
 
+- SKILL.md text works in every agent: a Claude-only name (`${CLAUDE_PLUGIN_ROOT}`,
+  AskUserQuestion, Bash tool) points at "Outside Claude Code" in `skills/unwire/SKILL.md`,
+  a test checks it. A version bump changes all three plugin manifests.
+
 ## Traps already hit
+- On Windows `git mv` of a folder can fail with "Permission denied" (a process holds the
+  folder): move the tracked files one by one, remove the empty folders later.
 - A skill rule "write these steps out in the chat" was ignored twice, the steps were only
   announced. User-facing guides live hard-coded in `data/` and the script shows them
   (see `data/login-guide.json`, `-PromptSession`).

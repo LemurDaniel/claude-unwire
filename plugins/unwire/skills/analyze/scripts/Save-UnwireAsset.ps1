@@ -13,15 +13,15 @@
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
 #
-#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
-#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #
-#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession -Language en
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession -Language en
 #     Unwire: login for https://nas.local/gitea/        # the guide, then the masked prompt
 #     Session cookie (...): ****                        # "Copy as cURL" from the browser
 #
 #   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'
-#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
 
 #
 #   Chapters:

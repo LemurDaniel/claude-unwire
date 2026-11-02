@@ -7,8 +7,8 @@
 #   Scans *.js, *.mjs, *.cjs, *.html, *.htm and the sourcesContent of *.js.map. A bundle with
 #   a source map next to it is skipped, the map holds the same code with real names.
 #
-#   ./plugins/unwire/core/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets
-#   ./plugins/unwire/core/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets -OutputFile ./unwire/router/candidates.json
+#   ./plugins/unwire/skills/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets
+#   ./plugins/unwire/skills/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets -OutputFile ./unwire/router/candidates.json
 
 #
 #   Chapters:

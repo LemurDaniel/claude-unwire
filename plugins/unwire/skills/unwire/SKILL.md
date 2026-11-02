@@ -1,11 +1,23 @@
 ---
-description: Reverse engineers the API of a web UI into openapi.json and a clickable HTML documentation. Read-only.
+name: unwire
+description: Reverse engineers the API of a web UI into openapi.json and a clickable HTML documentation. Read-only. Runs the whole chain (discover, analyze, document); use when someone wants the API of a router, NAS, smart home device or web app.
 argument-hint: <url|folder> [-Name <api-name>] [-SkipCertificateCheck]
 ---
 
 # /unwire
 
-Runs the Unwire chain for: `$ARGUMENTS`
+Runs the Unwire chain for: `$ARGUMENTS` (outside Claude Code: the URL or folder and the
+options the user gave).
+
+## Outside Claude Code
+Codex, Copilot CLI, Gemini CLI and other agents load the same skills. Two names below are
+from Claude Code:
+- `${CLAUDE_PLUGIN_ROOT}` is the plugin root. Where the agent does not replace it, it is
+  the folder two levels above this `SKILL.md`, the one that holds `shared/`.
+- **AskUserQuestion**: without that tool, ask the same question with the same options,
+  numbered, in the chat and wait for the reply. Only the user's own reply to this
+  question that names an option counts, exactly like an answer in the tool; anything else
+  cancels. The Bash tool is the agent's shell tool.
 
 ## Ground rules
 - **PowerShell 7 first.** Every script needs `pwsh`: run the check of

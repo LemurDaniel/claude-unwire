@@ -3,8 +3,8 @@
 #   Swagger UI, ReDoc and GraphiQL pages. Sends GET requests to well-known paths only and
 #   follows no redirects, so nothing on the target is changed.
 #
-#   ./plugins/unwire/core/discover/scripts/Find-UnwireSpec.ps1 -Uri 'http://192.168.178.1'
-#   ./plugins/unwire/core/discover/scripts/Find-UnwireSpec.ps1 -Uri 'https://nas.local:5001' -SkipCertificateCheck -OutputDirectory ./unwire/nas/discover
+#   ./plugins/unwire/skills/discover/scripts/Find-UnwireSpec.ps1 -Uri 'http://192.168.178.1'
+#   ./plugins/unwire/skills/discover/scripts/Find-UnwireSpec.ps1 -Uri 'https://nas.local:5001' -SkipCertificateCheck -OutputDirectory ./unwire/nas/discover
 
 #
 #   Chapters:

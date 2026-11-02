@@ -2,6 +2,8 @@
 
 Every Unwire script runs with `pwsh`, so this check comes before the first script of a run
 (`/unwire` or a skill called on its own). Once per session is enough when it passed.
+Outside Claude Code the Bash tool is the agent's shell tool and AskUserQuestion a question
+in the chat, as in "Outside Claude Code" of `skills/unwire/SKILL.md`.
 
 1. **Check** with the Bash tool, not the PowerShell tool (that one may be Windows
    PowerShell 5.1 or need `pwsh` itself): the `check` command of `data/pwsh-install.json`.

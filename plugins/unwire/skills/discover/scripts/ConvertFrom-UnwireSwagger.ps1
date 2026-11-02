@@ -3,7 +3,7 @@
 #   the chain: servers, components, request bodies, response content, security schemes.
 #   Adds the x-unwire-* extensions every operation needs, marked as taken from the device.
 #
-#   ./plugins/unwire/core/discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/gitea/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
+#   ./plugins/unwire/skills/discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/gitea/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
 
 #
 #   Chapters:

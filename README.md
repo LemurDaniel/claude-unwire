@@ -1,5 +1,5 @@
 # claude-unwire
-Claude Code plugin that reverse engineers the undocumented HTTP API of a web UI (router, NAS,
+Claude Code plugin (also for Copilot CLI, Codex and Gemini CLI, see [Install](#install)) that reverse engineers the undocumented HTTP API of a web UI (router, NAS,
 smart home device, web app) into an OpenAPI spec and a clickable HTML documentation.
 Client code for the parts you need is planned (`unwire:code`, not implemented yet).
 
@@ -14,7 +14,7 @@ Client code for the parts you need is planned (`unwire:code`, not implemented ye
 > explicit "at my own risk" confirmation.
 
 > [!WARNING]
-> **Prototype.** Unwire is an early prototype (v0.2.0). It is tested against a few home
+> **Prototype.** Unwire is an early prototype (v0.3.0). It is tested against a few home
 > systems only, its output can be incomplete or wrong, and its interfaces may change without
 > notice. Treat every generated spec and page as a draft to review, not as fact.
 
@@ -86,10 +86,37 @@ Then in Claude Code, from the repo root (`127.0.0.1` is an IP, so `-Name` is nee
 Output goes to `/unwire/<name>/`. Reset every target with `docker compose down`.
 
 ## Install
+**Claude Code**
 ```
 /plugin marketplace add LemurDaniel/claude-unwire
 /plugin install unwire@claude-unwire
 ```
+
+**GitHub Copilot CLI** (reads the same marketplace)
+```
+copilot plugin marketplace add LemurDaniel/claude-unwire
+copilot plugin install unwire@claude-unwire
+```
+
+**OpenAI Codex** (CLI and ChatGPT desktop app)
+```
+codex plugin marketplace add LemurDaniel/claude-unwire
+```
+Then `/plugins` in `codex`, pick **unwire** from the marketplace **claude-unwire**.
+
+**Gemini CLI** (an extension needs its manifest at the root, so clone first)
+```powershell
+git clone https://github.com/LemurDaniel/claude-unwire.git
+gemini extensions install ./claude-unwire/plugins/unwire
+```
+
+Outside Claude Code there is no `/unwire` command: ask for it in plain words ("unwire
+http://192.168.178.1") or call the `unwire` skill (`$unwire` in Codex). The skills ask their
+confirmations in the chat there, the rules stay the same.
+
+> [!NOTE]
+> Built and tested with Claude Code. The manifests for Copilot CLI, Codex and Gemini CLI
+> follow their documentation, but have not been run in those agents yet.
 
 ### Requirements
 PowerShell 7+ (`pwsh`) on PATH, no modules. Unwire checks it before the first script and
@@ -102,13 +129,14 @@ asks before anything gets installed.
 | Linux | per distro, see [Installing PowerShell on Linux](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux) |
 
 ## Status
-v0.2.0: all scripts work and are tested, one full run against Gitea (518 operations).
+v0.3.0: all scripts work and are tested, one full run against Gitea (518 operations).
+Installs in Claude Code, Copilot CLI, Codex and Gemini CLI.
 Step 4, `unwire:code`, is not implemented yet.
 
 ## Development
 ```powershell
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
-./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json   # re-render a page
+./plugins/unwire/skills/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json   # re-render a page
 claude --plugin-dir ./plugins/unwire      # load the plugin locally
 ```

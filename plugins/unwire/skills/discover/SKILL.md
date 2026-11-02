@@ -8,13 +8,16 @@ description: Step 1 of Unwire. Checks a web UI for published API documentation (
 Finds documentation the target already publishes. A hit can save the whole code analysis.
 
 ## Ground rule
+Outside Claude Code: `${CLAUDE_PLUGIN_ROOT}` and AskUserQuestion as in "Outside Claude
+Code" of `unwire/SKILL.md` (plugin root: two folders above this `SKILL.md`).
+
 PowerShell 7: run the check of `${CLAUDE_PLUGIN_ROOT}/shared/pwsh-check.md` before the
 first script, unless it already passed in this session.
 
 Only home systems the user owns: run `${CLAUDE_PLUGIN_ROOT}/shared/Test-UnwireTarget.ps1`
 before the first request. `RequiresConfirmation: true` (public or unresolvable) means warn
 and get an explicit "continue at my own risk" through the AskUserQuestion tool, exactly as
-`commands/unwire.md` describes, or send nothing.
+`unwire/SKILL.md` describes, or send nothing.
 
 Only GET requests to the paths in `data/spec-paths.json` of this skill. No POST, also not for a
 GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an open point.
@@ -22,12 +25,12 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
 ## Steps
 1. Run the probe from the plugin root (`${CLAUDE_PLUGIN_ROOT}`):
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/discover/scripts/Find-UnwireSpec.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/discover/scripts/Find-UnwireSpec.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/discover' -Verbose
    ```
    Run without `-SkipCertificateCheck`. An untrusted certificate stops the script after the
    first request with "has a TLS certificate this machine does not trust": ask the user as
-   `commands/unwire.md` describes, add the switch only after a yes.
+   `unwire/SKILL.md` describes, add the switch only after a yes.
 2. Read the result, one object per hit:
 
    | Kind | Meaning | Next |
@@ -40,7 +43,7 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
 
    Swagger 2.0 to OpenAPI 3, with the x-unwire-* extensions set on every operation:
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/discover/scripts/ConvertFrom-UnwireSwagger.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/discover/scripts/ConvertFrom-UnwireSwagger.ps1" `
        -Path './unwire/<name>/discover/swagger.v1.json' -OutputFile './unwire/<name>/openapi.json'
    ```
    Run `Test-UnwireSpec.ps1` right after: published specs have bugs too (Gitea's uses one
