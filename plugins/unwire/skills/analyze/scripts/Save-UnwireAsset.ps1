@@ -6,9 +6,13 @@
 #   Every asset goes out with the page that loaded it as Referer, like a browser: some
 #   devices answer 403 to scripts without it. Scripts that still answer 401 or 403
 #   are counted as AccessDenied: the code is probably behind a login, try session mode.
+#   A start page with a password field is reported as LoginForm: without a session only
+#   the code of the login page is there.
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
-#   the start page and *.js, *.mjs, *.map files, never a page, frame, endpoint or redirect.
+#   the start page, *.htm/*.html pages and frames and *.js, *.mjs, *.map files, never an
+#   endpoint or redirect. Signed-in pages are read, never saved: only their inline script
+#   code is kept, with the string values of 'var x = "..."' assignments redacted.
 #   -PromptSession shows the login guide of data/login-guide.json in -Language, then asks for
 #   the cookie with a masked prompt (interactive, nothing on disk), -UseSession reads it from
 #   an environment variable (automation). The cookie never appears in output, logs or manifest.
@@ -18,6 +22,7 @@
 #
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets -Page '/main/status.htm,/frame/menu.htm'
 #
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/wiki/' -OutputDirectory ./unwire/wiki/assets -PromptSession -Language en
 #     Unwire: login for https://nas.local/wiki/        # the guide, then the masked prompt
@@ -56,6 +61,18 @@ param (
     )]
     [System.String]
     $OutputDirectory,
+
+    <#
+    [Optional]
+    Extra pages to load besides the start page, e.g. '/main/status.htm': pages the UI loads
+    at runtime (XHR) and no tag names, derived from the code by the agent. Only same-origin
+    *.htm or *.html paths, resolved against Uri, the denylist applies in session mode.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [System.String[]]
+    $Page = @(),
 
     <#
     [Optional]
@@ -127,8 +144,8 @@ param (
     <#
     [Optional]
     Sends the session cookie from the environment variable SessionVariable and switches to
-    session mode: only the start page and *.js, *.mjs, *.map files are requested, nothing
-    on the denylist (logout, reboot, delete, ...), no redirects.
+    session mode: only the start page, *.htm/*.html pages and *.js, *.mjs, *.map files are
+    requested, nothing on the denylist (logout, reboot, delete, ...), no redirects.
     #>
     [Parameter(
         Mandatory = $false
@@ -183,6 +200,8 @@ $DEFAULT_LANGUAGE  = 'en'
 $MAX_REDIRECTS     = 5
 $REDIRECT_CODES    = @(301, 302, 303, 307, 308)
 $SOURCE_MAP_HEADER = @('SourceMap', 'X-SourceMap')
+# <input type="password" ...>, <input id="pw" type='password'>
+$HTML_PASSWORD_FIELD = '(?i)<input\b[^>]*?\btype\s*=\s*["'']?password\b'
 # <base href="/app/">, <script src="/js/app.js">, <link rel="modulepreload" href="/js/chunk.js">, <frame src="menu.html">
 $HTML_BASE_REF     = '<base\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_SCRIPT_REF  = '<script\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
@@ -201,6 +220,11 @@ $JS_PUBLIC_PATH    = '\b\w+\.p\s*=\s*"(?<path>[^"]*)"'
 $CHUNK_HASH        = '^[0-9a-fA-F]{6,}$'
 # Session mode: what may be requested at all, and what never
 $SESSION_STATIC    = '\.(m?js|map)$'
+$SESSION_PAGE      = '\.html?$'
+# Inline script blocks of a page: <script>...</script> without src
+$HTML_INLINE_SCRIPT = '(?is)<script\b(?![^>]*\bsrc\s*=)[^>]*>(?<code>.*?)</script>'
+# Server-rendered values: var name = "value"; => var name = "<redacted>";
+$JS_STRING_ASSIGNMENT = '(?<head>\b(?:var|let|const)\s+[\w$]+\s*=\s*)(?<q>["''])(?:\\.|(?!\k<q>)[^\\\r\n])*\k<q>'
 $SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)'
 # Line continuations of a pasted cURL command: bash '\', cmd '^', PowerShell '`'
 $PASTE_CONTINUATION = '\s[\\^`]\s*$'
@@ -212,6 +236,7 @@ $MAX_PASTE_LINES    = 200
 #
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
 #   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
+#   Get-UnwireInlineScript         Inline script code of a page, string values redacted.
 #   ConvertTo-UnwireCookieHeader   Cookie header from the usual copy formats of a browser.
 #   Get-UnwireCookieShape          Describes pasted text without showing its content.
 #   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
@@ -239,7 +264,8 @@ function Get-UnwireSessionBlock {
         > Path or query on the denylist   -> blocked, also the start page
         > The start page itself           -> allowed
         > *.js, *.mjs, *.map              -> allowed
-        > Anything else                   -> blocked (pages, frames, endpoints)
+        > *.htm, *.html                   -> allowed (pages and frames, read, never saved)
+        > Anything else                   -> blocked (endpoints, pages without extension)
     #>
 
     if ("$($Target.AbsolutePath)$($Target.Query)" -MATCH $SESSION_DENYLIST) {
@@ -248,10 +274,27 @@ function Get-UnwireSessionBlock {
     if ($Target.GetLeftPart([System.UriPartial]::Query) -EQ $Start.GetLeftPart([System.UriPartial]::Query)) {
         return $null
     }
-    if ($Target.AbsolutePath.ToLowerInvariant() -MATCH $SESSION_STATIC) {
+    $path = $Target.AbsolutePath.ToLowerInvariant()
+    if ($path -MATCH $SESSION_STATIC -OR $path -MATCH $SESSION_PAGE) {
         return $null
     }
-    return 'session mode: no static script or source map'
+    return 'session mode: no static script, source map or .htm page'
+}
+
+function Get-UnwireInlineScript {
+    param (
+        [System.String] $Text
+    )
+
+    # Only the code between the tags; string values of simple assignments are redacted, a
+    # signed-in page renders its data there (var wlanKey = "secret";).
+    $blocks = [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_INLINE_SCRIPT)
+    | ForEach-Object { $_.Groups['code'].Value.Trim() }
+    | Where-Object { -NOT [System.String]::IsNullOrEmpty($_) }
+    if ($null -EQ $blocks) {
+        return $null
+    }
+    return [System.Text.RegularExpressions.Regex]::Replace((@($blocks) -join "`n;`n"), $JS_STRING_ASSIGNMENT, '${head}"<redacted>"')
 }
 
 function ConvertTo-UnwireCookieHeader {
@@ -489,8 +532,8 @@ function ConvertFrom-UnwireDataUri {
 # ============================   PREPARE CRAWL   ============================
 # ===========================================================================
 #
-#   1. Validations   Fails early on a bad URI or a missing session cookie.
-#   2. Queue         Queues the start page and prepares the request settings.
+#   1. Validations   Fails early on a bad URI, a bad page or a missing session cookie.
+#   2. Queue         Queues the start page and extra pages, prepares the request settings.
 #
 
 # ---------------------------------------------------------------------------
@@ -501,6 +544,17 @@ function ConvertFrom-UnwireDataUri {
 $StartUri = $null
 if (-NOT [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $StartUri) -OR $StartUri.Scheme -NOTIN @('http', 'https')) {
     throw [System.ArgumentException]::new("Uri must be an absolute http or https URI, e.g. 'http://192.168.178.1', got '$Uri'.")
+}
+
+# Extra pages: checked before any prompt, so a bad path never costs the user a login.
+# pwsh -File hands a list over as one string: '/a.htm,/b.htm' => '/a.htm', '/b.htm'
+$PagePaths  = $Page -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -NE '' }
+$ExtraPages = foreach ($pagePath in $PagePaths) {
+    $pageUri = [System.Uri]::new($StartUri, $pagePath)
+    if (-NOT (Test-UnwireSameOrigin -Left $pageUri -Right $StartUri) -OR $pageUri.AbsolutePath -NOTMATCH $SESSION_PAGE) {
+        throw [System.ArgumentException]::new("Page must be a same-origin *.htm or *.html path, e.g. '/main/status.htm', got '$pagePath'.")
+    }
+    $pageUri
 }
 
 # PromptSession is session mode too, only the source of the cookie differs.
@@ -589,6 +643,10 @@ $Records   = [System.Collections.Generic.List[PSCustomObject]]::new()     # writ
 $SavedHashes = [System.Collections.Generic.Dictionary[System.String, System.String]]::new()     # content hash => saved file
 
 $Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; FoundIn = $null; PageBase = $StartUri; Guessed = $false; Referer = $null })
+# Pages the UI loads at runtime: one level below the start page, which is their Referer.
+foreach ($pageUri in $ExtraPages) {
+    $Queue.Enqueue([PSCustomObject]@{ Uri = $pageUri; Kind = 'html'; Depth = 1; FoundIn = '-Page'; PageBase = $pageUri; Guessed = $false; Referer = $StartUri })
+}
 
 # ===========================================================================
 # ===========================   DOWNLOAD ASSETS   ===========================
@@ -622,6 +680,7 @@ $Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; Fou
 
 $SavedCount  = 0
 $GuessMisses = 0
+$IsLoginForm = $false     # reported in WRITE MANIFEST
 
 :CRAWL while ($Queue.Count -GT 0) {
     $item = $Queue.Dequeue()
@@ -732,12 +791,28 @@ $GuessMisses = 0
     }
 
     # Session mode: the signed-in page may hold personal data or tokens, it is only read for
-    # its script references and never written to disk.
+    # its references and its inline script code (values redacted), never written to disk.
     if ($IsSessionMode -AND $item.Kind -EQ 'html') {
         $record.Status = 'read'
-        $record.Reason = 'session mode: page read for script references only, not saved'
+        $record.Reason = 'session mode: page read for scripts and frames, not saved'
         Write-Verbose "[Save-UnwireAsset] '$key' read in session mode, not saved."
+
+        $inlineCode = Get-UnwireInlineScript -Text $text
+        if ($null -NE $inlineCode) {
+            # 'main/status.htm' => 'main/status.htm.inline.js'
+            $inlineFile = "$(Get-UnwireAssetFile -AssetUri $result.FinalUri -Root $RootPath -Kind 'html').inline.js"
+            if ($UsedFiles.Add($inlineFile) -AND $PSCmdlet.ShouldProcess($inlineFile, "Save inline scripts of '$key'")) {
+                $null = New-Item -ItemType Directory -Path ([System.IO.Path]::GetDirectoryName($inlineFile)) -Force
+                Set-Content -Path $inlineFile -Value $inlineCode -NoNewline -Encoding utf8NoBOM
+                $SavedCount++
+                $Records.Add([PSCustomObject]@{ Uri = "$key (inline scripts)"; Kind = 'js'; Status = 'saved'; Reason = 'session mode: inline script code, string values redacted'; File = [System.IO.Path]::GetRelativePath($RootPath, $inlineFile).Replace('\', '/'); FoundIn = $key })
+            }
+        }
+
         foreach ($reference in Find-UnwireAssetReference -Text $text -Kind 'html' -AssetUri $result.FinalUri -PageBase $item.PageBase) {
+            if ($item.Depth + 1 -GT $MaxDepth) {
+                continue
+            }
             $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed; Referer = $referer })
         }
         continue CRAWL
@@ -759,6 +834,12 @@ $GuessMisses = 0
     $record.File   = [System.IO.Path]::GetRelativePath($RootPath, $file).Replace('\', '/')
     $SavedHashes[$hash] = $record.File
     Write-Verbose "[Save-UnwireAsset] Saved '$key' as '$($record.File)'."
+
+    # A start page with a password field is a login page: without a session only its code is here.
+    if ($item.Depth -EQ 0 -AND $item.Kind -EQ 'html' -AND $text -MATCH $HTML_PASSWORD_FIELD) {
+        $IsLoginForm = $true
+        Write-Verbose "[Save-UnwireAsset] Start page '$key' has a password field -> login page."
+    }
 
     if ($item.Kind -EQ 'map') {
         continue CRAWL
@@ -836,9 +917,14 @@ if ($AccessDenied -GT 0 -AND -NOT $IsSessionMode) {
     Write-Warning "[Save-UnwireAsset] $AccessDenied scripts or maps answered 401/403 although the Referer was sent: the code is probably behind a login, use session mode."
 }
 
+if ($IsLoginForm) {
+    Write-Warning "[Save-UnwireAsset] The start page is a login form: without a session only the code of the login page was saved."
+}
+
 return [PSCustomObject]@{
     OutputDirectory = $RootPath
     AccessDenied    = $AccessDenied
+    LoginForm       = $IsLoginForm
     Manifest        = $ManifestPath
     Saved           = @($Records | Where-Object -Property Status -EQ -Value 'saved').Count
     Skipped         = @($Records | Where-Object -Property Status -EQ -Value 'skipped').Count

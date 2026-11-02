@@ -57,9 +57,12 @@ on the page, per operation and as one list.
 **Behind a login.** No flag needed: Unwire first tries without a session, most single-page
 apps serve their scripts to anyone. When the start page redirects to a login, it walks you
 through copying one request as cURL from your own browser, signed in:
-1. F12 → **Network**, reload with F5.
-2. Right-click the first request (`document`): Chrome / Edge **Copy → Copy as cURL**,
-   Firefox **Copy Value → Copy as cURL**. bash, cmd, POSIX and Windows all work.
+1. Open the developer tools in a new, empty tab first (F12, or browser menu → More tools →
+   Developer tools): a page that blocks F12 and right-click cannot block them then.
+2. **Network**, tick **Preserve log**, open the web UI in that tab, log in, reload.
+3. Right-click the last `document` request: Chrome / Edge **Copy → Copy as cURL**,
+   Firefox **Copy Value → Copy as cURL**. bash, cmd, POSIX and Windows all work. A page
+   that keeps pausing in the debugger: Ctrl+F8 turns its breakpoints off.
 
 On Windows it then opens a separate window with a masked prompt, you paste the cURL there
 and close the window when the download is done. Only the cookie is taken from it. The cookie stays in that window's memory:

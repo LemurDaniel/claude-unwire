@@ -45,12 +45,16 @@ somewhere in there.
    **Code behind a login.** Most single-page apps serve their scripts without a login, only
    the data is protected: try without a session first. The script already sends the page
    as `Referer` like a browser (some devices answer 403 without it), so no
-   other theory needs testing. Use session mode when either is true:
+   other theory needs testing. Ask the login question of step 1 below, before reading any
+   code, when one of these is true:
    - the start page or the scripts redirect to a login,
    - the summary reports `AccessDenied` above 0: scripts answered 401 or 403 although the
-     Referer was sent.
+     Referer was sent,
+   - the summary reports `LoginForm: True`: the start page is a login form, so only the
+     code of the login page is there.
 
-   Then:
+   Never decide this yourself, also not when the login page's code already looks useful:
+   the user picks with a login, without one, or cancel. Then:
    - The user copies one signed-in request as cURL: no cookie name needed, the script takes
      the cookie out of `-b` or the `cookie:` header and drops every other header.
      `name=value` from Application → Cookies and a `cookie:` header line still work.
@@ -66,9 +70,12 @@ somewhere in there.
      Copy them exactly, only `{URL}` replaced with the real URL:
      - question: `question`
      - option 1: `open.label`, description `open.description`
-     - option 2: `cancel.label`, description `cancel.description`
+     - option 2: `skip.label`, description `skip.description`
+     - option 3: `cancel.label`, description `cancel.description`
 
-     No other tool call between the Read and the answer. Only option 1 continues. A custom
+     No other tool call between the Read and the answer. Option 1 goes on with step 2,
+     option 2 analyzes the saved code and records the API behind the login as an open
+     point, option 3 or any other answer stops the run. A custom
      answer is never the cURL itself: if it looks like one (`curl`, `cookie`, `=`), do not
      repeat or use it, tell the user it was not stored and that the paste belongs into the
      window, then ask again.
@@ -90,15 +97,29 @@ somewhere in there.
    - Never ask for the password, never log in, never ask the user to paste the cookie into
      the chat, never write it to a file.
    - `-UseSession` reads the cookie from `$env:UNWIRE_COOKIE` instead, for automation only.
-   - In session mode only the start page and `*.js`, `*.mjs`, `*.map` are requested,
-     nothing on the denylist (logout, reboot, delete, ...), no frames, no redirects.
-     The signed-in start page is read for its script references only and never saved
-     (status `read`): it may hold personal data or tokens.
+   - In session mode only the start page, `*.htm`/`*.html` pages and frames, and `*.js`,
+     `*.mjs`, `*.map` are requested, nothing on the denylist (logout, reboot, delete, ...),
+     no redirects. Signed-in pages are read for their scripts and frames and never saved
+     (status `read`): they may hold personal data or tokens. Their inline script code is
+     saved as `<page>.inline.js` with the string values of `var x = "..."` redacted; read
+     it like any other script, a `"<redacted>"` value is a server-rendered value, not code.
    - The user's paste may span many lines ("Copy as cURL"), the prompt reads all of them.
      Never ask the user to paste terminal output into the chat, read the terminal yourself.
    - A warning about a redirect of the start page means the session expired: ask the user
      to log in again and update the variable. In the manifest it shows as a start page
      that was not `read`.
+
+   **Pages loaded at runtime.** The script follows `<script>`, `<frame>` and `<iframe>`
+   tags only. When the code loads further views by XHR (a loader that builds
+   `"<folder>/" + name + ".htm"`), derive the paths from the code: the folder from the
+   loader, the names from string literals and from the inline scripts of a menu page.
+   Then run step 1 again with `-Page '/folder/a.htm,/folder/b.htm'` (one comma list, it
+   also passes through `-ArgumentList`). Only paths that the code names, never guessed
+   ones; the script rejects anything but same-origin `*.htm`/`*.html` and skips the
+   denylist. A menu page found this way may name more pages: at most two such extra
+   rounds. With a login each round needs a new paste: ask with AskUserQuestion first
+   (another round with login / continue with what is there), list the names you derived
+   in the question.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/analyze/scripts/Get-UnwireJsCandidate.ps1" `

@@ -34,10 +34,16 @@ param ()
 #   webpack_chunk_prefix   Builds CRA-style chunk names relative to the runtime's folder.
 #   referer                Sends the loading page as Referer, the start page without one.
 #   access_denied          Counts scripts that answer 401 or 403 and warns about a login.
+#   login_form             Reports a start page with a password field as LoginForm.
+#   login_guide_options    Every language offers login, without login and cancel.
 #   no_cookie_by_default   Sends no Cookie header without UseSession.
 #   session_missing        Fails early when the session variable is empty.
 #   session_cookie         Sends the cookie from the session variable.
-#   session_static_only    Requests only the start page and scripts, never pages or endpoints.
+#   session_static_only    Requests only the start page, scripts and .htm pages, never endpoints.
+#   session_pages          Reads .htm frames, keeps only their inline scripts, values redacted.
+#   session_extra_pages    Reads the pages of -Page, also as one comma list.
+#   session_page_rules     Rejects a page that is no same-origin *.htm before any request.
+#   session_page_denylist  Never requests a denylisted extra page.
 #   session_denylist       Never requests a denylisted path, also not a script.
 #   session_no_redirect    Never follows a redirect and warns about an expired session.
 #   session_secret         Never writes the cookie value into the manifest or the output.
@@ -325,6 +331,30 @@ Describe 'Save-UnwireAsset' {
         $warnings             | Should -BeLike '*2 scripts or maps answered 401/403*session mode*'
     }
 
+    It 'login_form: reports a start page with a password field as LoginForm, <Case>' -ForEach @(
+        @{ Case = 'login page'; Page = '<form><input id="pw" type="password"></form><script src="/a.js"></script>'; Expected = $true }
+        @{ Case = 'other page'; Page = '<form><input type="text"></form><script src="/a.js"></script>';               Expected = $false }
+    ) {
+        $Site['http://router.test/']     = New-TestResponse -Content $Page
+        $Site['http://router.test/a.js'] = New-TestResponse -Content 'a()'
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe -WarningVariable warnings -WarningAction SilentlyContinue
+
+        $summary.LoginForm                                     | Should -Be $Expected
+        @($warnings -LIKE '*start page is a login form*').Count | Should -Be ([System.Int32] $Expected)
+    }
+
+    It 'login_guide_options: every language offers login, without login and cancel' {
+        $guide = Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../data/login-guide.json') -Raw | ConvertFrom-Json -AsHashtable
+
+        foreach ($language in $guide.Keys) {
+            foreach ($option in 'open', 'skip', 'cancel') {
+                ($guide[$language][$option].label -split ' ').Count | Should -BeLessOrEqual 5 -Because "$language.$option.label must fit AskUserQuestion"
+                $guide[$language][$option].description             | Should -Not -BeNullOrEmpty
+            }
+        }
+    }
+
     It 'no_cookie_by_default: sends no Cookie header without UseSession' {
         $Site['http://router.test/'] = New-TestResponse -Content '<html></html>'
 
@@ -357,7 +387,7 @@ Describe 'Save-UnwireAsset' {
             Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Headers.Cookie -EQ 'sid=TOP-SECRET-VALUE' }
         }
 
-        It 'session_static_only: requests only the start page and scripts, never pages or endpoints' {
+        It 'session_static_only: requests only the start page, scripts and .htm pages, never endpoints' {
             $Site['http://router.test/']           = New-TestResponse -Content '<script src="/app.js"></script><iframe src="/panel"></iframe><script src="/data.lua?page=x"></script>'
             $Site['http://router.test/app.js']     = New-TestResponse -Content 'fetch("/api/status")'
 
@@ -368,7 +398,54 @@ Describe 'Save-UnwireAsset' {
             $summary.ReadOnly | Should -Be 1
             Should -Invoke Invoke-WebRequest -Times 2 -Exactly
             Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -IN @('/panel', '/data.lua', '/api/status') }
-            ($manifest.assets | Where-Object -Property Uri -EQ -Value 'http://router.test/panel').Reason | Should -Be 'session mode: no static script or source map'
+            ($manifest.assets | Where-Object -Property Uri -EQ -Value 'http://router.test/panel').Reason | Should -Be 'session mode: no static script, source map or .htm page'
+        }
+
+        It 'session_pages: reads .htm frames, keeps only their inline scripts with values redacted' {
+            $Site['http://router.test/']                = New-TestResponse -Content '<frameset><frame src="/main/status.htm"></frameset>'
+            $Site['http://router.test/main/status.htm'] = New-TestResponse -Content '<p>WAN 203.0.113.7</p><script>var wlanKey = "TOP-SECRET-KEY"; $.act(ACT_GET, WAN_IP_CONN, null, null, ["externalIPAddress"]);</script><script src="/js/status.js"></script>'
+            $Site['http://router.test/js/status.js']    = New-TestResponse -Content 's()'
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
+            $inline  = Get-Content -Path (Join-Path $OutputDirectory 'main/status.htm.inline.js') -Raw
+            $saved   = Get-ChildItem -Path $OutputDirectory -Recurse -File | Get-Content -Raw
+
+            $summary.ReadOnly                                         | Should -Be 2
+            $inline                                                   | Should -BeLike '*$.act(ACT_GET, WAN_IP_CONN*'
+            $inline                                                   | Should -BeLike '*var wlanKey = "<redacted>"*'
+            Join-Path -Path $OutputDirectory -ChildPath 'main/status.htm' | Should -Not -Exist
+            Join-Path -Path $OutputDirectory -ChildPath 'js/status.js'    | Should -Exist
+            ($saved -join "`n")                                       | Should -Not -Match 'TOP-SECRET-KEY|203\.0\.113\.7'
+        }
+
+        It 'session_extra_pages: reads the pages of -Page, also as one comma list, with the start page as Referer' {
+            $Site['http://router.test/']                = New-TestResponse -Content '<script src="/js/lib.js"></script>'
+            $Site['http://router.test/js/lib.js']       = New-TestResponse -Content 'l()'
+            $Site['http://router.test/main/status.htm'] = New-TestResponse -Content '<script>$.act(ACT_GET, WAN_IP_CONN);</script>'
+            $Site['http://router.test/frame/menu.htm']  = New-TestResponse -Content '<script>var pages = ["status.htm"];</script>'
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -Page '/main/status.htm, frame/menu.htm'
+
+            $summary.ReadOnly                                                       | Should -Be 3
+            Join-Path -Path $OutputDirectory -ChildPath 'main/status.htm.inline.js' | Should -Exist
+            Join-Path -Path $OutputDirectory -ChildPath 'frame/menu.htm.inline.js'  | Should -Exist
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/main/status.htm' -AND $Headers.Referer -EQ 'http://router.test/' }
+        }
+
+        It 'session_page_rules: rejects a page that is no same-origin *.htm before any request, <Case>' -ForEach @(
+            @{ Case = 'endpoint';     Page = '/cgi/info' }
+            @{ Case = 'other origin'; Page = 'http://cdn.test/a.htm' }
+        ) {
+            { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -Page $Page } | Should -Throw -ExceptionType ([System.ArgumentException]) -ExpectedMessage 'Page must be a same-origin *.htm or *.html path*'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It 'session_page_denylist: never requests a denylisted extra page' {
+            $Site['http://router.test/'] = New-TestResponse -Content '<html></html>'
+
+            $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -Page '/main/reboot.htm'
+
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/main/reboot.htm' }
         }
 
         It 'session_denylist: never requests a denylisted path, also not a script' {
@@ -506,8 +583,8 @@ Describe 'Save-UnwireAsset' {
         }
 
         It 'prompt_guide: shows the login guide with the URL before the prompt, in <Language>' -ForEach @(
-            @{ Language = 'de'; Title = 'Unwire: Login f?r http://router.test/'; Step = '2. Dr?ck F12*'; PromptLike = 'Session-Cookie (*'; Done = 'Fertig.*' }
-            @{ Language = 'en'; Title = 'Unwire: login for http://router.test/'; Step = '2. Press F12*'; PromptLike = 'Session cookie (*'; Done = 'Done.*' }
+            @{ Language = 'de'; Title = 'Unwire: Login f?r http://router.test/'; Step = '1. *leeren Browser-Tab*F12*'; Blocked = '*Entwicklertools. Zuerst ge?ffnet, kann keine Seite sie sperren.'; PromptLike = 'Session-Cookie (*'; Done = 'Fertig.*' }
+            @{ Language = 'en'; Title = 'Unwire: login for http://router.test/'; Step = '1. *empty browser tab*F12*'; Blocked = '*Developer tools. Opened first, no page can block it.'; PromptLike = 'Session cookie (*'; Done = 'Done.*' }
         ) {
             Mock Read-Host { ConvertTo-SecureString -String 'i_like_gitea=PROMPT-SECRET' -AsPlainText -Force }
 
@@ -515,8 +592,9 @@ Describe 'Save-UnwireAsset' {
             $shown  = @($output | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } | ForEach-Object { "$($_.MessageData)" })
 
             @($shown -LIKE $Title).Count                       | Should -Be 1
-            @($shown -LIKE '1. * http://router.test/ *').Count | Should -Be 1
+            @($shown -LIKE '3. * http://router.test/ *').Count | Should -Be 1
             @($shown -LIKE $Step).Count                        | Should -Be 1
+            @($shown -LIKE $Blocked).Count                     | Should -Be 1
             $shown[-1]                                         | Should -BeLike $Done
             Should -Invoke Read-Host -Times 1 -Exactly -ParameterFilter { $Prompt -LIKE $PromptLike }
         }

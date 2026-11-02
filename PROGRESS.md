@@ -28,8 +28,10 @@ changing anything on the target. Client code for picked operations is planned (`
   never ran: renamed, emptied to a stub, templates removed (still in the git history before
   this commit). The plugin promises only what works.
 - **Session mode loads code only** (2026-11-02). Cookie from a masked prompt in the user's
-  terminal (or an env variable for automation), then only the start page and `*.js`, `*.mjs`,
-  `*.map`. The signed-in page is read, never saved. Bearer tokens and MCP servers were
+  terminal (or an env variable for automation), then only the start page, `*.htm`/`*.html`
+  pages and frames (since 2026-11-02, user decision: frame-based router UIs keep their API
+  calls there), `*.js`, `*.mjs`, `*.map`. Pages are read, never saved, only their inline
+  scripts with string values redacted. Bearer tokens and MCP servers were
   declined: an MCP server documents itself, `tools/list` would break the read-only rule.
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
   Scripts do the mechanics (download, pre-filter, convert, validate, render); Claude reads
@@ -37,6 +39,10 @@ changing anything on the target. Client code for picked operations is planned (`
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`
   runs before the first script (Bash tool, PS >= 7), then AskUserQuestion: install yourself
   (recommended), Claude runs winget/brew (not on Linux, sudo), or cancel. No 5.1 fallback.
+- **The login question is asked, never decided** (2026-11-02). A router served its login
+  page with 200 and all scripts with the Referer, the skill had no trigger and analyzed
+  only the login page. `Save-UnwireAsset` reports `LoginForm` (password field on the start
+  page), the skill then asks with AskUserQuestion: with login, without, cancel.
 - **Referer like a browser, 401/403 means login** (2026-11-02). A TP-Link router answered
   403 to its scripts without a Referer; the agent guessed and fetched them by hand.
   `Save-UnwireAsset` now sends the loading page as Referer and reports `AccessDenied`, which

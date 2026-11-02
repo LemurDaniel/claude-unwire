@@ -1,24 +1,34 @@
 {
   "en": {
-    "question": "{URL} needs a login. The next step opens a PowerShell window with a step-by-step guide: log in in your browser, F12 → Network → right-click the document request → Copy as cURL, then paste it into the masked prompt of that window. Open the window?",
+    "question": "{URL} shows a login page or keeps its code behind one, without a login Unwire only sees the login page. With a login, the next step opens a PowerShell window with a step-by-step guide: open the developer tools in an empty tab (F12 or the browser menu, works even when the page blocks F12 and right-click), log in, Network → right-click the document request → Copy as cURL, then paste it into the masked prompt of that window. Analyze with a login?",
     "open": {
       "label": "Open the window",
       "description": "Opens the window with the guide and a masked prompt, the download runs there."
     },
+    "skip": {
+      "label": "Without login",
+      "description": "Analyzes only the code of the login page, the API behind the login stays an open point."
+    },
     "cancel": {
       "label": "Cancel",
-      "description": "No window, no request with a session."
+      "description": "Unwire stops here, nothing is analyzed."
     },
     "title": "Unwire: login for {URL}",
     "steps": [
-      "1. Open {URL} in your browser and log in. Stay on the page.",
-      "2. Press F12, open the Network tab, reload with F5.",
-      "3. Right-click the first request (the page itself, type 'document'):",
+      "1. Open a new, empty browser tab and press F12 there. If F12 does nothing:",
+      "   browser menu → More tools → Developer tools. Opened first, no page can block it.",
+      "2. Open the Network tab and tick 'Preserve log' (newer Chrome: 'Keep log', Firefox: 'Persist Logs').",
+      "   List empty but '0 / N requests' at the bottom? A filter is on: funnel icon, clear the text, pick 'All'.",
+      "3. In the same tab open {URL} and log in. Stay on the page,",
+      "   then reload it (F5 or the reload button).",
+      "4. Right-click the last request of type 'document' in the Network list (the reload).",
+      "   This works even when the page blocks right-click, the list is not the page:",
       "     Chrome / Edge: Copy → Copy as cURL (bash) or (cmd), both work.",
       "     Firefox:       Copy Value → Copy as cURL (POSIX) or (Windows).",
-      "4. Paste the cURL below, all lines at once, and press Enter.",
+      "   The page keeps pausing in the debugger? Ctrl+F8 turns its breakpoints off.",
+      "5. Paste the cURL below, all lines at once, and press Enter.",
       "   The input stays masked (****).",
-      "5. The download runs in this window. When it is done, read any warning,",
+      "6. The download runs in this window. When it is done, read any warning,",
       "   then close the window: Unwire continues only after that."
     ],
     "warning": "Never paste the cURL into the chat, it holds your session cookie.",
@@ -26,25 +36,35 @@
     "done": "Done. Read any warning above, then close this window."
   },
   "de": {
-    "question": "{URL} braucht einen Login. Im nächsten Schritt öffnet sich ein PowerShell-Fenster mit einer Schritt-für-Schritt-Anleitung: im Browser anmelden, F12 → Netzwerk → Rechtsklick auf den document-Request → Als cURL kopieren, dann in den maskierten Prompt dieses Fensters einfügen. Fenster öffnen?",
+    "question": "{URL} zeigt eine Login-Seite oder sperrt seinen Code ohne Login, ohne Login sieht Unwire nur die Login-Seite. Mit Login öffnet sich im nächsten Schritt ein PowerShell-Fenster mit einer Schritt-für-Schritt-Anleitung: Entwicklertools in einem leeren Tab öffnen (F12 oder Browser-Menü, klappt auch, wenn die Seite F12 und Rechtsklick sperrt), anmelden, Netzwerk → Rechtsklick auf den document-Request → Als cURL kopieren, dann in den maskierten Prompt dieses Fensters einfügen. Mit Login analysieren?",
     "open": {
       "label": "Fenster öffnen",
       "description": "Öffnet das Fenster mit Anleitung und maskiertem Prompt, der Download läuft dort."
     },
+    "skip": {
+      "label": "Ohne Login",
+      "description": "Analysiert nur den Code der Login-Seite, die API dahinter bleibt ein offener Punkt."
+    },
     "cancel": {
       "label": "Abbrechen",
-      "description": "Kein Fenster, kein Request mit Session."
+      "description": "Unwire stoppt hier, nichts wird analysiert."
     },
     "title": "Unwire: Login für {URL}",
     "steps": [
-      "1. Öffne {URL} im Browser und melde dich an. Bleib auf der Seite.",
-      "2. Drück F12, öffne den Tab Netzwerk (Network), lade mit F5 neu.",
-      "3. Rechtsklick auf den ersten Request (die Seite selbst, Typ 'document'):",
+      "1. Öffne einen neuen, leeren Browser-Tab und drück dort F12. Passiert nichts:",
+      "   Browser-Menü → Weitere Tools → Entwicklertools. Zuerst geöffnet, kann keine Seite sie sperren.",
+      "2. Öffne den Tab Netzwerk (Network) und setz den Haken bei 'Log beibehalten' (neueres Chrome: 'Keep log', Firefox: 'Logs beibehalten').",
+      "   Liste leer, aber unten '0 / N requests'? Ein Filter ist an: Trichter-Symbol, Text leeren, 'All' wählen.",
+      "3. Öffne im selben Tab {URL} und melde dich an. Bleib auf der Seite",
+      "   und lade sie neu (F5 oder der Neu-laden-Knopf).",
+      "4. Rechtsklick auf den letzten Request vom Typ 'document' in der Netzwerk-Liste (das Neuladen).",
+      "   Das geht auch, wenn die Seite Rechtsklick sperrt, die Liste gehört nicht zur Seite:",
       "     Chrome / Edge: Kopieren → Als cURL kopieren (bash) oder (cmd), beides geht.",
       "     Firefox:       Wert kopieren → Als cURL kopieren (POSIX) oder (Windows).",
-      "4. Füg den cURL hier unten ein, alle Zeilen auf einmal, und drück Enter.",
+      "   Die Seite hält ständig im Debugger an? Strg+F8 schaltet ihre Haltepunkte ab.",
+      "5. Füg den cURL hier unten ein, alle Zeilen auf einmal, und drück Enter.",
       "   Die Eingabe bleibt maskiert (****).",
-      "5. Der Download läuft in diesem Fenster. Wenn er fertig ist, lies die Warnungen",
+      "6. Der Download läuft in diesem Fenster. Wenn er fertig ist, lies die Warnungen",
       "   und schließ dann das Fenster: Unwire macht erst danach weiter."
     ],
     "warning": "Füg den cURL nie in den Chat ein, er enthält dein Session-Cookie.",
