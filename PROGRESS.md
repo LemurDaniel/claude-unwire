@@ -42,15 +42,23 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## State
 
-- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 119 Pester tests. The hand-over ends with a
+- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 129 Pester
+  tests (plus 5 in `docs/screenshots`). The hand-over ends with a
   `file:///` link to `API.html` (`FileUri` from `ConvertTo-UnwireHtml`), then asks to open
   it in the default browser (`Invoke-Item`).
+- `API.html`: light default with a dark toggle, summary cards, group tiles, views Operations,
+  Open points and Authentication. `examples/juiceshop/` is the reference page, re-rendered
+  with every template change (a test checks), README screenshot from `docs/screenshots/`.
 - Live runs: Grafana (webpack, base tag, 243 candidates), Gitea without and with login
   (full run to `API.html`: 471 documented + 47 derived operations, 0 spec findings).
 - `examples/testbed`: Juice Shop, Grafana, Gitea, Uptime Kuma on 127.0.0.1, not started yet.
 
 ## Open
 
+- **Auth per operation is new and untested in a run** (2026-11-02). `unwire:analyze` now sets
+  `security` per derived operation (`[]` for public), `Test-UnwireSpec` warns otherwise. The
+  Juice Shop example predates it: all 88 derived operations take the root default, so the
+  Authentication view lists the login under bearerAuth. A new Juice Shop run fixes it.
 - **`unwire:code` is a stub.** Open: which language(s), what shape; the old PowerShell
   module design (SKILL.md, templates) is in the history of `core/module/`.
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks

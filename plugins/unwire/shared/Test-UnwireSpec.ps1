@@ -1,7 +1,8 @@
 # NOTE:
 #   Validates an Unwire openapi.json before unwire:document renders it:
 #   the OpenAPI 3.x structure both need, path parameters, unique operationIds,
-#   local $ref targets and the x-unwire-* extensions on every operation.
+#   local $ref targets, security against the defined schemes and the x-unwire-*
+#   extensions on every operation.
 #   Returns one finding per problem, nothing when the spec is valid.
 #
 #   A spec taken over by unwire:discover (root x-unwire-source 'discover:...') was written
@@ -48,6 +49,7 @@ $PATH_PARAM_REGEX  = '\{(?<name>[^{}]+)\}'
 #   Add-UnwireFinding             Adds one finding to the result list.
 #   Get-UnwireJsonRef             Collects every '$ref' with its location.
 #   Resolve-UnwireJsonPointer     Resolves a local '#/...' pointer, $null when missing.
+#   Test-UnwireSecurity           Checks one security list against the defined schemes.
 #
 
 $Findings = [System.Collections.Generic.List[PSCustomObject]]::new()     # returned in REPORT FINDINGS
@@ -111,6 +113,25 @@ function Resolve-UnwireJsonPointer {
     return , $node
 }
 
+function Test-UnwireSecurity {
+    param (
+        [System.Object]   $Security,
+        [System.String]   $Location,
+        [System.String[]] $SchemeNames
+    )
+
+    # [{ "bearerAuth": [] }] or [] (public): a list of requirement objects
+    if ($Security -isnot [System.Collections.IList] -OR @($Security | Where-Object { $_ -isnot [System.Collections.IDictionary] }).Count -GT 0) {
+        Add-UnwireFinding -Severity Error -Location $Location -Rule 'security' -Message 'security must be a list of requirement objects, e.g. [{ "bearerAuth": [] }], or [] for no auth.'
+        return
+    }
+    foreach ($name in $Security | ForEach-Object { $_.Keys }) {
+        if ($name -NOTIN $SchemeNames) {
+            Add-UnwireFinding -Severity Error -Location $Location -Rule 'security' -Message "security scheme '$name' must be defined in components.securitySchemes."
+        }
+    }
+}
+
 # ===========================================================================
 # ==============================   LOAD SPEC   ==============================
 # ===========================================================================
@@ -148,14 +169,14 @@ if ($Spec -isnot [System.Collections.IDictionary]) {
 # =============================   CHECK SPEC   ==============================
 # ===========================================================================
 #
-#   1. Root         openapi 3.x, info.title, info.version, x-unwire-open and paths.
-#   2. Operations   Path parameters, operationId, responses and x-unwire-*.
+#   1. Root         openapi 3.x, info, x-unwire-open, paths and the root security.
+#   2. Operations   Path parameters, operationId, responses, x-unwire-* and security.
 #   3. References   Every local $ref points to an existing target.
 #
 
 # ---------------------------------------------------------------------------
 # Root
-#   openapi 3.x, info.title, info.version, x-unwire-open and paths.
+#   openapi 3.x, info, x-unwire-open, paths and the root security.
 # ---------------------------------------------------------------------------
 
 if (-NOT ([System.String] $Spec['openapi']).StartsWith('3.')) {
@@ -188,12 +209,20 @@ elseif ($Paths.Count -EQ 0) {
 $IsDiscovered       = ([System.String] $Spec['x-unwire-source']).StartsWith('discover:')
 $ExtensionSeverity  = if ($IsDiscovered) { 'Warning' } else { 'Error' }
 
+# Security: the schemes the spec defines, the root list is the default of every operation.
+$SecuritySchemes = $Spec['components'] -is [System.Collections.IDictionary] ? $Spec['components']['securitySchemes'] : $null
+$SchemeNames     = @($SecuritySchemes -is [System.Collections.IDictionary] ? $SecuritySchemes.Keys : @())
+if ($Spec.Contains('security')) {
+    Test-UnwireSecurity -Security $Spec['security'] -Location 'security' -SchemeNames $SchemeNames
+}
+
 # ---------------------------------------------------------------------------
 # Operations
-#   Path parameters, operationId, responses and x-unwire-*.
+#   Path parameters, operationId, responses, x-unwire-* and security.
 # ---------------------------------------------------------------------------
 
-$OperationIds = @{}     # operationId => location of its first use
+$OperationIds   = @{}     # operationId => location of its first use
+$InheritedAuth  = 0       # derived operations without their own security, reported below the loop
 
 foreach ($pathKey in $Paths.Keys) {
     $pathItem = $Paths[$pathKey]
@@ -299,7 +328,21 @@ foreach ($pathKey in $Paths.Keys) {
         elseif ($method -IN $WRITE_METHODS -AND $impact -NE 'write') {
             Add-UnwireFinding -Severity Error -Location $location -Rule 'x-unwire-impact' -Message "A $($method.ToUpper()) operation must have x-unwire-impact: write."
         }
+
+        # security: checked when set; a derived operation without it only takes the default
+        if ($operation.Contains('security')) {
+            Test-UnwireSecurity -Security $operation['security'] -Location $location -SchemeNames $SchemeNames
+        }
+        elseif (-NOT ([System.String] $source).StartsWith('discover:')) {
+            $InheritedAuth++
+        }
     }
+}
+
+# One finding, not one per operation: with schemes defined, every derived operation should
+# say whether it needs auth ([] for public ones like a login), the page shows the default otherwise.
+if ($SchemeNames.Count -GT 0 -AND $InheritedAuth -GT 0) {
+    Add-UnwireFinding -Severity Warning -Location 'paths' -Rule 'security' -Message "$InheritedAuth derived operations set no security of their own: set [] on public ones (login, register) and the scheme on the others."
 }
 
 # ---------------------------------------------------------------------------

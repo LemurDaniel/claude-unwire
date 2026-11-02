@@ -109,6 +109,8 @@ somewhere in there.
    - **Parameters**: query, path and body fields, from the code that builds the request.
    - **Response**: from the code that reads the result (`res.data.items`, `if (r.status === 'ok')`).
    - **Auth**: login endpoint, token or session handling, headers set on every request.
+     Define each scheme once in `components.securitySchemes` (bearer JWT, cookie, API key),
+     then decide per operation whether it needs it, see Auth per operation below.
    - **Names**: `operationId` from the calling function or UI context (`getConnectedDevices`).
 4. **Spec**: write `unwire/<name>/openapi.json` (JSON, OpenAPI 3.1 for a new spec; keep the version of a discovered one, the Swagger converter writes 3.0.3) with these extensions
    on every operation:
@@ -120,6 +122,19 @@ somewhere in there.
    | `x-unwire-verified` | always `false` in v1, nothing was executed |
    | `x-unwire-impact` | `write` for operations that change data, else `read` |
    | `x-unwire-open` | list of open points of this operation |
+
+   And `security` on every derived operation, even when a root default exists:
+   `[{ "bearerAuth": [] }]` or `[]` for no auth. The page lists who needs what from it.
+
+   **Auth per operation**, from the UI context, not from the request helper alone:
+   - `[]` (public): calls the UI makes logged out. The login and register calls, password
+     reset, captcha, the config or language files the start page loads, catalog pages a
+     guest can open.
+   - The scheme: calls that only run logged in. Inside a guarded route (`canActivate`,
+     `requireAuth`), a view behind the login, a call that reads the user or the token first.
+   - An interceptor that adds the token to every request tells nothing per operation: it
+     also sends it on public calls. Decide by the UI context above.
+   - Unclear: set the scheme and add an `x-unwire-open` point "auth unclear: ...".
 
 5. **Open points**: everything that belongs to no single operation goes into the root
    `x-unwire-open` of the spec, one string per point, with its source:
@@ -137,7 +152,8 @@ somewhere in there.
    ```
    Returns one finding per problem (`Severity`, `Location`, `Rule`, `Message`), nothing when
    valid. Fix every `Error` before unwire:document. A `Warning` may stay, but low-confidence
-   operations without `x-unwire-open` should get their open points.
+   operations without `x-unwire-open` should get their open points, and a `security`
+   warning means derived operations still lack their own `security`.
 
 ## Rules
 - Nothing is dropped silently: what cannot be resolved becomes an open point.

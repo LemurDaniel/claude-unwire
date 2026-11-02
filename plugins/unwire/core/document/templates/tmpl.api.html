@@ -15,13 +15,20 @@
         RENDER SCHEMAS      Turns a JSON schema into a nested property list.
         RENDER OPERATIONS   One collapsible card per operation.
         RENDER PAGE         Header, stats, navigation, groups and open points.
-        FILTER OPERATIONS   Search and filter chips.
+        FILTER OPERATIONS   Search, filter chips and group tabs.
 -->
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>__UNWIRE_TITLE__</title>
+    <script>
+        // Theme before the first paint, no flash: the stored choice, light by default.
+        // Storage can be blocked (private window, file:// policy), then light stays.
+        try {
+            if (localStorage.getItem('unwire-theme') === 'dark') document.documentElement.dataset.theme = 'dark'
+        } catch { }
+    </script>
     <style>
         :root {
             --bg: #f7f7f5;
@@ -46,32 +53,34 @@
             --radius: 8px;
             --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
         }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #161615;
-                --surface: #1f1f1d;
-                --surface-alt: #262624;
-                --text: #ecebe6;
-                --muted: #9d9b94;
-                --border: #34332f;
-                --accent: #91a7ff;
-                --get: #69db7c;
-                --post: #74c0fc;
-                --put: #ffc078;
-                --patch: #e599f7;
-                --delete: #ff8787;
-                --other: #adb5bd;
-                --high: #69db7c;
-                --medium: #ffc078;
-                --low: #ff8787;
-                --warn-bg: #2b2118;
-                --warn-border: #8a5a24;
-                --code: #2a2a27;
-            }
+        /* Light is the default, dark only by the toggle in the header (data-theme on <html>) */
+        :root[data-theme="dark"] {
+            --bg: #161615;
+            --surface: #1f1f1d;
+            --surface-alt: #262624;
+            --text: #ecebe6;
+            --muted: #9d9b94;
+            --border: #34332f;
+            --accent: #91a7ff;
+            --get: #69db7c;
+            --post: #74c0fc;
+            --put: #ffc078;
+            --patch: #e599f7;
+            --delete: #ff8787;
+            --other: #adb5bd;
+            --high: #69db7c;
+            --medium: #ffc078;
+            --low: #ff8787;
+            --warn-bg: #2b2118;
+            --warn-border: #8a5a24;
+            --code: #2a2a27;
+            color-scheme: dark;
         }
 
         * { box-sizing: border-box; }
-        html { scroll-padding-top: 76px; }
+        /* --toolbar-h is measured by the page script, the sticky toolbar has one or two rows */
+        :root { --toolbar-h: 116px; color-scheme: light; }
+        html { scroll-padding-top: calc(var(--toolbar-h) + 12px); }
         body {
             margin: 0;
             background: var(--bg);
@@ -83,20 +92,53 @@
         a:hover { text-decoration: underline; }
 
         /* Header and toolbar */
-        header { padding: 28px 24px 8px; max-width: 1280px; margin: 0 auto; }
-        header h1 { margin: 0 0 4px; font-size: 1.7rem; letter-spacing: -0.01em; }
+        header { position: relative; padding: 28px 24px 8px; max-width: 1280px; margin: 0 auto; }
+        .theme-toggle {
+            position: absolute; top: 28px; right: 24px; padding: 6px 12px;
+            border: none; border-left: 2px solid var(--border); border-radius: 0;
+            background: var(--surface); color: var(--text); font: inherit; font-size: 0.82rem; cursor: pointer;
+        }
+        .theme-toggle:hover { background: var(--surface-alt); border-left-color: var(--accent); }
+        .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+        header h1 { margin: 0 0 4px; padding-right: 110px; font-size: 1.7rem; letter-spacing: -0.01em; }
         header .version { color: var(--muted); font-size: 0.9rem; }
         header .description { margin: 10px 0 0; max-width: 820px; color: var(--muted); }
         .notice {
-            margin: 16px 0 0; padding: 10px 14px; border-radius: var(--radius);
-            background: var(--warn-bg); border: 1px solid var(--warn-border); font-size: 0.92rem;
+            margin: 16px 0 0; padding: 8px 14px; border-radius: var(--radius);
+            background: var(--warn-bg); border: 1px solid var(--warn-border); font-size: 0.88rem;
         }
-        .stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
-        .stat {
-            padding: 4px 10px; border-radius: 999px; background: var(--surface);
-            border: 1px solid var(--border); font-size: 0.85rem;
+        /* Flex, not grid: the wide Confidence card never pushes the last card into a row of its own */
+        .summary { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 16px; }
+        .card {
+            flex: 1 1 160px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface);
+            border: 1px solid var(--border); min-width: 0;
         }
-        .stat strong { font-variant-numeric: tabular-nums; }
+        .card.wide { flex: 2 1 280px; }
+        .card-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+        .card-value { display: block; margin: 2px 0; font-size: 1.6rem; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--text); }
+        .card-sub { font-size: 0.82rem; color: var(--muted); }
+        a.card:hover { border-color: var(--accent); text-decoration: none; }
+        a.card .card-value { color: var(--accent); }
+        .bar { display: flex; height: 8px; margin: 8px 0 10px; border-radius: 999px; overflow: hidden; background: var(--surface-alt); }
+        .bar span { display: block; }
+        .bar .high { background: var(--high); }
+        .bar .medium { background: var(--medium); }
+        .bar .low { background: var(--low); }
+        .levels { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 0.88rem; }
+        .levels > span { display: inline-flex; align-items: center; gap: 6px; }
+        .levels strong { font-variant-numeric: tabular-nums; }
+        /* Info tooltip: opens on hover and on focus (keyboard, tap), takes no space in the card */
+        .info { position: relative; display: inline-block; margin-left: 4px; cursor: help; text-transform: none; letter-spacing: 0; }
+        .info-box {
+            display: none; position: absolute; top: calc(100% + 6px); left: -12px; z-index: 10;
+            width: max-content; max-width: min(340px, calc(100vw - 32px)); padding: 10px 12px;
+            background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius);
+            box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); color: var(--text); font-size: 0.82rem;
+        }
+        .info:hover .info-box, .info:focus .info-box, .info:focus-within .info-box { display: block; }
+        .info-box ul { margin: 0 0 6px; padding: 0; list-style: none; }
+        .info-box li { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+        .info-box p { margin: 0; color: var(--muted); }
         .toolbar {
             position: sticky; top: 0; z-index: 5; background: var(--bg);
             border-bottom: 1px solid var(--border);
@@ -115,14 +157,91 @@
             background: var(--surface); color: var(--text); font: inherit; font-size: 0.85rem; cursor: pointer;
         }
         .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-        .result-count { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+        /* Fixed width: '4 of 89' and '89 of 89' wrap the toolbar the same way, the tiles never shift */
+        .result-count { flex: none; min-width: 13em; text-align: right; color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+        /* Group tabs: square tiles in a grid that wraps, a thin accent bar marks the active one */
+        .group-bar {
+            max-width: 1280px; margin: 0 auto; padding: 0 24px 12px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px;
+        }
+        .group-tab {
+            display: flex; align-items: baseline; gap: 8px; min-width: 0;
+            padding: 7px 12px; border: none; border-left: 2px solid transparent; border-radius: 0;
+            background: var(--surface); color: var(--text); font: inherit; font-size: 0.82rem; font-weight: 500;
+            text-align: left; cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s;
+        }
+        .group-tab .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .group-tab .prefix { color: var(--muted); font-weight: 400; }
+        .group-tab .n { flex: none; color: var(--muted); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+        .group-tab:hover { background: var(--surface-alt); border-left-color: var(--border); }
+        .group-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+        .group-tab[aria-pressed="true"] {
+            background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+            border-left-color: var(--accent); color: var(--accent);
+        }
+        .group-tab[aria-pressed="true"] .prefix, .group-tab[aria-pressed="true"] .n { color: var(--accent); opacity: 0.75; }
+
+        /* Views: Operations, Open points and Authentication, switched by the tabs below the header */
+        .views {
+            max-width: 1280px; margin: 8px auto 0; padding: 0 24px;
+            display: flex; border-bottom: 1px solid var(--border);
+        }
+        .view-tab {
+            display: flex; align-items: baseline; gap: 8px; padding: 10px 18px; margin-bottom: -1px;
+            border-bottom: 2px solid transparent; color: var(--muted); font-weight: 600;
+        }
+        .view-tab:hover { color: var(--text); text-decoration: none; background: var(--surface-alt); }
+        .view-tab[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+        .view-tab .n { font-size: 0.75rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+        /* Side views: Open points and Authentication */
+        .side-view { min-height: 100vh; max-width: 1280px; margin: 0 auto; padding: 24px 24px 64px; }
+        .side-view .lead { margin: 0 0 8px; max-width: 820px; color: var(--muted); }
+        .side-view h2 {
+            display: flex; gap: 8px; align-items: baseline; margin: 28px 0 12px;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+        }
+        .point-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+        .point {
+            padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+            border-left: 3px solid var(--warn-border); min-width: 0;
+        }
+        .point h3 { margin: 0 0 6px; font-size: 0.95rem; }
+        .point p { margin: 0; font-size: 0.9rem; overflow-wrap: anywhere; }
+        .point.scheme { border-left-color: var(--accent); }
+        .point .scheme-type { margin: 0 0 6px; font-family: var(--mono); font-size: 0.85rem; color: var(--accent); }
+        .point .hint { margin: 8px 0 0; }
+        .side-view .note {
+            margin: 0 0 12px; padding: 8px 14px; max-width: 820px; font-size: 0.88rem;
+            background: var(--warn-bg); border-left: 3px solid var(--warn-border);
+        }
+        .auth-need { margin: 0 0 8px; background: var(--surface); border-left: 3px solid var(--accent); }
+        .auth-need.public { border-left-color: var(--get); }
+        .auth-need.unknown { border-left-color: var(--warn-border); }
+        .auth-need > summary { display: flex; gap: 10px; align-items: baseline; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+        .auth-need > summary .n { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
+        .auth-need .op-list { padding: 4px 14px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2px 16px; }
+        .auth-need .op-list a { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; min-width: 0; color: var(--text); }
+        .auth-need .op-list .path { font-family: var(--mono); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .auth-need .op-list .default { color: var(--muted); font-size: 0.75rem; }
+        .op-group { margin: 0 0 20px; }
+        .op-group h3 { margin: 0 0 8px; font-size: 1rem; }
+        .op-point {
+            display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 6px 16px;
+            padding: 10px 14px; margin: 0 0 4px; background: var(--surface); border-left: 3px solid var(--warn-border);
+        }
+        .op-point a { display: flex; gap: 8px; align-items: baseline; min-width: 0; color: var(--text); }
+        .op-point a .path { font-family: var(--mono); font-size: 0.88rem; overflow-wrap: anywhere; }
+        .op-point a:hover .path { color: var(--accent); }
+        .op-point ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
 
         /* Layout */
+        /* min-height: a short group keeps the scroll position of a tab click, see FILTER OPERATIONS */
         .layout {
-            max-width: 1280px; margin: 0 auto; padding: 20px 24px 64px;
+            min-height: 100vh; max-width: 1280px; margin: 0 auto; padding: 20px 24px 64px;
             display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 28px;
         }
-        nav { position: sticky; top: 76px; align-self: start; max-height: calc(100vh - 96px); overflow: auto; font-size: 0.88rem; }
+        nav { position: sticky; top: calc(var(--toolbar-h) + 12px); align-self: start; max-height: calc(100vh - var(--toolbar-h) - 32px); overflow: auto; font-size: 0.88rem; }
         nav h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 14px 0 6px; }
         nav ul { list-style: none; margin: 0; padding: 0; }
         nav li a { display: flex; gap: 8px; align-items: baseline; padding: 3px 6px; border-radius: 6px; color: var(--text); }
@@ -198,28 +317,37 @@
             nav { display: none; }
             header { padding: 20px 16px 4px; }
             .toolbar-inner { padding: 10px 16px; }
+            .views { padding: 0 16px; }
+            .side-view { padding: 20px 16px 48px; }
+            .op-point { grid-template-columns: minmax(0, 1fr); }
+            .group-bar { padding: 0 16px 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
             .result-count { margin-left: 0; width: 100%; }
         }
     </style>
 </head>
 <body>
     <header id="page-header"></header>
+    <nav class="views hidden" id="views" aria-label="Views"></nav>
     <div class="toolbar">
         <div class="toolbar-inner">
             <input id="search" type="search" placeholder="Search path, summary or operationId" aria-label="Search operations">
-            <button class="chip" type="button" data-filter="high" aria-pressed="false">High</button>
-            <button class="chip" type="button" data-filter="medium" aria-pressed="false">Medium</button>
-            <button class="chip" type="button" data-filter="low" aria-pressed="false">Low</button>
+            <button class="chip" type="button" data-filter="high" aria-pressed="false" title="Path and body appear literally in the code">High</button>
+            <button class="chip" type="button" data-filter="medium" aria-pressed="false" title="Assembled from parts of the code">Medium</button>
+            <button class="chip" type="button" data-filter="low" aria-pressed="false" title="Guessed from hints in the code">Low</button>
             <button class="chip" type="button" data-filter="write" aria-pressed="false">Write only</button>
             <button class="chip" type="button" data-filter="open" aria-pressed="false">Open points</button>
             <button class="chip" type="button" data-filter="derived" aria-pressed="false">Derived only</button>
             <span class="result-count" id="result-count"></span>
         </div>
+        <div class="group-bar" id="group-bar" role="toolbar" aria-label="Groups"></div>
     </div>
     <div class="layout">
         <nav id="page-nav" aria-label="Operations"></nav>
         <main id="page-main"></main>
     </div>
+    <!-- ids differ from the hashes (#open-points, #authentication): the script handles those, the browser must not scroll to them -->
+    <section class="side-view hidden" id="open-view" aria-label="Open points"></section>
+    <section class="side-view hidden" id="auth-view" aria-label="Authentication"></section>
 
     <script type="application/json" id="unwire-spec">__UNWIRE_SPEC_JSON__</script>
     <script>
@@ -232,11 +360,18 @@
         //   resolveDeep         Follows $refs until a real object is reached.
         //   refName             'Team' from '#/components/schemas/Team'.
         //   slug                Turns any text into an id-safe slug.
+        //   count               '1 operation', '2 operations': a number with its noun.
         //
 
         const HTTP_METHODS     = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
         const WRITE_METHODS    = ['post', 'put', 'patch', 'delete']
         const MAX_SCHEMA_DEPTH = 6
+        // What x-unwire-confidence means, shown in the legend and as tooltips.
+        const CONFIDENCE_HINTS = {
+            high:   'path and body appear literally in the code',
+            medium: 'assembled from parts of the code',
+            low:    'guessed from hints in the code',
+        }
 
         function el(tag, attributes = {}, ...children) {
             const node = document.createElement(tag)
@@ -276,6 +411,30 @@
 
         function slug(text) {
             return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        }
+
+        function count(number, singular, plural = `${singular}s`) {
+            return `${number} ${number === 1 ? singular : plural}`
+        }
+
+        /*
+            Which auth an operation needs, from its own security or the spec default.
+            Every requirement object is one alternative, its keys are needed together.
+            - security: [{ bearerAuth: [] }]       => 'bearerAuth'
+            - security: [{ a: [] }, { b: [] }]     => 'a or b'
+            - security: [{}] or []                 => 'none'
+            - no security anywhere                 => 'not stated'
+        */
+        function authOf(operation) {
+            const isOwn    = Array.isArray(operation.security)
+            const security = isOwn ? operation.security : (Array.isArray(spec.security) ? spec.security : null)
+            if (null == security) return { label: 'not stated', source: 'none' }
+            const alternatives = security.map(requirement => Object.keys(requirement ?? {}))
+            const isPublic     = alternatives.length === 0 || alternatives.every(keys => keys.length === 0)
+            return {
+                label:  isPublic ? 'none' : alternatives.map(keys => keys.length === 0 ? 'none' : keys.join(' + ')).join(' or '),
+                source: isOwn ? 'operation' : 'default',
+            }
         }
 
         // ===========================================================================
@@ -325,6 +484,7 @@
                         isDocumented: String(operation['x-unwire-source'] ?? spec['x-unwire-source'] ?? '').startsWith('discover:'),
                         open,
                         parameters: [...(pathItem.parameters ?? []), ...(operation.parameters ?? [])].map(resolveDeep),
+                        auth:       authOf(operation),
                     }
                 }))
 
@@ -437,7 +597,7 @@
                 el('span', { className: `method ${method}` }, method.toUpperCase()),
                 el('span', { className: 'path' }, path),
                 el('span', { className: 'summary-text' }, operation.summary ?? ''),
-                el('span', { className: 'badge', title: 'Confidence' }, el('span', { className: `dot ${confidence}` }), confidence),
+                el('span', { className: 'badge', title: `Confidence: ${CONFIDENCE_HINTS[confidence] ?? 'not set in the spec'}` }, el('span', { className: `dot ${confidence}` }), confidence),
                 isWrite ? el('span', { className: 'badge write', title: 'Changes data on the target' }, 'write') : null,
                 entry.isDocumented ? null : el('span', { className: 'badge', title: 'Derived from the frontend code, not documented by the target' }, 'derived'),
                 open.length > 0 ? el('span', { className: 'badge open' }, `${open.length} open`) : null,
@@ -452,6 +612,7 @@
                 el('h3', {}, 'Source'),
                 el('dl', { className: 'meta' },
                     el('dt', {}, 'operationId'), el('dd', {}, el('code', {}, operation.operationId ?? '-')),
+                    el('dt', {}, 'Auth'), el('dd', {}, entry.auth.label, entry.auth.source === 'default' ? el('span', { className: 'hint' }, ' (spec default, not set on this operation)') : null),
                     el('dt', {}, 'Found in'), el('dd', {}, el('code', {}, operation['x-unwire-source'] ?? '-')),
                     el('dt', {}, 'Verified'), el('dd', {}, verified === true ? 'yes, executed against the target' : 'no, derived statically'),
                     el('dt', {}, 'Link'), el('dd', {}, el('a', { href: `#${entry.id}` }, `#${entry.id}`)),
@@ -467,15 +628,18 @@
         // =============================   RENDER PAGE   =============================
         // ===========================================================================
         //
-        //   1. Header        Title, version, description, notice and stats.
-        //   2. Navigation    Groups with their operations as links.
-        //   3. Groups        One section per group with its operation cards.
-        //   4. Open points   The open points of the whole spec, from root x-unwire-open.
+        //   1. Header                Theme toggle, title, version, description, notice and summary cards.
+        //   2. Navigation            Groups with their operations as links, and the group tabs.
+        //   3. Groups                One section per group with its operation cards.
+        //   4. Open points view      The open points as their own view: whole spec as cards,
+        //                            per operation by group.
+        //   5. Authentication view   The auth schemes and which operations need which, then
+        //                            the view tabs.
         //
 
         // ---------------------------------------------------------------------------
         // Header
-        //   Title, version, description, notice and stats.
+        //   Theme toggle, title, version, description, notice and summary cards.
         // ---------------------------------------------------------------------------
 
         const countBy         = predicate => operations.filter(predicate).length
@@ -484,35 +648,71 @@
         const documentedCount = countBy(entry => entry.isDocumented)
         const derivedCount    = operations.length - documentedCount
 
-        // Where the operations come from decides what the notice may claim.
+        // Where the operations come from: the notice says it once, the Operations card counts it.
         // - only documented  => taken from the target's own documentation
-        // - only derived     => derived from the frontend code
-        // - both             => one sentence per source with its count
-        const notice = documentedCount > 0 && derivedCount > 0
-            ? `${documentedCount} operations come from documentation the target publishes, ${derivedCount} were derived statically from its frontend code. Nothing was executed against the target.`
-            : documentedCount > 0
-                ? 'Taken from documentation the target publishes. Nothing was executed against the target.'
-                : 'Derived statically by Unwire from the frontend code. Nothing was executed against the target, every operation is a well-founded guess.'
+        // - otherwise        => drafts, derived at least in part from the frontend code
+        const notice = derivedCount === 0
+            ? 'Taken from documentation the target publishes. Nothing was executed against the target.'
+            : 'Nothing was executed against the target: every operation is a draft to review.'
+        const origin = documentedCount > 0 && derivedCount > 0
+            ? `${documentedCount} documented · ${derivedCount} derived`
+            : derivedCount > 0 ? 'derived from the frontend code' : 'from published documentation'
+
+        const levelCounts = Object.fromEntries(['high', 'medium', 'low'].map(level => [level, countBy(entry => entry.confidence === level)]))
+        const writeCount  = countBy(entry => entry.isWrite)
+
+        // One card per question: how many, how sure, what changes data, what is open.
+        const card = (attributes, label, value, ...rest) => el(attributes.href ? 'a' : 'div', { className: 'card', ...attributes },
+            el('div', { className: 'card-label' }, label), el('span', { className: 'card-value' }, value), rest)
+
+        // Theme toggle: switches data-theme on <html> and remembers it, see the script in <head>.
+        const isDark      = () => document.documentElement.dataset.theme === 'dark'
+        const themeToggle = el('button', { className: 'theme-toggle', type: 'button' })
+        const showTheme   = () => {
+            themeToggle.textContent = isDark() ? '☀ Light' : '☾ Dark'
+            themeToggle.setAttribute('aria-label', isDark() ? 'Switch to light mode' : 'Switch to dark mode')
+        }
+        themeToggle.addEventListener('click', () => {
+            if (isDark()) delete document.documentElement.dataset.theme
+            else document.documentElement.dataset.theme = 'dark'
+            // Storage can be blocked, the toggle still works for this visit.
+            try { localStorage.setItem('unwire-theme', isDark() ? 'dark' : 'light') } catch { }
+            showTheme()
+        })
+        showTheme()
 
         document.getElementById('page-header').append(
+            themeToggle,
             el('h1', {}, spec.info?.title ?? 'API'),
             el('div', { className: 'version' }, `Version ${spec.info?.version ?? '?'} · OpenAPI ${spec.openapi ?? '?'}`),
             spec.info?.description ? el('p', { className: 'description' }, spec.info.description) : null,
             countBy(entry => entry.operation['x-unwire-verified'] !== true) > 0 ? el('div', { className: 'notice' }, notice) : null,
-            el('div', { className: 'stats' },
-                el('span', { className: 'stat' }, el('strong', {}, operations.length), ' operations'),
-                el('span', { className: 'stat' }, el('span', { className: 'dot high' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'high')), ' high'),
-                el('span', { className: 'stat' }, el('span', { className: 'dot medium' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'medium')), ' medium'),
-                el('span', { className: 'stat' }, el('span', { className: 'dot low' }), ' ', el('strong', {}, countBy(entry => entry.confidence === 'low')), ' low'),
-                el('span', { className: 'stat' }, el('strong', {}, countBy(entry => entry.isWrite)), ' write'),
-                documentedCount > 0 && derivedCount > 0 ? el('span', { className: 'stat' }, el('strong', {}, derivedCount), ' derived') : null,
-                openTotal > 0 ? el('a', { className: 'stat', href: '#open-points' }, el('strong', {}, openTotal), ' open points') : null,
+            el('div', { className: 'summary' },
+                card({}, 'Operations', operations.length, el('div', { className: 'card-sub' }, origin)),
+                // Confidence: a bar of the shares, the counts, and what the levels mean.
+                el('div', { className: 'card wide' },
+                    el('div', { className: 'card-label' }, 'Confidence',
+                        el('span', { className: 'info', tabindex: '0', role: 'button', 'aria-label': 'What do the confidence levels mean?' }, 'ⓘ',
+                            el('span', { className: 'info-box', role: 'tooltip' },
+                                el('ul', {}, ['high', 'medium', 'low'].map(level =>
+                                    el('li', {}, el('span', { className: `dot ${level}` }), `${level}: ${CONFIDENCE_HINTS[level]}`))),
+                                el('p', {}, 'None of them is verified.')))),
+                    el('div', { className: 'bar', 'aria-hidden': 'true' }, ['high', 'medium', 'low']
+                        .filter(level => levelCounts[level] > 0)
+                        .map(level => el('span', { className: level, style: `width: ${100 * levelCounts[level] / operations.length}%` }))),
+                    el('div', { className: 'levels' }, ['high', 'medium', 'low'].map(level =>
+                        el('span', { title: CONFIDENCE_HINTS[level] }, el('span', { className: `dot ${level}` }), el('strong', {}, levelCounts[level]), level))),
+                ),
+                card({ title: 'POST, PUT, PATCH and DELETE' }, 'Write', writeCount, el('div', { className: 'card-sub' }, 'change data on the target')),
+                openTotal > 0
+                    ? card({ href: '#open-points' }, 'Open points', openTotal, el('div', { className: 'card-sub' }, 'not resolved from the code'))
+                    : null,
             ),
         )
 
         // ---------------------------------------------------------------------------
         // Navigation
-        //   Groups with their operations as links.
+        //   Groups with their operations as links, and the group tabs.
         // ---------------------------------------------------------------------------
 
         const nav = document.getElementById('page-nav')
@@ -528,6 +728,22 @@
             nav.append(el('div', { 'data-group': group }, el('h2', {}, group), el('ul', {}, items)))
         }
         if (openTotal > 0) nav.append(el('h2', {}, el('a', { href: '#open-points' }, 'Open points')))
+
+        // Group tabs in the toolbar: 'All' (null) plus one per group, each with its count.
+        // A prefix before ' · ' is shown muted, so the part that differs stands out.
+        // - 'Web · Addresses'  => prefix 'Web · ', name 'Addresses'
+        // - 'Order'            => name 'Order'
+        const tabLabel = group => {
+            const separator = group.lastIndexOf(' · ')
+            return separator < 0
+                ? [group]
+                : [el('span', { className: 'prefix' }, group.slice(0, separator + 3)), group.slice(separator + 3)]
+        }
+        const groupBar  = document.getElementById('group-bar')
+        const groupTabs = new Map([null, ...groupNames].map(group => [group,
+            el('button', { className: 'group-tab', type: 'button', title: group ?? 'All groups', 'aria-pressed': group === null ? 'true' : 'false' },
+                el('span', { className: 'label' }, group === null ? 'All' : tabLabel(group)), el('span', { className: 'n' }))]))
+        groupBar.append(...groupTabs.values())
 
         // ---------------------------------------------------------------------------
         // Groups
@@ -545,37 +761,156 @@
         }
 
         // ---------------------------------------------------------------------------
-        // Open points
-        //   The open points of the whole spec, from root x-unwire-open.
+        // Open points view
+        //   The open points as their own view: whole spec as cards, per operation by group.
         // ---------------------------------------------------------------------------
 
+        // A short label before the first colon becomes the card title.
+        // - 'Auth: Bearer JWT from POST /rest/user/login'  => 'Auth', 'Bearer JWT from ...'
+        // - 'Navigation left out (4): /profile and ...'    => 'Navigation left out (4)', '/profile ...'
+        // - 'The schema of the body is unknown.'           => no title, the whole text
+        const splitPoint = point => {
+            const match = /^([A-Z][^:]{0,40}):\s+([\s\S]+)$/.exec(String(point))
+            return null == match ? [null, String(point)] : [match[1], match[2]]
+        }
+
+        const openView     = document.getElementById('open-view')
+        const openEntries  = operations.filter(entry => entry.open.length > 0)
+        const opPointCount = openEntries.reduce((sum, entry) => sum + entry.open.length, 0)
+
         if (openTotal > 0) {
-            main.append(el('section', { className: 'group', id: 'open-points' },
-                el('h2', {}, 'Open points'),
-                el('p', {}, 'Everything that could not be resolved from the code alone.'),
-                rootOpen.length > 0 ? el('ul', { className: 'open-points' }, rootOpen.map(point => el('li', {}, point))) : null,
-                el('div', { className: 'table-wrap' }, el('table', {},
-                    el('tbody', {}, operations
-                        .filter(entry => entry.open.length > 0)
-                        .flatMap(entry => entry.open.map(point => el('tr', {},
-                            el('td', {}, el('a', { href: `#${entry.id}` }, el('span', { className: `method ${entry.method}` }, entry.method.toUpperCase()), ' ', el('code', {}, entry.path))),
-                            el('td', {}, point),
-                        )))),
-                )),
+            // Wrapped in el(): it flattens the nested arrays, the native append would print them.
+            openView.append(el('div', {},
+                el('p', { className: 'lead' }, 'Everything Unwire could not resolve from the code alone. Check these before you rely on an operation.'),
+                rootOpen.length > 0 ? [
+                    el('h2', {}, 'Whole spec', el('span', {}, rootOpen.length)),
+                    el('div', { className: 'point-grid' }, rootOpen.map(point => {
+                        const [title, text] = splitPoint(point)
+                        return el('article', { className: 'point' }, title ? el('h3', {}, title) : null, el('p', {}, text))
+                    })),
+                ] : null,
+                opPointCount > 0 ? [
+                    el('h2', {}, 'Per operation', el('span', {}, opPointCount)),
+                    groupNames
+                        .filter(group => openEntries.some(entry => entry.group === group))
+                        .map(group => el('div', { className: 'op-group' },
+                            el('h3', {}, group),
+                            openEntries.filter(entry => entry.group === group).map(entry => el('div', { className: 'op-point' },
+                                el('a', { href: `#${entry.id}`, title: 'Show this operation' },
+                                    el('span', { className: `method ${entry.method}` }, entry.method.toUpperCase()),
+                                    el('span', { className: 'path' }, entry.path)),
+                                el('ul', {}, entry.open.map(point => el('li', {}, point))),
+                            )),
+                        )),
+                ] : null,
             ))
+        }
+
+        // ---------------------------------------------------------------------------
+        // Authentication view
+        //   The auth schemes and which operations need which, then the view tabs.
+        // ---------------------------------------------------------------------------
+
+        // One line per scheme type, as a client would send it.
+        // - http bearer JWT         => 'HTTP bearer (JWT) · Authorization: Bearer <token>'
+        // - apiKey in header X-Key  => 'API key in header X-Key'
+        // - oauth2 with two flows   => 'OAuth 2 · authorizationCode, clientCredentials'
+        const describeScheme = scheme => {
+            const type = String(scheme?.type ?? 'unknown')
+            if (type === 'http') {
+                const name = String(scheme.scheme ?? '').toLowerCase()
+                const header = name === 'bearer' ? ' · Authorization: Bearer <token>' : name === 'basic' ? ' · Authorization: Basic <base64 user:password>' : ''
+                return `HTTP ${name}${scheme.bearerFormat ? ` (${scheme.bearerFormat})` : ''}${header}`
+            }
+            if (type === 'apiKey') return `API key in ${scheme.in ?? '?'} ${scheme.name ?? '?'}`
+            if (type === 'oauth2') return `OAuth 2 · ${Object.keys(scheme.flows ?? {}).join(', ') || 'no flows'}`
+            if (type === 'openIdConnect') return `OpenID Connect · ${scheme.openIdConnectUrl ?? '?'}`
+            return type
+        }
+
+        const authView    = document.getElementById('auth-view')
+        const schemes     = spec.components?.securitySchemes ?? {}
+        const schemeNames = Object.keys(schemes)
+        const hasAuthInfo = schemeNames.length > 0 || operations.some(entry => entry.auth.source !== 'none')
+        // 'none' first, then the schemes, 'not stated' last.
+        const authLabels  = [...new Set(operations.map(entry => entry.auth.label))]
+            .sort((a, b) => (a === 'none' ? -1 : b === 'none' ? 1 : a === 'not stated' ? 1 : b === 'not stated' ? -1 : a.localeCompare(b)))
+        const defaultCount = countBy(entry => entry.auth.source === 'default')
+        // Root open points about auth, by their title ('Auth: ...', 'Login: ...').
+        const authPoints  = rootOpen.filter(point => /^(auth|login|session|token|csrf|cookie)/i.test(splitPoint(point)[0] ?? ''))
+
+        if (hasAuthInfo) {
+            authView.append(el('div', {},
+                el('p', { className: 'lead' }, 'How the API is secured, as far as the code and the published documentation show it. Not verified against the target.'),
+                schemeNames.length > 0 ? [
+                    el('h2', {}, 'Schemes', el('span', {}, schemeNames.length)),
+                    el('div', { className: 'point-grid' }, schemeNames.map(name => el('article', { className: 'point scheme' },
+                        el('h3', {}, name),
+                        el('p', { className: 'scheme-type' }, describeScheme(schemes[name])),
+                        schemes[name]?.description ? el('p', {}, schemes[name].description) : null,
+                        el('p', { className: 'hint' }, `Used by ${count(countBy(entry => entry.auth.label.split(/ \+ | or /).includes(name)), 'operation')}`),
+                    ))),
+                ] : null,
+                el('h2', {}, 'Who needs what', el('span', {}, operations.length)),
+                defaultCount > 0
+                    ? el('p', { className: 'note' }, `${count(defaultCount, 'operation')} ${defaultCount === 1 ? 'states' : 'state'} no auth of its own and ${defaultCount === 1 ? 'takes' : 'take'} the spec default. Public endpoints such as a login may be listed under a scheme wrongly.`)
+                    : null,
+                authLabels.map(label => {
+                    const entries = operations.filter(entry => entry.auth.label === label)
+                    const kind    = label === 'none' ? 'public' : label === 'not stated' ? 'unknown' : ''
+                    return el('details', { className: `auth-need ${kind}`, open: entries.length <= 15 },
+                        el('summary', {}, label === 'none' ? 'No auth' : label === 'not stated' ? 'Not stated' : label, el('span', { className: 'n' }, count(entries.length, 'operation'))),
+                        el('div', { className: 'op-list' }, entries.map(entry => el('a', { href: `#${entry.id}`, title: `${entry.method.toUpperCase()} ${entry.path}` },
+                            el('span', { className: `method ${entry.method}` }, entry.method.toUpperCase()),
+                            el('span', { className: 'path' }, entry.path),
+                            entry.auth.source === 'default' ? el('span', { className: 'default' }, 'default') : null))),
+                    )
+                }),
+                authPoints.length > 0 ? [
+                    el('h2', {}, 'From the analysis', el('span', {}, authPoints.length)),
+                    el('div', { className: 'point-grid' }, authPoints.map(point => {
+                        const [title, text] = splitPoint(point)
+                        return el('article', { className: 'point' }, el('h3', {}, title), el('p', {}, text))
+                    })),
+                ] : null,
+            ))
+        }
+
+        // View tabs, only when there is more than the operations to show.
+        const viewNav  = document.getElementById('views')
+        const viewTabs = [
+            ['operations', 'Operations', operations.length],
+            openTotal > 0 ? ['open-points', 'Open points', openTotal] : null,
+            hasAuthInfo ? ['authentication', 'Authentication', schemeNames.length] : null,
+        ].filter(Boolean)
+        if (viewTabs.length > 1) {
+            viewNav.classList.remove('hidden')
+            viewNav.append(...viewTabs.map(([name, label, number]) =>
+                el('a', { className: 'view-tab', href: `#${name}`, 'data-view': name }, label, el('span', { className: 'n' }, number))))
         }
 
         // ===========================================================================
         // ==========================   FILTER OPERATIONS   ==========================
         // ===========================================================================
         //
-        //   1. Filters    Search text and chips, combined with AND.
-        //   2. Deep link  Opens the card of the operation in the URL hash.
+        //   1. Toolbar height   Keeps anchors and the sticky nav below the toolbar.
+        //   2. Filters          Search text, chips and group tabs, combined with AND.
+        //   3. Deep link        Opens the card of the operation in the URL hash.
         //
 
         // ---------------------------------------------------------------------------
+        // Toolbar height
+        //   Keeps anchors and the sticky nav below the toolbar.
+        // ---------------------------------------------------------------------------
+
+        const toolbar        = document.querySelector('.toolbar')
+        const measureToolbar = () => document.documentElement.style.setProperty('--toolbar-h', `${toolbar.offsetHeight}px`)
+        new ResizeObserver(measureToolbar).observe(toolbar)
+        measureToolbar()
+
+        // ---------------------------------------------------------------------------
         // Filters
-        //   Search text and chips, combined with AND.
+        //   Search text, chips and group tabs, combined with AND.
         // ---------------------------------------------------------------------------
 
         /*
@@ -584,28 +919,38 @@
             > Write only       -> only write operations
             > Open points      -> only operations with open points
             > Derived only     -> only operations not documented by the target
+            > Group tab        -> only operations of that group, 'All' shows every group
             Groups and nav headings without a visible operation are hidden too.
+            Each tab counts the matches of its group without the group filter, so it
+            tells where a search hits; a tab without matches is hidden.
         */
 
         const searchInput = document.getElementById('search')
         const chips       = [...document.querySelectorAll('.chip')]
         const resultCount = document.getElementById('result-count')
+        let activeGroup   = null     // null = All, set by the group tabs
 
         function applyFilters() {
             const text        = searchInput.value.trim().toLowerCase()
             const pressed     = new Set(chips.filter(chip => chip.getAttribute('aria-pressed') === 'true').map(chip => chip.dataset.filter))
             const confidences = ['high', 'medium', 'low'].filter(value => pressed.has(value))
+            const groupCounts = new Map([...groupTabs.keys()].map(group => [group, 0]))
 
             let visibleCount = 0
             for (const entry of operations) {
                 const haystack = `${entry.method} ${entry.path} ${entry.operation.summary ?? ''} ${entry.operation.operationId ?? ''}`.toLowerCase()
-                const isVisible = (text === '' || haystack.includes(text))
+                const isMatch = (text === '' || haystack.includes(text))
                     && (confidences.length === 0 || confidences.includes(entry.confidence))
                     && (!pressed.has('write') || entry.isWrite)
                     && (!pressed.has('open') || entry.open.length > 0)
                     && (!pressed.has('derived') || !entry.isDocumented)
+                const isVisible = isMatch && (null === activeGroup || entry.group === activeGroup)
                 entry.card.classList.toggle('hidden', !isVisible)
                 entry.navItem.classList.toggle('hidden', !isVisible)
+                if (isMatch) {
+                    groupCounts.set(null, groupCounts.get(null) + 1)
+                    groupCounts.set(entry.group, groupCounts.get(entry.group) + 1)
+                }
                 if (isVisible) visibleCount++
             }
 
@@ -613,7 +958,12 @@
             for (const container of document.querySelectorAll('[data-group]')) {
                 container.classList.toggle('hidden', null == container.querySelector(':scope > .operation:not(.hidden), :scope > ul > li:not(.hidden)'))
             }
-            resultCount.textContent = `${visibleCount} of ${operations.length} operations`
+            for (const [group, tab] of groupTabs) {
+                tab.querySelector('.n').textContent = groupCounts.get(group)
+                tab.classList.toggle('hidden', group !== null && group !== activeGroup && groupCounts.get(group) === 0)
+                tab.setAttribute('aria-pressed', group === activeGroup ? 'true' : 'false')
+            }
+            resultCount.textContent = `${visibleCount} of ${count(operations.length, 'operation')}`
         }
 
         searchInput.addEventListener('input', applyFilters)
@@ -623,15 +973,72 @@
                 applyFilters()
             })
         }
+        /*
+            A tab click keeps the tiles where they are on screen:
+            > Toolbar not stuck yet (page near the top) -> no scroll at all
+            > Toolbar stuck (scrolled into the list)    -> back to the one position where it just
+                                                           sticks, the same for every group
+            .layout has min-height 100vh, so a short group never makes the page shorter
+            than that position and the browser never clamps the scroll.
+        */
+        for (const [group, tab] of groupTabs) {
+            tab.addEventListener('click', () => {
+                const stuckAt = main.getBoundingClientRect().top + window.scrollY - toolbar.offsetHeight - 12
+                const isStuck = window.scrollY > stuckAt
+                activeGroup = group
+                applyFilters()
+                if (isStuck) window.scrollTo({ top: stuckAt, behavior: 'instant' })
+            })
+        }
         applyFilters()
 
         // ---------------------------------------------------------------------------
         // Deep link
-        //   Opens the card of the operation in the URL hash.
+        //   Shows the view of the URL hash and opens the card of an operation.
         // ---------------------------------------------------------------------------
 
+        /*
+            > #open-points                  -> the Open points view
+            > #authentication               -> the Authentication view
+            > anything else (#operations,   -> the Operations view, an operation's card
+              an operation id, empty)          opens when the hash names one
+            A side view without content (no open points, no auth info) falls back to Operations.
+            Switching views scrolls back to the view tabs only when the page is below them,
+            so a switch near the top never moves the page.
+        */
+
+        const layout    = document.querySelector('.layout')
+        const sideViews = new Map([
+            ['open-points', openTotal > 0 ? openView : null],
+            ['authentication', hasAuthInfo ? authView : null],
+        ])
+        let currentView = 'operations'
+
+        // Returns the view that is shown, which differs from name when it has no content.
+        function showView(name) {
+            const view = null != sideViews.get(name) ? name : 'operations'
+            toolbar.classList.toggle('hidden', view !== 'operations')
+            layout.classList.toggle('hidden', view !== 'operations')
+            for (const [key, section] of sideViews) section?.classList.toggle('hidden', key !== view)
+            for (const tab of viewNav.querySelectorAll('.view-tab')) {
+                if (tab.dataset.view === view) tab.setAttribute('aria-current', 'page')
+                else tab.removeAttribute('aria-current')
+            }
+            const viewTop = viewNav.getBoundingClientRect().top + window.scrollY
+            if (view !== currentView && window.scrollY > viewTop) window.scrollTo({ top: viewTop, behavior: 'instant' })
+            currentView = view
+            return view
+        }
+
         function openFromHash() {
-            const target = document.getElementById(decodeURIComponent(location.hash.slice(1)))
+            const id = decodeURIComponent(location.hash.slice(1))
+            if (showView(id) !== 'operations') return
+            const target = document.getElementById(id)
+            // A link into a group that the active tab hides switches back to All.
+            if (null !== activeGroup && null != target && null != target.closest('.hidden')) {
+                activeGroup = null
+                applyFilters()
+            }
             if (target?.tagName === 'DETAILS') {
                 target.open = true
                 target.scrollIntoView({ block: 'start' })

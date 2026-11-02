@@ -38,6 +38,10 @@ downloaded JavaScript.
 Open points (auth flow, URLs built at runtime, unknown schemas) live in the spec and show up
 on the page, per operation and as one list.
 
+<img src="docs/screenshots/api-html.png" width="720" alt="API.html rendered by Unwire for the testbed Juice Shop: summary cards, confidence bar, search, filters and group tiles">
+
+*`API.html` of the testbed Juice Shop, see [examples/juiceshop/API.html](examples/juiceshop/API.html).*
+
 ## Usage
 > [!IMPORTANT]
 > **Needs PowerShell 7 installed** (`pwsh`). Claude checks it before the first step and helps

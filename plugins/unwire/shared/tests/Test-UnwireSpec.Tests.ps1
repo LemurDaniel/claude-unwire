@@ -24,6 +24,10 @@ param ()
 #   broken_ref              Rejects a $ref to a missing target.
 #   low_without_open        Warns on low confidence without open points.
 #   root_open_points        Rejects root x-unwire-open that is no list of strings.
+#   security_set            Accepts [] and a defined scheme on every operation.
+#   security_unknown        Rejects a scheme missing in components.securitySchemes.
+#   security_not_list       Rejects a security that is no list of objects.
+#   security_inherited      Warns once on derived operations without their own security.
 #   errors_first            Returns errors before warnings.
 #   missing_file            Fails early on a missing file.
 #
@@ -191,6 +195,61 @@ Describe 'Test-UnwireSpec' {
         $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))
 
         $findings.Location | Should -Be @('x-unwire-open')
+    }
+
+    Context 'security' {
+        BeforeEach {
+            # Two operations, a bearer scheme defined, the root default set
+            $Login   = New-TestOperation -OperationId 'login'
+            $Devices = New-TestOperation -OperationId 'getDevices'
+            $Spec    = New-TestSpec -Paths ([ordered]@{ '/api/login' = @{ post = $Login }; '/api/devices' = @{ get = $Devices } })
+            $Login['x-unwire-impact'] = 'write'
+            $Spec['components'] = @{ securitySchemes = @{ bearerAuth = @{ type = 'http'; scheme = 'bearer' } } }
+            $Spec['security']   = @(@{ bearerAuth = @() })
+        }
+
+        It 'security_set: accepts [] and a defined scheme on every operation' {
+            $Login['security']   = @()
+            $Devices['security'] = @(@{ bearerAuth = @() })
+
+            $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+
+            $findings.Count | Should -Be 0
+        }
+
+        It 'security_unknown: rejects a scheme missing in components.securitySchemes' {
+            $Login['security']   = @()
+            $Devices['security'] = @(@{ apiKey = @() })
+
+            $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+
+            $findings.Count       | Should -Be 1
+            $findings[0].Rule     | Should -Be 'security'
+            $findings[0].Severity | Should -Be 'Error'
+            $findings[0].Location | Should -Be "paths['/api/devices'].get"
+            $findings[0].Message  | Should -BeLike "*'apiKey'*"
+        }
+
+        It 'security_not_list: rejects a security that is no list of objects' {
+            $Login['security']   = @()
+            $Devices['security'] = @()
+            $Spec['security']    = @{ bearerAuth = @() }
+
+            $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+
+            $findings.Count       | Should -Be 1
+            $findings[0].Location | Should -Be 'security'
+            $findings[0].Severity | Should -Be 'Error'
+        }
+
+        It 'security_inherited: warns once on derived operations without their own security' {
+            $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $Spec))
+
+            $findings.Count       | Should -Be 1
+            $findings[0].Rule     | Should -Be 'security'
+            $findings[0].Severity | Should -Be 'Warning'
+            $findings[0].Message  | Should -BeLike '2 derived operations*'
+        }
     }
 
     It 'errors_first: returns errors before warnings' {

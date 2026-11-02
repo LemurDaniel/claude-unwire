@@ -14,6 +14,8 @@ param ()
 #   title_and_count        Renders a spec with its title and operation count.
 #   default_output         Writes API.html next to the spec by default.
 #   file_uri               Returns a file URI to open the page in the browser.
+#   confidence_legend      Explains every confidence level on the page.
+#   example_current        examples/juiceshop/API.html matches the current template.
 #   title_escaped          HTML-encodes the title.
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
@@ -70,6 +72,26 @@ Describe 'ConvertTo-UnwireHtml' {
 
         $result.FileUri                          | Should -BeLike 'file:///*/with%20space/API.html'
         ([System.Uri] $result.FileUri).LocalPath | Should -Be ([System.IO.Path]::GetFullPath($outputFile))
+    }
+
+    It 'confidence_legend: explains every confidence level on the page' {
+        $result = & $SCRIPT_PATH -Path (Set-TestSpec -Title 'Router')
+        $html   = Get-Content -Path $result.OutputFile -Raw
+
+        $html | Should -Match "high:\s+'path and body appear literally in the code'"
+        $html | Should -Match "medium:\s+'assembled from parts of the code'"
+        $html | Should -Match "low:\s+'guessed from hints in the code'"
+        $html | Should -Match 'None of them is verified\.'
+    }
+
+    It 'example_current: examples/juiceshop/API.html matches the current template' {
+        $exampleFolder = Join-Path -Path $PSScriptRoot -ChildPath '../../../../../examples/juiceshop'
+        $outputFile    = Join-Path -Path $TestDrive -ChildPath 'juiceshop.html'
+
+        $null = & $SCRIPT_PATH -Path (Join-Path -Path $exampleFolder -ChildPath 'openapi.json') -OutputFile $outputFile
+
+        # A template change without re-rendering the example fails here.
+        Get-Content -Path $outputFile -Raw | Should -BeExactly (Get-Content -Path (Join-Path -Path $exampleFolder -ChildPath 'API.html') -Raw) -Because 'the example is re-rendered after every template change'
     }
 
     It 'title_escaped: HTML-encodes the title' {
