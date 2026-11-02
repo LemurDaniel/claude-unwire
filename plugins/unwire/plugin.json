@@ -16,5 +16,19 @@
     "powershell",
     "api-documentation",
     "read-only"
-  ]
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Unwire",
+        "shortDescription": "Web UI to OpenAPI spec and API.html, read-only",
+        "developerName": "LemurDaniel",
+        "category": "Productivity",
+        "websiteURL": "https://github.com/LemurDaniel/claude-unwire",
+        "brandColor": "#D9772B",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/icon.png"
+      }
+    }
+  }
 }

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Unwire icon: loose wires run through { ... } and leave as one twisted strand. Source of icon.png and the API.html favicon. -->
+  <defs>
+    <radialGradient id="background" cx="50%" cy="45%" r="75%">
+      <stop offset="0" stop-color="#2e221c"/>
+      <stop offset="1" stop-color="#140f0c"/>
+    </radialGradient>
+    <linearGradient id="sleeve" gradientUnits="userSpaceOnUse" x1="0" y1="196" x2="0" y2="316">
+      <stop offset="0" stop-color="#9c5a2c"/>
+      <stop offset="0.18" stop-color="#ffe2c2"/>
+      <stop offset="0.42" stop-color="#e9a066"/>
+      <stop offset="0.8" stop-color="#b8682f"/>
+      <stop offset="1" stop-color="#6e3514"/>
+    </linearGradient>
+
+    <!-- Loose wires, each ends in the sleeve -->
+    <path id="w1" d="M 40 128 C 80 116, 116 146, 106 186 C 98 216, 62 212, 70 192 C 80 170, 132 190, 152 224 C 164 242, 180 240, 210 240"/>
+    <path id="w2" d="M 30 204 C 60 200, 74 244, 110 234 C 148 224, 126 178, 98 204 C 74 228, 140 258, 210 251"/>
+    <path id="w3" d="M 34 288 C 56 282, 86 300, 76 272 C 66 244, 124 240, 134 268 C 142 292, 172 262, 210 262"/>
+    <path id="w4" d="M 30 370 C 74 386, 124 356, 104 326 C 88 302, 58 336, 94 344 C 136 352, 162 280, 210 273"/>
+    <path id="w5" d="M 46 440 C 110 456, 168 414, 146 362 C 132 328, 170 292, 210 284"/>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#background)"/>
+
+  <!-- Stripped ends: bare copper -->
+  <g stroke-linecap="round" stroke-width="7" stroke="#ffdcae">
+    <line x1="20" y1="132" x2="42" y2="128"/>
+    <line x1="10" y1="206" x2="32" y2="204"/>
+    <line x1="14" y1="291" x2="36" y2="288"/>
+    <line x1="10" y1="365" x2="32" y2="370"/>
+    <line x1="26" y1="436" x2="48" y2="440"/>
+  </g>
+  <!-- Wires: shadow, insulation, sheen -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#1a0c05" stroke-width="16">
+      <use href="#w1"/><use href="#w2"/><use href="#w3"/><use href="#w4"/><use href="#w5"/>
+    </g>
+    <g stroke-width="11">
+      <use href="#w1" stroke="#ffcf9e"/>
+      <use href="#w2" stroke="#e57a3b"/>
+      <use href="#w3" stroke="#f3a564"/>
+      <use href="#w4" stroke="#c4602a"/>
+      <use href="#w5" stroke="#db8a4c"/>
+    </g>
+    <g stroke="#fff3e6" stroke-opacity="0.35" stroke-width="3" transform="translate(0 -2.5)">
+      <use href="#w1"/><use href="#w2"/><use href="#w3"/><use href="#w4"/><use href="#w5"/>
+    </g>
+  </g>
+
+  <!-- One strand out: the five wires twisted together -->
+  <defs>
+    <pattern id="twist" width="55" height="55" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+      <rect x="0" width="11" height="55" fill="#ffcf9e"/>
+      <rect x="11" width="11" height="55" fill="#e57a3b"/>
+      <rect x="22" width="11" height="55" fill="#f3a564"/>
+      <rect x="33" width="11" height="55" fill="#c4602a"/>
+      <rect x="44" width="11" height="55" fill="#db8a4c"/>
+    </pattern>
+    <linearGradient id="round" gradientUnits="userSpaceOnUse" x1="0" y1="222" x2="0" y2="290">
+      <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+      <stop offset="0.2" stop-color="#fff" stop-opacity="0.3"/>
+      <stop offset="0.45" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.65"/>
+    </linearGradient>
+  </defs>
+  <rect x="300" y="222" width="222" height="68" fill="url(#twist)"/>
+  <rect x="300" y="222" width="222" height="68" fill="url(#round)"/>
+  <!-- Sleeve with { ... } -->
+  <rect x="192" y="198" width="10" height="116" rx="5" fill="#000" opacity="0.35"/>
+  <rect x="196" y="196" width="124" height="120" rx="18" fill="url(#sleeve)"/>
+  <g stroke="#6e3514" stroke-opacity="0.55" stroke-width="3">
+    <line x1="210" y1="200" x2="210" y2="312"/>
+    <line x1="306" y1="200" x2="306" y2="312"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+    <g stroke="#fff1e0" stroke-opacity="0.45" transform="translate(0 1.5)">
+      <path d="M 238 222 C 224 222, 222 228, 222 240 L 222 246 C 222 252, 219 256, 212 256 C 219 256, 222 260, 222 266 L 222 272 C 222 284, 224 290, 238 290"/>
+      <path d="M 278 222 C 292 222, 294 228, 294 240 L 294 246 C 294 252, 297 256, 304 256 C 297 256, 294 260, 294 266 L 294 272 C 294 284, 292 290, 278 290"/>
+    </g>
+    <g stroke="#3a2012">
+      <path d="M 238 222 C 224 222, 222 228, 222 240 L 222 246 C 222 252, 219 256, 212 256 C 219 256, 222 260, 222 266 L 222 272 C 222 284, 224 290, 238 290"/>
+      <path d="M 278 222 C 292 222, 294 228, 294 240 L 294 246 C 294 252, 297 256, 304 256 C 297 256, 294 260, 294 266 L 294 272 C 294 284, 292 290, 278 290"/>
+    </g>
+  </g>
+  <g fill="#3a2012">
+    <circle cx="245" cy="256" r="6"/>
+    <circle cx="258" cy="256" r="6"/>
+    <circle cx="271" cy="256" r="6"/>
+  </g>
+</svg>

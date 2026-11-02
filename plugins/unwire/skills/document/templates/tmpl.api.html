@@ -3,7 +3,8 @@
     NOTE:
       Template of the clickable API documentation, filled by ../scripts/ConvertTo-UnwireHtml.ps1:
       the TITLE placeholder in <title> becomes the HTML-escaped info.title, the SPEC_JSON
-      placeholder in the JSON script block the spec. They appear nowhere else.
+      placeholder in the JSON script block the spec, the FAVICON placeholder in the icon link
+      the plugin icon (assets/icon.svg) as base64. They appear nowhere else.
       Self-contained: no CDN, no network, opens offline from the file system.
 
       Every value of the spec is untrusted (it comes from downloaded code), so the page only
@@ -22,6 +23,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>__UNWIRE_TITLE__</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,__UNWIRE_FAVICON__">
     <script>
         // Theme before the first paint, no flash: the stored choice, light by default.
         // Storage can be blocked (private window, file:// policy), then light stays.

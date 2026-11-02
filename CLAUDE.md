@@ -49,7 +49,7 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
 - Output of real targets goes to `/unwire/<name>/` (git-ignored, anchored to the root:
   a bare `unwire/` would also hide `plugins/unwire/`). It never gets committed. Exception:
   `examples/juiceshop/` (testbed target, checked for secrets), the user's reference for feedback.
-- Every change of `tmpl.api.html` re-renders `examples/juiceshop/API.html` in the same step
+- Every change of `tmpl.api.html` or `assets/icon.svg` (the embedded favicon) re-renders `examples/juiceshop/API.html` in the same step
   (`ConvertTo-UnwireHtml.ps1 -Path ./examples/juiceshop/openapi.json`), a Pester test fails otherwise.
   A visible change also retakes the README screenshot (`./docs/screenshots/New-UnwireScreenshot.ps1`),
   no test checks that one.

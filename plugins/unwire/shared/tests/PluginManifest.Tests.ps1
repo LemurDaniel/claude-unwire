@@ -12,6 +12,7 @@ param ()
 #
 #   same_identity       Claude, Agent Plugins and Gemini name the same plugin
 #                       and version.
+#   icon                Claude and Codex icon fields point at an existing PNG.
 #   marketplaces        Claude and Codex marketplaces point at the plugin.
 #   skill_names         Every skill folder has a SKILL.md whose name is the
 #                       folder name, plus a description.
@@ -49,6 +50,21 @@ Describe 'plugin manifests' {
     It 'same_identity: the Agent Plugins manifest has the 1.0.0 schema and no path fields' {
         $Manifests.agents['$schema'] | Should -Be 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json'
         $Manifests.agents.Keys       | Should -Not -Contain 'skills'
+    }
+
+    It 'icon: <Field> points at the PNG in assets/' -ForEach @(
+        @{ Field = 'claude.icon' }
+        @{ Field = 'agents.composerIcon' }
+        @{ Field = 'agents.logo' }
+    ) {
+        $path = switch ($Field) {
+            'claude.icon'         { $Manifests.claude.icon }
+            'agents.composerIcon' { $Manifests.agents.extensions['com.openai'].interface.composerIcon }
+            'agents.logo'         { $Manifests.agents.extensions['com.openai'].interface.logo }
+        }
+
+        $path                                                   | Should -Be './assets/icon.png'
+        Join-Path -Path $PLUGIN_ROOT -ChildPath $path | Test-Path | Should -BeTrue
     }
 
     It 'marketplaces: <File> points unwire at ./plugins/unwire' -ForEach @(

@@ -39,7 +39,8 @@ Set-StrictMode -Version 1.0
 $ErrorActionPreference = 'Stop'
 
 $TEMPLATE_FILE       = Join-Path -Path $PSScriptRoot -ChildPath '../templates/tmpl.api.html'
-$PLACEHOLDER_PATTERN = '__UNWIRE_(?<name>TITLE|SPEC_JSON)__'
+$ICON_FILE           = Join-Path -Path $PSScriptRoot -ChildPath '../../../assets/icon.svg'
+$PLACEHOLDER_PATTERN = '__UNWIRE_(?<name>TITLE|SPEC_JSON|FAVICON)__'
 $HTTP_METHODS        = @('get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace')
 # JSON escape of '<', built from char codes so no tool or editor turns it back into '<'.
 $JSON_ESCAPED_LT     = -join [System.Char[]] @(92, 117, 48, 48, 51, 99)     # backslash u 0 0 3 c
@@ -105,6 +106,8 @@ Write-Verbose "[ConvertTo-UnwireHtml] '$Title' with $OperationCount operations."
 # string for JSON.parse, but no '</script>' or '<!--' can end the script block early.
 $EmbeddedSpec = $SpecText.Trim().Replace('<', $JSON_ESCAPED_LT)
 $EncodedTitle = [System.Net.WebUtility]::HtmlEncode($Title)
+# The plugin icon as favicon, base64 keeps the page self-contained.
+$EncodedIcon  = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($ICON_FILE))
 
 # One pass: a title containing '__UNWIRE_SPEC_JSON__' is never replaced again.
 $Html = [System.Text.RegularExpressions.Regex]::Replace(
@@ -112,7 +115,11 @@ $Html = [System.Text.RegularExpressions.Regex]::Replace(
     $PLACEHOLDER_PATTERN,
     {
         param ($match)
-        if ($match.Groups['name'].Value -EQ 'TITLE') { $EncodedTitle } else { $EmbeddedSpec }
+        switch ($match.Groups['name'].Value) {
+            'TITLE'   { $EncodedTitle }
+            'FAVICON' { $EncodedIcon }
+            default   { $EmbeddedSpec }
+        }
     }
 )
 

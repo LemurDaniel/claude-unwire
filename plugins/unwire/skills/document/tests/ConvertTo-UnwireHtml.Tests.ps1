@@ -18,6 +18,7 @@ param ()
 #   example_current        examples/juiceshop/API.html matches the current template.
 #   title_escaped          HTML-encodes the title.
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
+#   favicon                Embeds the plugin icon as base64 SVG favicon.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
 #   invalid_json           Fails early on invalid JSON.
 #   missing_file           Fails early on a missing file.
@@ -112,6 +113,18 @@ Describe 'ConvertTo-UnwireHtml' {
 
         $html                                     | Should -Not -Match ([System.Text.RegularExpressions.Regex]::Escape('<script>alert(1)'))
         ($block | ConvertFrom-Json).info.description | Should -Be $description
+    }
+
+    It 'favicon: embeds the plugin icon as base64 SVG' {
+        $specFile = Set-TestSpec -Title 'Router'
+        $iconFile = Join-Path -Path $PSScriptRoot -ChildPath '../../../assets/icon.svg'
+
+        $result = & $SCRIPT_PATH -Path $specFile
+        $html   = Get-Content -Path $result.OutputFile -Raw
+        $match  = [System.Text.RegularExpressions.Regex]::Match($html, '<link rel="icon" type="image/svg\+xml" href="data:image/svg\+xml;base64,(?<data>[A-Za-z0-9+/=]+)">')
+
+        $match.Success                                                    | Should -BeTrue
+        [System.Convert]::FromBase64String($match.Groups['data'].Value) | Should -Be ([System.IO.File]::ReadAllBytes($iconFile))
     }
 
     It 'placeholder_in_title: never replaces a placeholder inside the title again' {
