@@ -19,6 +19,8 @@ param ()
 #   title_escaped          HTML-encodes the title.
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
 #   favicon                Embeds the plugin icon as base64 SVG favicon.
+#   no_network             The page never sends a request itself, it only builds commands.
+#   try_it                 Builds PowerShell and cURL commands, session values never stored.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
 #   invalid_json           Fails early on invalid JSON.
 #   missing_file           Fails early on a missing file.
@@ -125,6 +127,26 @@ Describe 'ConvertTo-UnwireHtml' {
 
         $match.Success                                                    | Should -BeTrue
         [System.Convert]::FromBase64String($match.Groups['data'].Value) | Should -Be ([System.IO.File]::ReadAllBytes($iconFile))
+    }
+
+    It 'no_network: the page never sends a request itself, it only builds commands' {
+        $template = Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../templates/tmpl.api.html') -Raw
+
+        # A file:// page cannot read answers of other origins, but a form POST would still fire.
+        $template | Should -Not -Match '\bfetch\s*\(|XMLHttpRequest|sendBeacon|new\s+WebSocket|EventSource|\.submit\s*\(|<form\b'
+    }
+
+    It 'try_it: builds PowerShell and cURL commands, session values never stored' {
+        $template = Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../templates/tmpl.api.html') -Raw
+        $script   = [System.Text.RegularExpressions.Regex]::Match($template, '(?s)// =+\s+BUILD COMMANDS\s+=+.*?// =+\s+RENDER OPERATIONS').Value
+
+        $script | Should -Match 'Invoke-WebRequest @request'
+        $script | Should -Match 'curl -i -X'
+        $script | Should -Match "type: 'password'"
+        $script | Should -Match "\['x-unwire-value-prefix'\]"
+        $script | Should -Match "return 'Bearer '"
+        $script | Should -Match "return 'Basic '"
+        $script | Should -Not -Match 'localStorage|sessionStorage|indexedDB|document\.cookie'
     }
 
     It 'placeholder_in_title: never replaces a placeholder inside the title again' {

@@ -34,6 +34,9 @@ first script, unless it already passed in this session.
    ```
    Writes `unwire/<name>/API.html` next to the spec. The page works offline, no CDN.
    It returns `OutputFile` and `FileUri`, the `file:///` link to the page.
+   Every operation card has a "Try it" block: the user fills the session and parameters
+   and copies a PowerShell or cURL command to run in their own terminal. The page itself
+   sends nothing, and the agent never runs these commands.
 4. **Hand over**: the operation count per confidence, the number of write operations and the
    three most important open points. The reply ends with the link, `FileUri` copied exactly
    from the script output (never built by hand), in the language of the conversation:

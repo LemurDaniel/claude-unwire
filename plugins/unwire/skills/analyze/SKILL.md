@@ -159,6 +159,9 @@ somewhere in there.
    - **Auth**: login endpoint, token or session handling, headers set on every request.
      Define each scheme once in `components.securitySchemes` (bearer JWT, cookie, API key),
      then decide per operation whether it needs it, see Auth per operation below.
+     A fixed text before the value of an API key (`Authorization: SID <value>`) goes into
+     the scheme as `"x-unwire-value-prefix": "SID "`: the "Try it" block of API.html
+     shows it and puts it in front of what the user types.
    - **Names**: `operationId` from the calling function or UI context (`getConnectedDevices`).
 4. **Spec**: write `unwire/<name>/openapi.json` (JSON, OpenAPI 3.1 for a new spec; keep the version of a discovered one, the Swagger converter writes 3.0.3) with these extensions
    on every operation:

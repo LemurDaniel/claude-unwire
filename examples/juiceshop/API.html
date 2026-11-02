@@ -14,6 +14,7 @@
         HELPERS             DOM builder, $ref resolution and small formatters.
         LOAD SPEC           Parses the embedded spec and flattens the operations.
         RENDER SCHEMAS      Turns a JSON schema into a nested property list.
+        BUILD COMMANDS      'Try it': PowerShell and cURL commands, the page sends nothing.
         RENDER OPERATIONS   One collapsible card per operation.
         RENDER PAGE         Header, stats, navigation, groups and open points.
         FILTER OPERATIONS   Search, filter chips and group tabs.
@@ -313,6 +314,29 @@
         .response .status { font-family: var(--mono); font-weight: 600; margin-right: 8px; }
         .empty { color: var(--muted); font-style: italic; }
         .hidden { display: none !important; }
+
+        /* Try it: settings panel in the header and the command builder of each operation */
+        .try-settings { margin: 0 0 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+        .try-settings > summary { padding: 10px 14px; cursor: pointer; font-weight: 600; }
+        .try-settings .try-fields { padding: 0 14px 14px; }
+        .try-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+        .try-fields label { font-family: var(--mono); font-size: 0.85rem; }
+        .try-fields .hint { grid-column: 2; margin-top: -4px; }
+        .try input[type="text"], .try select, .try textarea, .try-settings input[type="text"], .try-settings input[type="password"] {
+            width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; font-family: var(--mono); font-size: 0.85rem;
+            color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+        }
+        .try textarea { min-height: 7em; resize: vertical; }
+        .try-settings .prefixed { display: flex; gap: 8px; align-items: center; }
+        .try-settings .prefixed code { flex: none; white-space: pre; font-family: var(--mono); font-size: 0.85rem; }
+        .try .warn { margin: 0 0 10px; padding: 8px 12px; border-radius: 6px; background: var(--warn-bg); border: 1px solid var(--warn-border); font-size: 0.88rem; }
+        .try .warn label { display: block; margin-top: 6px; font-weight: 600; }
+        .try .command { position: relative; margin: 8px 0 0; }
+        .try .command pre { margin: 4px 0 0; padding: 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; background: var(--code); border-radius: 6px; }
+        .try .command button {
+            position: absolute; top: 0; right: 0; padding: 2px 10px; font: inherit; font-size: 0.8rem; cursor: pointer;
+            color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+        }
 
         @media (max-width: 860px) {
             .layout { grid-template-columns: minmax(0, 1fr); padding: 16px 16px 48px; }
@@ -4315,6 +4339,250 @@
         }
 
         // ===========================================================================
+        // ===========================   BUILD COMMANDS   ============================
+        // ===========================================================================
+        //
+        //   trySettings          Base URL, certificate switch and session values, in memory only.
+        //   valuePrefixOf        Fixed text before a session value: 'Bearer ', 'Basic ', 'SID '.
+        //   quotePwsh            Single-quoted PowerShell string.
+        //   quoteBash            Single-quoted bash string.
+        //   bodySkeleton         Editable body text from a schema: 'name=' lines or JSON.
+        //   buildRequest         URL, headers and body of an operation with the session added.
+        //   renderCommands       The PowerShell and cURL command with copy buttons.
+        //   renderTry            The 'Try it' block of one operation card.
+        //   renderTrySettings    The settings panel in the header.
+        //
+        // The page never sends a request: it builds commands the user runs in a terminal
+        // (a file:// page cannot read answers of other origins, a form POST would still fire).
+
+        // Session values live in this tab only: never stored, gone on reload.
+        const trySettings = {
+            baseUrl:         String(spec.servers?.[0]?.url ?? '').replace(/\/$/, ''),
+            skipCertificate: false,
+            secrets:         {},
+        }
+        const SETTINGS_EVENT = 'unwire-try-settings'
+
+        /*
+            Fixed text in front of a session value, shown in the settings and put in the command:
+            > x-unwire-value-prefix in the scheme    -> as it is ('SID ')
+            > http basic                             -> 'Basic '
+            > http bearer, oauth2, openIdConnect     -> 'Bearer '
+            > apiKey in cookie                       -> '<name>='
+            > anything else                          -> none
+        */
+        function valuePrefixOf(scheme) {
+            if (null != scheme?.['x-unwire-value-prefix']) return String(scheme['x-unwire-value-prefix'])
+            if (scheme?.type === 'http' && String(scheme.scheme).toLowerCase() === 'basic') return 'Basic '
+            if (scheme?.type === 'http' || scheme?.type === 'oauth2' || scheme?.type === 'openIdConnect') return 'Bearer '
+            if (scheme?.type === 'apiKey' && scheme.in === 'cookie') return `${scheme.name}=`
+            return ''
+        }
+
+        function quotePwsh(text) {
+            return `'${String(text).replaceAll("'", "''")}'`
+        }
+
+        function quoteBash(text) {
+            return `'${String(text).replaceAll("'", `'\\''`)}'`
+        }
+
+        /*
+            Editable body from the schema of a media type:
+            > form-urlencoded   -> one 'name=' line per property, a single enum value filled in
+            > anything else     -> JSON with empty values per property, '{}' without properties
+        */
+        function bodySkeleton(mediaType, schema) {
+            const resolved   = resolveDeep(schema) ?? {}
+            const properties = Object.entries(resolved.properties ?? {})
+            if (mediaType === 'application/x-www-form-urlencoded') {
+                return properties.map(([name, property]) => {
+                    const values = resolveDeep(property)?.enum
+                    return `${name}=${Array.isArray(values) && values.length === 1 ? values[0] : ''}`
+                }).join('\n')
+            }
+            const emptyOf = property => ({ integer: 0, number: 0, boolean: false, array: [], object: {} })[resolveDeep(property)?.type] ?? ''
+            return JSON.stringify(Object.fromEntries(properties.map(([name, property]) => [name, emptyOf(property)])), null, 2)
+        }
+
+        /*
+            The request of an operation, session from the first security alternative:
+            > apiKey in header          -> header
+            > apiKey in query           -> the body field of that name when the form has one,
+                                           else a query parameter
+            > apiKey in cookie          -> Cookie header
+            > http, oauth2, oidc        -> Authorization header
+            Every value gets its prefix (valuePrefixOf): 'Bearer ' + 'abc' => 'Bearer abc'.
+            An empty session value stays a '<scheme>' placeholder in the command.
+        */
+        function buildRequest(entry, values, mediaType, bodyText) {
+            const headers = {}
+            const query   = []
+            const isForm  = mediaType === 'application/x-www-form-urlencoded'
+            // 'a=1\nb=' => [['a', '1'], ['b', '']]
+            const fields  = isForm ? bodyText.split('\n').filter(line => line.trim() !== '').map(line => {
+                const separator = line.indexOf('=')
+                return separator < 0 ? [line.trim(), ''] : [line.slice(0, separator).trim(), line.slice(separator + 1)]
+            }) : []
+
+            const security    = Array.isArray(entry.operation.security) ? entry.operation.security : (spec.security ?? [])
+            const requirement = security.find(alternative => Object.keys(alternative ?? {}).length > 0) ?? {}
+            for (const name of Object.keys(requirement)) {
+                const scheme = resolveDeep(spec.components?.securitySchemes?.[name]) ?? {}
+                const value  = `${valuePrefixOf(scheme)}${trySettings.secrets[name] || `<${name}>`}`
+                const field  = fields.find(([key]) => key === scheme.name)
+                if (scheme.type === 'apiKey' && scheme.in === 'header') headers[scheme.name] = value
+                else if (scheme.type === 'apiKey' && scheme.in === 'query' && null != field) { if (field[1] === '') field[1] = value }
+                else if (scheme.type === 'apiKey' && scheme.in === 'query') query.push([scheme.name, value])
+                else if (scheme.type === 'apiKey' && scheme.in === 'cookie') headers.Cookie = value
+                else headers.Authorization = value
+            }
+
+            let path = entry.path
+            for (const parameter of entry.parameters) {
+                const value = values[`${parameter?.in}:${parameter?.name}`] ?? ''
+                if (value === '') continue
+                if (parameter.in === 'path') path = path.replaceAll(`{${parameter.name}}`, encodeURIComponent(value))
+                else if (parameter.in === 'query') query.push([parameter.name, value])
+                else if (parameter.in === 'header') headers[parameter.name] = value
+                else if (parameter.in === 'cookie') headers.Cookie = [headers.Cookie, `${parameter.name}=${value}`].filter(Boolean).join('; ')
+            }
+
+            const search = query.map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`).join('&')
+            const body   = isForm
+                ? fields.map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`).join('&')
+                : bodyText.trim()
+            return {
+                method:      entry.method.toUpperCase(),
+                url:         `${trySettings.baseUrl}${path}${search ? `?${search}` : ''}`,
+                headers,
+                contentType: null != mediaType && body !== '' ? mediaType : null,
+                body:        body !== '' ? body : null,
+            }
+        }
+
+        function renderCommands(request) {
+            const method     = request.method.charAt(0) + request.method.slice(1).toLowerCase()
+            const headerList = Object.entries(request.headers)
+            const pwshLines  = [
+                `Uri                  = ${quotePwsh(request.url)}`,
+                `Method               = ${quotePwsh(method)}`,
+                headerList.length > 0 ? `Headers              = @{ ${headerList.map(([name, value]) => `${quotePwsh(name)} = ${quotePwsh(value)}`).join('; ')} }` : null,
+                null != request.contentType ? `ContentType          = ${quotePwsh(request.contentType)}` : null,
+                null != request.body ? `Body                 = ${quotePwsh(request.body)}` : null,
+                trySettings.skipCertificate ? 'SkipCertificateCheck = $true' : null,
+                'SkipHttpErrorCheck   = $true',
+            ].filter(Boolean)
+            const pwsh = ['$request = @{', ...pwshLines.map(line => `    ${line}`), '}', '$response = Invoke-WebRequest @request', '$response.StatusCode', '$response.Content'].join('\n')
+
+            const curl = [
+                `curl -i -X ${request.method} ${quoteBash(request.url)}`,
+                ...headerList.map(([name, value]) => `  -H ${quoteBash(`${name}: ${value}`)}`),
+                null != request.contentType ? `  -H ${quoteBash(`Content-Type: ${request.contentType}`)}` : null,
+                null != request.body ? `  --data-raw ${quoteBash(request.body)}` : null,
+                trySettings.skipCertificate ? '  -k' : null,
+            ].filter(Boolean).join(' \\\n')
+
+            // Copy: clipboard API where allowed, else the text is selected for Ctrl+C.
+            const command = (label, text) => {
+                const pre    = el('pre', {}, text)
+                const button = el('button', { type: 'button' }, 'Copy')
+                button.addEventListener('click', () => {
+                    const select = () => window.getSelection()?.selectAllChildren(pre)
+                    if (null == navigator.clipboard) return select()
+                    navigator.clipboard.writeText(text).then(() => { button.textContent = 'Copied' }, select)
+                })
+                return el('div', { className: 'command' }, el('div', { className: 'hint' }, label), button, pre)
+            }
+            return [command('PowerShell 7', pwsh), command('cURL (bash)', curl)]
+        }
+
+        function renderTry(entry) {
+            const values  = {}
+            const output  = el('div', {})
+            const content = Object.entries(resolveDeep(entry.operation.requestBody)?.content ?? {})
+            const [mediaType, media] = content[0] ?? [null, null]
+            // Body variants: the alternatives of a oneOf, else the schema itself
+            const schema   = resolveDeep(media?.schema)
+            const variants = Array.isArray(schema?.oneOf) ? schema.oneOf.map(resolveDeep) : (null != schema ? [schema] : [])
+
+            let isConfirmed = !entry.isWrite
+            const bodyInput = el('textarea', { spellcheck: 'false', 'aria-label': 'Request body' })
+            bodyInput.value = variants.length > 0 ? bodySkeleton(mediaType, variants[0]) : ''
+
+            const update = () => {
+                output.replaceChildren(...(isConfirmed
+                    ? renderCommands(buildRequest(entry, values, mediaType, bodyInput.value))
+                    : [el('p', { className: 'hint' }, 'Confirm the warning above to build the command.')]))
+            }
+
+            const fields = el('div', { className: 'try-fields' }, entry.parameters.map(parameter => {
+                const input = el('input', { type: 'text', placeholder: resolveDeep(parameter?.schema)?.enum?.join(' | ') ?? parameter?.example ?? '' })
+                input.addEventListener('input', () => { values[`${parameter?.in}:${parameter?.name}`] = input.value; update() })
+                return [el('label', {}, `${parameter?.name ?? '?'} (${parameter?.in ?? '?'})`), input]
+            }))
+            bodyInput.addEventListener('input', update)
+
+            let variantSelect = null
+            if (variants.length > 1) {
+                variantSelect = el('select', { 'aria-label': 'Body variant' }, variants.map((variant, index) => el('option', { value: index }, variant?.title ?? `Variant ${index + 1}`)))
+                variantSelect.addEventListener('change', () => { bodyInput.value = bodySkeleton(mediaType, variants[Number(variantSelect.value)]); update() })
+            }
+
+            let warning = null
+            if (entry.isWrite) {
+                const confirm = el('input', { type: 'checkbox' })
+                confirm.addEventListener('change', () => { isConfirmed = confirm.checked; update() })
+                warning = el('div', { className: 'warn' },
+                    'This operation changes data on the target. Run the command only against your own device and only when you know what it does.',
+                    el('label', {}, confirm, ' I understand, build the command'))
+            }
+
+            document.addEventListener(SETTINGS_EVENT, update)
+            update()
+            return el('div', { className: 'try' },
+                el('h3', {}, 'Try it'),
+                el('p', { className: 'hint' }, 'Builds a command for your own terminal. This page sends nothing, session values stay in this tab.'),
+                warning,
+                entry.parameters.length > 0 ? fields : null,
+                null != mediaType ? [el('div', { className: 'hint' }, `Body (${mediaType}${mediaType === 'application/x-www-form-urlencoded' ? ', one name=value per line' : ''})`), variantSelect, bodyInput] : null,
+                output,
+            )
+        }
+
+        function renderTrySettings() {
+            const notify = () => document.dispatchEvent(new CustomEvent(SETTINGS_EVENT))
+            const field  = (label, input, hint) => [el('label', {}, label), input, hint ? el('div', { className: 'hint' }, hint) : null]
+
+            const baseUrl = el('input', { type: 'text', value: trySettings.baseUrl, 'aria-label': 'Base URL' })
+            baseUrl.addEventListener('input', () => { trySettings.baseUrl = baseUrl.value.replace(/\/$/, ''); notify() })
+
+            const skip = el('input', { type: 'checkbox' })
+            skip.addEventListener('change', () => { trySettings.skipCertificate = skip.checked; notify() })
+
+            // The value prefix of a scheme stands fixed in front of its field: 'Bearer ' [ abc ]
+            const schemes = Object.entries(spec.components?.securitySchemes ?? {}).map(([name, scheme]) => {
+                const resolved = resolveDeep(scheme) ?? {}
+                const prefix   = valuePrefixOf(resolved)
+                const input    = el('input', { type: 'password', autocomplete: 'off', 'aria-label': name })
+                input.addEventListener('input', () => { trySettings.secrets[name] = input.value; notify() })
+                // Basic: the value is base64 of 'user:password', the page does not encode it.
+                const hint = [resolved.description, prefix === 'Basic ' ? 'Value: base64 of user:password.' : null].filter(Boolean).join(' ')
+                return field(name, prefix !== '' ? el('div', { className: 'prefixed' }, el('code', {}, prefix), input) : input, hint || null)
+            })
+
+            return el('details', { className: 'try-settings' },
+                el('summary', {}, 'Try it: base URL and session'),
+                el('div', { className: 'try-fields' },
+                    field('Base URL', baseUrl),
+                    field('Skip certificate check', el('div', {}, skip), 'For devices with a self-signed certificate.'),
+                    schemes,
+                    el('div', { className: 'hint' }, 'Session values stay in this tab only: never saved, gone on reload. Every operation card gets a "Try it" block that builds the command.'),
+                ),
+            )
+        }
+
+        // ===========================================================================
         // ==========================   RENDER OPERATIONS   ==========================
         // ===========================================================================
         //
@@ -4398,6 +4666,13 @@
             )
 
             const card = el('details', { className: 'operation', id: entry.id }, summary, body)
+            // Try it: built on the first open, a closed card costs nothing.
+            card.addEventListener('toggle', () => {
+                if (card.open && null == entry.tryBlock) {
+                    entry.tryBlock = renderTry(entry)
+                    body.append(entry.tryBlock)
+                }
+            })
             entry.card = card
             return card
         }
@@ -4406,7 +4681,8 @@
         // =============================   RENDER PAGE   =============================
         // ===========================================================================
         //
-        //   1. Header                Theme toggle, title, version, description, notice and summary cards.
+        //   1. Header                Theme toggle, title, version, description, notice, summary
+        //                            cards and the Try it settings.
         //   2. Navigation            Groups with their operations as links, and the group tabs.
         //   3. Groups                One section per group with its operation cards.
         //   4. Open points view      The open points as their own view: whole spec as cards,
@@ -4417,7 +4693,8 @@
 
         // ---------------------------------------------------------------------------
         // Header
-        //   Theme toggle, title, version, description, notice and summary cards.
+        //   Theme toggle, title, version, description, notice, summary cards and the
+        //   Try it settings.
         // ---------------------------------------------------------------------------
 
         const countBy         = predicate => operations.filter(predicate).length
@@ -4486,6 +4763,7 @@
                     ? card({ href: '#open-points' }, 'Open points', openTotal, el('div', { className: 'card-sub' }, 'not resolved from the code'))
                     : null,
             ),
+            renderTrySettings(),
         )
 
         // ---------------------------------------------------------------------------
