@@ -70,6 +70,7 @@ Set-StrictMode -Version 1.0
 $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot/../../../shared/ConvertTo-UnwireText.ps1
+. $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
 
 $SPEC_PATHS_FILE  = Join-Path -Path $PSScriptRoot -ChildPath '../data/spec-paths.json'
 $SPEC_KINDS        = @('OpenApi', 'Swagger', 'OpenApiYaml')     # kinds that are saved as files
@@ -193,7 +194,12 @@ $Hits = [System.Collections.Generic.List[PSCustomObject]]::new()
         $response = Invoke-WebRequest @RequestConfig -Uri $target
     }
     catch [System.Net.Http.HttpRequestException] {
-        # Connection refused, DNS or TLS failure: every other path would fail the same way.
+        # Untrusted certificate: the user decides about SkipCertificateCheck, never the script.
+        $certificateError = Get-UnwireCertificateError -Exception $_.Exception
+        if ($null -NE $certificateError) {
+            throw [System.Security.Authentication.AuthenticationException]::new("Uri '$BaseUri' has a TLS certificate this machine does not trust ($certificateError). Ask the user, then run again with -SkipCertificateCheck.", $_.Exception)
+        }
+        # Connection refused, DNS failure: every other path would fail the same way.
         throw [System.InvalidOperationException]::new("Uri '$BaseUri' must be reachable, the request to '$target' failed: $($_.Exception.Message)", $_.Exception)
     }
     catch [System.OperationCanceledException], [System.TimeoutException] {

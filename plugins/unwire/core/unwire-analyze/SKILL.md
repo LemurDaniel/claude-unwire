@@ -35,11 +35,54 @@ somewhere in there.
    **Code behind a login.** Most single-page apps serve their scripts without a login, only
    the data is protected: try without a session first. When the start page or the scripts
    redirect to a login, use session mode:
-   - The user logs in in their own browser and copies the session cookie from the dev tools
-     (Application → Cookies, e.g. `i_like_gitea`, `grafana_session`) as `name=value`.
-   - Run the script with `-PromptSession` in a terminal the user types into (in the Claude
-     desktop app: a terminal tab of the user), not in your own shell. It asks with a masked
-     prompt, the cookie stays in memory for that one run: not on disk, not in the history.
+   - The user copies one signed-in request as cURL: no cookie name needed, the script takes
+     the cookie out of `-b` or the `cookie:` header and drops every other header.
+     `name=value` from Application → Cookies and a `cookie:` header line still work.
+   - Run the script with `-PromptSession` in a window the user types into, never in your
+     own shell: the cookie stays in that window's memory, not on disk, not in the history.
+     Always guide first, the window never opens before the user answered:
+
+     **Step 1a, the guide as text.** Before the AskUserQuestion call, your message contains
+     these six steps, written out in full in the user's language with the real URL. A
+     sentence like "I'll explain how to log in" without the steps is wrong, the steps
+     themselves have to be in the message:
+     1. Open `<URL>` in your browser and log in. Stay on the page.
+     2. Press F12, open the **Network** tab, reload with F5.
+     3. Right-click the first request (the page itself, type `document`):
+        - Chrome / Edge: **Copy → Copy as cURL (bash)** or **(cmd)**, both work.
+        - Firefox: **Copy Value → Copy as cURL (POSIX)** or **(Windows)**.
+     4. Answer the question "Are you ready?" below. Never paste the cURL into the chat, it
+        holds your cookie.
+     5. A new PowerShell window opens with the prompt `Session cookie (...)`. Paste the cURL
+        there, all lines at once; the input stays masked (`****`).
+     6. The download runs in that window. When it is done, read any warning, then close
+        the window: Unwire continues only after that.
+
+     **Step 1b, then AskUserQuestion.** Only after the guide, with no other tool call before
+     the answer. The dialog may hide the text above it, so the question repeats the
+     essentials:
+     - question: "Are you ready? Logged in to `<URL>`, request copied as cURL (F12 → Network
+       → right-click the document request → Copy as cURL). The next step opens a window
+       with a masked prompt for it."
+     - option 1: "Ready, open the window"
+     - option 2: "Cancel": no window, no request with a session.
+
+     Only option 1 continues. A custom answer is never the cURL itself: if it looks like
+     one (`curl`, `cookie`, `=`), do not repeat or use it, tell the user it was not stored
+     and that the paste belongs into the window, then ask again.
+
+     **Step 2, after "Ready, open the window".** Open the window (Windows), one tool call that does
+     nothing else; add `-SkipCertificateCheck` only when the user agreed for this host:
+     ```powershell
+     Start-Process pwsh -Wait -WorkingDirectory $PWD -ArgumentList @(
+         '-NoProfile', '-NoExit', '-File', '${CLAUDE_PLUGIN_ROOT}/core/unwire-analyze/scripts/Save-UnwireAsset.ps1',
+         '-Uri', '<URL>', '-OutputDirectory', './unwire/<name>/assets', '-PromptSession')
+     ```
+     Then check `unwire-assets.json` in a separate call, never the window. No manifest
+     means the run stopped before the crawl (bad paste, window closed early, certificate):
+     ask the user what the window said (the error, never the cURL) and offer a new try.
+     Elsewhere (macOS, Linux, no desktop) give the command for the user's own terminal in
+     step 1 and ask "Done?" with AskUserQuestion after it ran, instead of opening a window.
    - Never ask for the password, never log in, never ask the user to paste the cookie into
      the chat, never write it to a file.
    - `-UseSession` reads the cookie from `$env:UNWIRE_COOKIE` instead, for automation only.
@@ -50,7 +93,8 @@ somewhere in there.
    - The user's paste may span many lines ("Copy as cURL"), the prompt reads all of them.
      Never ask the user to paste terminal output into the chat, read the terminal yourself.
    - A warning about a redirect of the start page means the session expired: ask the user
-     to log in again and update the variable.
+     to log in again and update the variable. In the manifest it shows as a start page
+     that was not `read`.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-analyze/scripts/Get-UnwireJsCandidate.ps1" `

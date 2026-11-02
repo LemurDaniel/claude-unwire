@@ -22,7 +22,9 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-discover/scripts/Find-UnwireSpec.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/discover' -Verbose
    ```
-   Add `-SkipCertificateCheck` only after the user agreed (self-signed device certificates).
+   Run without `-SkipCertificateCheck`. An untrusted certificate stops the script after the
+   first request with "has a TLS certificate this machine does not trust": ask the user as
+   `commands/unwire.md` describes, add the switch only after a yes.
 2. Read the result, one object per hit:
 
    | Kind | Meaning | Next |

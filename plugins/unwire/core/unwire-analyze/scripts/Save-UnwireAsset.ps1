@@ -158,6 +158,7 @@ Set-StrictMode -Version 1.0
 $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot/../../../shared/ConvertTo-UnwireText.ps1
+. $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
 
 $MANIFEST_FILE     = 'unwire-assets.json'
 $MAX_REDIRECTS     = 5
@@ -625,6 +626,11 @@ $GuessMisses = 0
         $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig -IsRedirectAllowed (-NOT $IsSessionMode)
     }
     catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
+        # Untrusted certificate on the start page: the user decides about SkipCertificateCheck.
+        $certificateError = Get-UnwireCertificateError -Exception $_.Exception
+        if ($item.Depth -EQ 0 -AND $null -NE $certificateError) {
+            throw [System.Security.Authentication.AuthenticationException]::new("Uri '$StartUri' has a TLS certificate this machine does not trust ($certificateError). Ask the user, then run again with -SkipCertificateCheck.", $_.Exception)
+        }
         if ($item.Depth -EQ 0) {
             throw [System.InvalidOperationException]::new("Uri '$StartUri' must be reachable, the request failed: $($_.Exception.Message)", $_.Exception)
         }

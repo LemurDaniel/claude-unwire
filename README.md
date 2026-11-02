@@ -38,12 +38,45 @@ on the page, per operation and as one list.
 
 ## Usage
 ```
-/unwire http://192.168.178.1 -Name FritzBox
-/unwire ./saved-ui -Name Nas        # local copy of a UI behind a login, fully offline
+/unwire https://nas.example.test               # name derived from the host: Nas
+/unwire http://192.168.178.1 -Name FritzBox    # an IP has no name to derive
+/unwire https://nas.example.test/gitea/ with login   # name from the path: Gitea, code behind a login
+/unwire ./saved-ui                             # saved copy ("Save page as"), fully offline: logins without a cookie, unreachable devices
 ```
+
+**Behind a login.** No flag needed: Unwire first tries without a session, most single-page
+apps serve their scripts to anyone. When the start page redirects to a login, it walks you
+through copying one request as cURL from your own browser, signed in:
+1. F12 → **Network**, reload with F5.
+2. Right-click the first request (`document`): Chrome / Edge **Copy → Copy as cURL**,
+   Firefox **Copy Value → Copy as cURL**. bash, cmd, POSIX and Windows all work.
+
+On Windows it then opens a separate window with a masked prompt, you paste the cURL there
+and close the window when the download is done. Only the cookie is taken from it. The cookie stays in that window's memory:
+never in a file, a log or the chat. Unwire never logs in itself. Saying "with login" up front
+skips the first try.
 
 Example output: [examples/grafana/API.html](examples/grafana/API.html), rendered from
 [examples/grafana/openapi.json](examples/grafana/openapi.json).
+
+## Try it on the testbed
+Throwaway targets on `127.0.0.1`, no volumes, made to be analyzed (Docker required). Details
+and logins in [examples/testbed/README.md](examples/testbed/README.md).
+```powershell
+Set-Location ./examples/testbed
+Copy-Item .env.example .env      # test credentials only
+docker compose up -d             # Juice Shop :3000, Grafana :3001, Gitea :3003
+
+# Gitea admin, once after every fresh start
+docker compose exec -u git unwire-gitea gitea admin user create --admin --username unwire --password unwire-testbed --email unwire@example.test --must-change-password=false
+```
+Then in Claude Code, from the repo root (`127.0.0.1` is an IP, so `-Name` is needed):
+```
+/unwire http://127.0.0.1:3000 -Name JuiceShop                # undocumented REST API, Angular SPA
+/unwire http://127.0.0.1:3003 -Name Gitea                    # published swagger.v1.json + web routes
+/unwire http://127.0.0.1:3001 -Name Grafana with login       # session mode, admin / unwire-testbed
+```
+Output goes to `/unwire/<name>/`. Reset every target with `docker compose down`.
 
 ## Install
 ```

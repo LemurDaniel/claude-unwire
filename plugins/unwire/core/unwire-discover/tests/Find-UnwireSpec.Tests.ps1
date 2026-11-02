@@ -11,15 +11,16 @@ param ()
 # =====================   DETECT PUBLISHED DOCUMENTATION   ==================
 # ===========================================================================
 #
-#   openapi_json        Detects an OpenAPI JSON spec with version and title.
-#   swagger_yaml        Detects a Swagger YAML spec.
-#   swagger_ui          Reports a Swagger UI page as documentation.
-#   redirect_ignored    Ignores redirects, they usually lead to a login page.
-#   no_hits             Returns nothing and warns when no path has docs.
-#   saves_specs         Saves found specs into OutputDirectory.
-#   get_only            Never sends anything but GET.
-#   unreachable         Fails with a clear error on an unreachable host.
-#   invalid_uri         Fails early on a URI that is not http(s).
+#   openapi_json            Detects an OpenAPI JSON spec with version and title.
+#   swagger_yaml            Detects a Swagger YAML spec.
+#   swagger_ui              Reports a Swagger UI page as documentation.
+#   redirect_ignored        Ignores redirects, they usually lead to a login page.
+#   no_hits                 Returns nothing and warns when no path has docs.
+#   saves_specs             Saves found specs into OutputDirectory.
+#   get_only                Never sends anything but GET.
+#   unreachable             Fails with a clear error on an unreachable host.
+#   untrusted_certificate   Stops after the first request on an untrusted certificate.
+#   invalid_uri             Fails early on a URI that is not http(s).
 #
 
 BeforeAll {
@@ -108,6 +109,14 @@ Describe 'Find-UnwireSpec' {
         Mock Invoke-WebRequest { throw [System.Net.Http.HttpRequestException]::new('No such host is known.') }
 
         { & $SCRIPT_PATH -Uri $BASE_URI } | Should -Throw -ExceptionType ([System.InvalidOperationException]) -ExpectedMessage "Uri 'http://router.test/' must be reachable*"
+    }
+
+    It 'untrusted_certificate: stops after the first request and names SkipCertificateCheck' {
+        $inner = [System.Security.Authentication.AuthenticationException]::new('The remote certificate is invalid because of errors in the certificate chain: UntrustedRoot')
+        Mock Invoke-WebRequest { throw [System.Net.Http.HttpRequestException]::new('The SSL connection could not be established, see inner exception.', $inner) }
+
+        { & $SCRIPT_PATH -Uri 'https://router.test' } | Should -Throw -ExceptionType ([System.Security.Authentication.AuthenticationException]) -ExpectedMessage "Uri 'https://router.test/' has a TLS certificate this machine does not trust (*UntrustedRoot)*-SkipCertificateCheck*"
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
     }
 
     It 'invalid_uri: fails early on a URI that is not http(s)' {

@@ -1,6 +1,6 @@
 ---
 description: Reverse engineers the API of a web UI into openapi.json and a clickable HTML documentation. Read-only. A PowerShell module follows only on request.
-argument-hint: <url|folder> -Name <api-name> [-SkipCertificateCheck]
+argument-hint: <url|folder> [-Name <api-name>] [-SkipCertificateCheck]
 ---
 
 # /unwire
@@ -33,14 +33,37 @@ Runs the Unwire chain for: `$ARGUMENTS`
 
 ## Input
 - `<url>`: base URI of the web UI, e.g. `http://192.168.178.1`.
-- `<folder>`: a local copy of the web UI ("Save page as" in the browser), for UIs behind a login.
-  Then step 1 is skipped and step 2 works fully offline.
-- `-Name`: short name of the API, used for the output folder and the module prefix.
-  Ask the user when it is missing.
-- `-SkipCertificateCheck`: for devices with self-signed certificates. Ask before using it.
-- Code behind a login: the user logs in in their own browser, `unwire-analyze` runs the
-  download with `-PromptSession` in the user's terminal, they paste the cookie at the masked
-  prompt (scripts only). Never ask for a password or for the cookie in the chat.
+- `<folder>`: a local copy of the web UI ("Save page as" in the browser), for logins without
+  a cookie (token in `localStorage`), devices out of reach or no request at all. Then step 1
+  is skipped and step 2 works fully offline. A cookie login needs no folder, see Code behind
+  a login below.
+- `-Name` (optional): short name of the API, used for the output folder (lowercase,
+  `unwire/nfs/`) and the module prefix (PascalCase, `Get-NfsDevice`). When it is missing,
+  derive it and name it in the first reply:
+  - URL with a path: its last segment, `https://nas.example.test/gitea/` → `Gitea`
+    (several apps behind one reverse proxy).
+  - host name: its first label, `nfs.fritz.box` → `Nfs`, `fritz.box` → `Fritz`.
+  - folder: its name, `./saved-ui` → `SavedUi`.
+  - IP address: no name to derive, ask the user.
+
+  Ask also when `unwire/<name>/` already exists: overwrite it or pick another name.
+- `-SkipCertificateCheck`: for devices with self-signed certificates. Never ask up front and
+  never set it on your own: run without it. When a script stops with "has a TLS certificate
+  this machine does not trust", ask with the **AskUserQuestion** tool:
+  - question: "The TLS connection to `<host>` (`<addresses>`) fails, probably a self-signed
+    certificate (`<reason>`). Use -SkipCertificateCheck for this host?"
+  - option 1: "Yes, ignore the certificate": every GET to `<host>` runs with it.
+  - option 2: "Cancel": no further request, the user checks the certificate.
+
+  Only option 1 continues, then every later script of this run gets the switch. Ask again
+  for every new host, the answer never carries over. Given in the arguments, it skips the
+  question.
+- Code behind a login: the user logs in in their own browser and copies a request as cURL
+  (`unwire-analyze` has the guide: write all its steps out every time, before the
+  AskUserQuestion, never just announce them), `unwire-analyze` runs the download
+  with `-PromptSession` in a separate window, they paste it at the masked prompt (scripts
+  only). "with login" in the arguments skips the try without a session. Never ask for a
+  password or for the cookie in the chat.
 
 ## Output
 ```

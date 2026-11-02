@@ -29,6 +29,7 @@ param ()
 #   get_only               Never sends anything but GET, never lets the client redirect.
 #   manifest               Writes unwire-assets.json with every asset.
 #   unreachable            Fails with a clear error when the start page is unreachable.
+#   untrusted_certificate  Stops at the start page on an untrusted certificate.
 #   webpack_chunk_map      Loads the lazy chunks of a webpack runtime by name and hash.
 #   webpack_chunk_prefix   Builds CRA-style chunk names relative to the runtime's folder.
 #   no_cookie_by_default   Sends no Cookie header without UseSession.
@@ -254,6 +255,14 @@ Describe 'Save-UnwireAsset' {
         Mock Invoke-WebRequest { throw [System.Net.Http.HttpRequestException]::new('No such host is known.') }
 
         { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory } | Should -Throw -ExceptionType ([System.InvalidOperationException]) -ExpectedMessage "Uri 'http://router.test/' must be reachable*"
+    }
+
+    It 'untrusted_certificate: stops at the start page and names SkipCertificateCheck' {
+        $inner = [System.Security.Authentication.AuthenticationException]::new('The remote certificate is invalid because of errors in the certificate chain: UntrustedRoot')
+        Mock Invoke-WebRequest { throw [System.Net.Http.HttpRequestException]::new('The SSL connection could not be established, see inner exception.', $inner) }
+
+        { & $SCRIPT_PATH -Uri 'https://router.test/' -OutputDirectory $OutputDirectory } | Should -Throw -ExceptionType ([System.Security.Authentication.AuthenticationException]) -ExpectedMessage "Uri 'https://router.test/' has a TLS certificate this machine does not trust (*UntrustedRoot)*-SkipCertificateCheck*"
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
     }
 
     It 'webpack_chunk_map: loads the lazy chunks of a webpack runtime by name and hash' {
