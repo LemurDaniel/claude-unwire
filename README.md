@@ -78,17 +78,22 @@ and logins in [examples/testbed/README.md](examples/testbed/README.md).
 ```powershell
 Set-Location ./examples/testbed
 Copy-Item .env.example .env      # test credentials only
-docker compose up -d             # Juice Shop :3000, Grafana :3001, Gitea :3003
-
-# Gitea admin, once after every fresh start
-docker compose exec -u git unwire-gitea gitea admin user create --admin --username unwire --password unwire-testbed --email unwire@example.test --must-change-password=false
+docker compose up -d --build     # Juice Shop :3000, mock router :3010-3016
 ```
 Then in Claude Code, from the repo root (`127.0.0.1` is an IP, so `-Name` is needed):
-```
-/unwire http://127.0.0.1:3000 -Name JuiceShop                # undocumented REST API, Angular SPA
-/unwire http://127.0.0.1:3003 -Name Gitea                    # published swagger.v1.json + web routes
-/unwire http://127.0.0.1:3001 -Name Grafana with login       # session mode, admin / unwire-testbed
-```
+
+| Target | Command | What it tests |
+| --- | --- | --- |
+| Juice Shop | `/unwire http://127.0.0.1:3000 -Name JuiceShop` | Undocumented REST API, Angular SPA |
+| Mock none | `/unwire http://127.0.0.1:3010 -Name MockNone` | Frame UI, scripts only with a `Referer` |
+| Mock basic | `/unwire http://127.0.0.1:3011 -Name MockBasic` | HTTP Basic, `HttpAuth: Basic` |
+| Mock digest | `/unwire http://127.0.0.1:3012 -Name MockDigest` | HTTP Digest, rejected, local folder |
+| Mock form | `/unwire http://127.0.0.1:3013 -Name MockForm` | Login form, session cookie |
+| Mock sid | `/unwire http://127.0.0.1:3014 -Name MockSid` | Session in the URL parameter `sid` |
+| Mock path | `/unwire http://127.0.0.1:3015/ui/ -Name MockPath` | Session token in the path |
+| Mock bearer | `/unwire http://127.0.0.1:3016 -Name MockBearer` | Public code, API with a Bearer header |
+
+Mock logins come from `.env`, details per variant in [examples/mocks](examples/mocks/README.md).
 Output goes to `/unwire/<name>/`. Reset every target with `docker compose down`.
 
 ## Install

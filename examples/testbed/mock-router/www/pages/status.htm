@@ -1,0 +1,13 @@
+<h1>Status</h1>
+<div class="grid">
+  <div class="card"><h2>Version</h2><div class="stat" id="version">…</div></div>
+  <div class="card"><h2>WAN</h2><div class="stat" id="wan">…</div></div>
+  <div class="card"><h2>Uptime</h2><div class="stat" id="uptime">…</div></div>
+</div>
+<script>
+api.get('/api/status').then(function (status) {
+  document.getElementById('version').textContent = status.version;
+  document.getElementById('wan').textContent = status.wan.ip;
+  document.getElementById('uptime').textContent = Math.round(status.uptime / 3600) + ' h';
+});
+</script>

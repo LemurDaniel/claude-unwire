@@ -1,0 +1,12 @@
+{
+  "description": "One port per login method, all serving the same frame UI from www/. Ports are published on 127.0.0.1 by docker-compose.yaml.",
+  "variants": [
+    { "name": "none",   "port": 3010, "auth": "none",   "summary": "No login, scripts answer 403 without a same-origin Referer." },
+    { "name": "basic",  "port": 3011, "auth": "basic",  "summary": "HTTP Basic on every request." },
+    { "name": "digest", "port": 3012, "auth": "digest", "summary": "HTTP Digest on every request, Unwire must reject the session." },
+    { "name": "form",   "port": 3013, "auth": "form",   "summary": "Login form, session cookie mock_form_session, code behind the login." },
+    { "name": "sid",    "port": 3014, "auth": "sid",    "summary": "Login built by an imported script, session in the URL parameter sid." },
+    { "name": "path",   "port": 3015, "auth": "path",   "summary": "Session token as a path segment, /ui/;tok=<VALUE>/." },
+    { "name": "bearer", "port": 3016, "auth": "bearer", "summary": "Public code, the API needs an Authorization Bearer header." }
+  ]
+}

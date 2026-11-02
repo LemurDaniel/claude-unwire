@@ -1,0 +1,12 @@
+<h1>System</h1>
+<div class="card">
+  <h2>Log (warn)</h2>
+  <pre id="logs"></pre>
+</div>
+<script>
+getLogs('warn').then(function (logs) {
+  document.getElementById('logs').textContent = JSON.stringify(logs.entries, null, 2);
+});
+getConfig('lan');
+</script>
+<button class="is-danger" onclick="api.post('/api/reboot', {})">Restart</button>
