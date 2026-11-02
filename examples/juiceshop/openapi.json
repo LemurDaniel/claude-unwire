@@ -246,10 +246,13 @@
         },
         "x-unwire-source": "assets/main.js:1:386",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "Loaded by app-login, app-score-board, app-about and app-navbar, all without guard."
+        "x-unwire-auth": "Loaded by app-login, app-score-board, app-about and app-navbar, all without guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/admin/application-version": {
@@ -276,10 +279,13 @@
         },
         "x-unwire-source": "assets/main.js:1:401839",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-navbar and sidenav load it on every page."
+        "x-unwire-auth": "app-navbar and sidenav load it on every page.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/web3/nftUnlocked": {
@@ -291,15 +297,30 @@
         "operationId": "nftUnlocked",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:874",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-nft-unlock (route juicy-nft, no guard) loads it."
+        "x-unwire-auth": "app-nft-unlock (route juicy-nft, no guard) loads it.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/web3/nftMintListen": {
@@ -312,16 +333,32 @@
         "description": "Name suggests a long-running listener; response shape not read by the UI.",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:979",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Name suggests a long-running listener; response shape not read by the UI.",
-          "auth unclear: no call site found in a routed component."
+          "auth unclear: no call site found in a routed component.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
         ],
         "security": [
           {
@@ -479,10 +516,11 @@
         },
         "x-unwire-source": "assets/main.js:1:324046",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object passed as query params ({params:e}); only key=nftMintChallenge is literal (main.js:1:1103)."
+          "Generic filter object passed as query params ({params:e}); only key=nftMintChallenge is literal (main.js:1:1103).",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
         ],
         "security": [],
         "x-unwire-auth": "app-score-board and the notifications load it without a login."
@@ -513,11 +551,12 @@
         },
         "x-unwire-source": "assets/main.js:1:324252",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Response is text (responseType: text).",
-          "auth unclear: no call site found in a component, only defined in the challenge service."
+          "auth unclear: no call site found in a component, only defined in the challenge service.",
+          "Live GET 2026-11-02: without session HTTP 200 text/plain, with session HTTP 200 text/plain. It answered without a session, security may be []."
         ],
         "security": [
           {
@@ -550,10 +589,13 @@
         },
         "x-unwire-source": "assets/main.js:1:324403",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "Score board and challenge notifications, no login needed."
+        "x-unwire-auth": "Score board and challenge notifications, no login needed.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/continue-code-findIt": {
@@ -580,10 +622,13 @@
         },
         "x-unwire-source": "assets/main.js:1:324539",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/continue-code-fixIt": {
@@ -610,10 +655,13 @@
         },
         "x-unwire-source": "assets/main.js:1:324681",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/continue-code/apply/{continueCode}": {
@@ -760,10 +808,13 @@
         },
         "x-unwire-source": "assets/main.js:1:323149",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-score-board (no guard) and app-login load it."
+        "x-unwire-auth": "app-score-board (no guard) and app-login load it.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/snippets/{key}": {
@@ -933,10 +984,11 @@
         },
         "x-unwire-source": "assets/main.js:1:44994",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object as query params, fields unknown. Used by the admin page."
+          "Generic filter object as query params, fields unknown. Used by the admin page.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
         ],
         "security": [
           {
@@ -1240,10 +1292,13 @@
         },
         "x-unwire-source": "assets/main.js:1:45858",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-navbar and sidenav call it on every page, also logged out; it names the user only when a token is sent."
+        "x-unwire-auth": "app-navbar and sidenav call it on every page, also logged out; it names the user only when a token is sent.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/saveLoginIp": {
@@ -1298,14 +1353,17 @@
         },
         "x-unwire-source": "assets/main.js:1:46204",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "app-deluxe-user (login guard) and app-payment."
+        "x-unwire-auth": "app-deluxe-user (login guard) and app-payment.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 400 application/json, with session HTTP 200 application/json."
+        ]
       },
       "post": {
         "tags": [
@@ -1436,10 +1494,11 @@
         },
         "x-unwire-source": "assets/main.js:1:86953",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object as query params, fields unknown."
+          "Generic filter object as query params, fields unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
         ],
         "security": [],
         "x-unwire-auth": "app-register and app-forgot-password (no guard) load it."
@@ -1482,7 +1541,10 @@
         "x-unwire-verified": false,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-forgot-password (no guard) calls it with the email."
+        "x-unwire-auth": "app-forgot-password (no guard) calls it with the email.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 500 application/json, with session HTTP 500 application/json."
+        ]
       }
     },
     "/rest/user/erasure-request": {
@@ -1597,19 +1659,43 @@
         "operationId": "twoFactorStatus",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "setup": {
+                      "type": "boolean"
+                    },
+                    "secret": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "setupToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:190404",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "app-two-factor-auth manages 2FA of the signed-in user."
+        "x-unwire-auth": "app-two-factor-auth manages 2FA of the signed-in user.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
       }
     },
     "/rest/2fa/setup": {
@@ -2118,14 +2204,17 @@
         },
         "x-unwire-source": "assets/main.js:1:261144",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "app-order-history, orders of the signed-in user."
+        "x-unwire-auth": "app-order-history, orders of the signed-in user.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 500 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/order-history/orders": {
@@ -2159,7 +2248,10 @@
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 403 application/json, with session HTTP 403 application/json."
+        ]
       }
     },
     "/rest/order-history/{id}/delivery-status": {
@@ -2244,10 +2336,13 @@
         },
         "x-unwire-source": "assets/main.js:1:119273",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-search-result, the start page, loads it without a login."
+        "x-unwire-auth": "app-search-result, the start page, loads it without a login.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/api/Products/": {
@@ -2275,10 +2370,11 @@
         },
         "x-unwire-source": "assets/main.js:1:119181",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object as query params, fields unknown."
+          "Generic filter object as query params, fields unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
         ],
         "security": [
           {
@@ -2607,10 +2703,13 @@
         },
         "x-unwire-source": "assets/main.js:1:120408",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-search-result (start page) loads the stock for every visitor."
+        "x-unwire-auth": "app-search-result (start page) loads the stock for every visitor.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/api/Quantitys/{id}": {
@@ -2696,10 +2795,11 @@
         },
         "x-unwire-source": "assets/main.js:1:69652",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object as query params, fields unknown."
+          "Generic filter object as query params, fields unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
         ],
         "security": [],
         "x-unwire-auth": "app-about (no guard) shows the feedback carousel."
@@ -2804,15 +2904,36 @@
         "operationId": "getCaptcha",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "captchaId": {
+                      "type": "integer"
+                    },
+                    "captcha": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:70202",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-contact (no guard) loads the captcha."
+        "x-unwire-auth": "app-contact (no guard) loads the captcha.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/image-captcha/": {
@@ -2824,12 +2945,30 @@
         "operationId": "getImageCaptcha",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    },
+                    "UserId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:202941",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
@@ -2837,7 +2976,8 @@
           }
         ],
         "x-unwire-open": [
-          "auth unclear: app-data-export loads it on open, the route has no guard but the export needs a user."
+          "auth unclear: app-data-export loads it on open, the route has no guard but the export needs a user.",
+          "Live GET 2026-11-02: without session HTTP 500 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
         ]
       }
     },
@@ -2945,15 +3085,33 @@
         "operationId": "getChatbotStatus",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "body": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:167358",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-chatbot (no guard) loads it when the page opens."
+        "x-unwire-auth": "app-chatbot (no guard) loads it when the page opens.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/chatbot/respond": {
@@ -3026,10 +3184,11 @@
         },
         "x-unwire-source": "assets/main.js:1:173994",
         "x-unwire-confidence": "medium",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Generic filter object as query params, fields unknown."
+          "Generic filter object as query params, fields unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
         ],
         "security": [
           {
@@ -3116,14 +3275,17 @@
         },
         "x-unwire-source": "assets/main.js:1:174444",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "Address routes have the login guard (canActivate: token present)."
+        "x-unwire-auth": "Address routes have the login guard (canActivate: token present).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/api/Addresss/{id}": {
@@ -3320,14 +3482,17 @@
         },
         "x-unwire-source": "assets/main.js:1:233079",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "app-wallet and app-payment, balance of the signed-in user."
+        "x-unwire-auth": "app-wallet and app-payment, balance of the signed-in user.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
       },
       "put": {
         "tags": [
@@ -3403,14 +3568,17 @@
         },
         "x-unwire-source": "assets/main.js:1:233513",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "Checkout flow (delivery method), bid from the login."
+        "x-unwire-auth": "Checkout flow (delivery method), bid from the login.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
       }
     },
     "/api/Deliverys/{id}": {
@@ -3481,14 +3649,17 @@
         },
         "x-unwire-source": "assets/main.js:1:233953",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "x-unwire-auth": "app-payment-method and checkout, logged in only."
+        "x-unwire-auth": "app-payment-method and checkout, logged in only.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/api/Cards/{id}": {
@@ -3705,10 +3876,13 @@
         },
         "x-unwire-source": "assets/main.js:1:305502",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-photo-wall shows the photos to everyone; posting is behind isLoggedIn()."
+        "x-unwire-auth": "app-photo-wall shows the photos to everyone; posting is behind isLoggedIn().",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/languages": {
@@ -3720,15 +3894,51 @@
         "operationId": "getLanguages",
         "responses": {
           "200": {
-            "description": "Response shape not read by the UI."
+            "description": "Response shape not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "lang": {
+                        "type": "string"
+                      },
+                      "icons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "shortKey": {
+                        "type": "string"
+                      },
+                      "percentage": {
+                        "type": "number"
+                      },
+                      "gauge": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "x-unwire-source": "assets/main.js:1:402190",
         "x-unwire-confidence": "high",
-        "x-unwire-verified": false,
+        "x-unwire-verified": true,
         "x-unwire-impact": "read",
         "security": [],
-        "x-unwire-auth": "app-navbar loads it on every page."
+        "x-unwire-auth": "app-navbar loads it on every page.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
       }
     },
     "/rest/country-mapping": {
@@ -3753,7 +3963,8 @@
           }
         ],
         "x-unwire-open": [
-          "auth unclear: only app-challenge-solved-notification calls it, which also checks isLoggedIn()."
+          "auth unclear: only app-challenge-solved-notification calls it, which also checks isLoggedIn().",
+          "Live GET 2026-11-02: without session HTTP 500, with session HTTP 500."
         ]
       }
     }
