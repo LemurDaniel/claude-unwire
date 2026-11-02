@@ -10,8 +10,13 @@ undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`
 module only on request. Skills live in `plugins/unwire/core/<skill>/` with their own scripts,
 data or templates and Pester tests; `plugins/unwire/shared/` holds what several skills use.
 
-## Ground rule: read-only
+## Ground rule: own home systems, read-only
 Every change must keep this true, it is the reason the plugin may run against real devices.
+- Only for home systems the user owns or may analyze. `shared/Test-UnwireTarget.ps1`
+  classifies the target before the first request; public or unresolvable targets need a
+  warning and an explicit "own risk" answer through AskUserQuestion, per target, never
+  carried over. The README carries the notices (own systems only, prototype, AI-generated):
+  keep them when editing it.
 - Only GET on well-known documentation paths and on static assets (HTML, JS, source maps).
   Never call an endpoint found in the code, never submit a form, never execute downloaded JS.
 - Session mode (`-PromptSession`, `-UseSession`) requests only the start page and

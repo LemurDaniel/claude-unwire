@@ -3,6 +3,25 @@ Claude Code plugin that reverse engineers the undocumented HTTP API of a web UI 
 smart home device, web app) into an OpenAPI spec and a clickable HTML documentation.
 A PowerShell module for the parts you need follows on request.
 
+> [!CAUTION]
+> **ONLY USE FOR HOME SYSTEMS YOU OWN.** Run Unwire only against devices and services that
+> belong to you, or that you are explicitly allowed to analyze, such as the local
+> [testbed](examples/testbed/README.md). Analyzing third-party systems can break their terms
+> of service or the law. You are responsible for where you point it. Unwire checks the
+> target first: anything outside the home network gets a warning and runs only after an
+> explicit "at my own risk" confirmation.
+
+> [!WARNING]
+> **Prototype.** Unwire is an early prototype (v0.2.0). It is tested against a few home
+> systems only, its output can be incomplete or wrong, and its interfaces may change without
+> notice. Treat every generated spec, page and module as a draft to review, not as fact.
+
+> [!NOTE]
+> **AI-generated.** The code, skills and documentation of this repository were written with
+> Claude (Anthropic) via Claude Code, reviewed and directed by a human. The plugin itself uses
+> Claude at run time: the specs it produces are partly derived by an AI model and are marked
+> as unverified (`x-unwire-verified: false`).
+
 **Read-only by design:** Unwire finds published documentation and analyzes the static
 frontend code. It never calls an API endpoint, never submits a form, never executes
 downloaded JavaScript.

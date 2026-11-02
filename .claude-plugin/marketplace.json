@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-unwire",
-  "description": "Unwire: reverse engineer the undocumented API of a web UI (router, NAS, smart home, web app) into an OpenAPI spec and a clickable HTML documentation. Read-only by design.",
+  "description": "Unwire: reverse engineer the undocumented API of a web UI (router, NAS, smart home, web app) into an OpenAPI spec and a clickable HTML documentation. Read-only by design. Prototype, only for home systems you own.",
   "owner": {
     "name": "LemurDaniel"
   },

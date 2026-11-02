@@ -8,6 +8,11 @@ description: Step 1 of Unwire. Checks a web UI for published API documentation (
 Finds documentation the target already publishes. A hit can save the whole code analysis.
 
 ## Ground rule
+Only home systems the user owns: run `${CLAUDE_PLUGIN_ROOT}/shared/Test-UnwireTarget.ps1`
+before the first request. `RequiresConfirmation: true` (public or unresolvable) means warn
+and get an explicit "continue at my own risk" through the AskUserQuestion tool, exactly as
+`commands/unwire.md` describes, or send nothing.
+
 Only GET requests to the paths in `data/spec-paths.json` of this skill. No POST, also not for a
 GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an open point.
 
