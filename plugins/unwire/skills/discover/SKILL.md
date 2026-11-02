@@ -50,16 +50,21 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
    operationId used twice). Fix them in `openapi.json` and record each fix in `x-unwire-open`.
 3. Judge the hit:
    - **Complete**: covers the UI's features. Ask the user whether to skip `unwire:analyze`.
-   - **Partial** (e.g. only a public API, the UI uses more): continue with `unwire:analyze`
-     and merge, the published spec wins on conflicts. When both live under different base
-     URLs (e.g. API under `/api/v1`, web routes under the app root), use the common root
-     as the one server and prefix the API paths with their base: `/notifications` of the
-     web UI and `/api/v1/notifications` of the API must stay two operations.
+   - **Partial** (e.g. only a public API, the UI uses more): continue with
+     `unwire:analyze` and merge both specs.
+     - On a conflict the published spec wins.
+     - Different base URLs (e.g. API under `/api/v1`, web routes under the app root):
+       the common root is the one server, every API path gets its base as prefix.
+     - Example: `/notifications` of the web UI and `/api/v1/notifications` of the API
+       stay two operations.
    - **None**: continue with `unwire:analyze`.
 
 Report the result as observed (paths, status codes), no guess about vendor or product.
 
 ## Output
 - `unwire/<name>/discover/*.json|yaml`: saved specs.
-- When a spec is taken over: `unwire/<name>/openapi.json` with
-  `x-unwire-source: "discover:<file name>"` on the root object and on every operation (set by `ConvertFrom-UnwireSwagger.ps1`; for an OpenAPI 3 spec set it yourself). The page tells documented and derived operations apart by it.
+- `unwire/<name>/openapi.json`: only when a found spec is taken over as it is.
+  - Mark the root object and every operation with `x-unwire-source: "discover:<file name>"`.
+    API.html uses this mark to tell documented operations from derived ones.
+  - Swagger 2: `ConvertFrom-UnwireSwagger.ps1` sets the mark.
+  - OpenAPI 3: set the mark yourself.

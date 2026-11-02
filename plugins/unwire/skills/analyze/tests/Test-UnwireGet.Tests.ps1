@@ -29,6 +29,7 @@ param ()
 #   max_requests            Stops at MaxRequests and reports the rest as skipped.
 #   results_file            Writes live-get.json with status and media type per pass.
 #   progress                Shows each request as path template, never the session.
+#   window_done             Ends with the done line only in a window.
 #   server_origin           Fails before any request when the server leaves the origin.
 #   bad_value               Fails early on a value that is not name=value.
 #   untrusted_certificate   Stops at the first request and names SkipCertificateCheck.
@@ -347,6 +348,18 @@ Describe 'Test-UnwireGet' {
         Should -Invoke Write-Progress -Times 1 -Exactly -ParameterFilter { $Status -EQ '2 / 2: GET /devices/{id} (with session)' -AND $PercentComplete -EQ 100 }
         Should -Invoke Write-Progress -Times 0 -Exactly -ParameterFilter { "$Status" -MATCH 'TOP-SECRET-VALUE' }
         Should -Invoke Write-Progress -Times 1 -Exactly -ParameterFilter { $Completed }
+    }
+
+    It 'window_done: ends with the done line only in a window' {
+        Mock Write-Host { }
+        $Site['http://router.test/api/status'] = New-TestResponse -Content '{}'
+        $file = Set-TestSpec -Spec (New-TestSpec -Paths @{ '/status' = @{ get = (New-TestOperation -OperationId 'getStatus') } })
+
+        $null = & $SCRIPT_PATH -Path $file -Uri $TARGET_URI
+        Should -Invoke Write-Host -Times 0 -Exactly
+
+        $null = & $SCRIPT_PATH -Path $file -Uri $TARGET_URI -Window -Language de
+        Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { "$Object" -LIKE 'Fertig. Lies die Warnungen oben*' }
     }
 
     It 'server_origin: fails before any request when the server leaves the origin' {

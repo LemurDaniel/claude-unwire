@@ -18,6 +18,8 @@
 #   tested operation.
 #
 #   -Plan lists what would be sent and why the rest is skipped, without any request.
+#   A progress bar shows every request. -Window (or -PromptSession) ends with a line that
+#   tells the user to close the window.
 #
 #   ./plugins/unwire/skills/analyze/scripts/Test-UnwireGet.ps1 -Path ./unwire/router/openapi.json -Uri 'http://192.168.178.1' -Plan
 #   ./plugins/unwire/skills/analyze/scripts/Test-UnwireGet.ps1 -Path ./unwire/router/openapi.json -Uri 'http://192.168.178.1'
@@ -32,7 +34,7 @@
 #     WRITE RESULTS    Updates the spec, writes live-get.json, returns a summary.
 #
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'The last line of the login guide is for the user in the PromptSession window.')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'The last line of the login guide is for the user in the window.')]
 [CmdletBinding()]
 param (
     <#
@@ -123,7 +125,8 @@ param (
     <#
     [Optional]
     Sends every operation a second time with the session from the environment variable
-    SessionVariable (automation).
+    SessionVariable. For tests and the mock runs only, never set by the agent: it would
+    put the cookie into its own shell. The agent uses PromptSession.
     #>
     [Parameter(
         Mandatory = $false
@@ -171,7 +174,18 @@ param (
         Mandatory = $false
     )]
     [System.String]
-    $Language = 'en'
+    $Language = 'en',
+
+    <#
+    [Optional]
+    Runs in a window the user watches (Start-Process): ends with the 'done' line of the
+    login guide, so the user knows when to close it. PromptSession implies it.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [switch]
+    $Window
 )
 
 Set-StrictMode -Version 1.0
@@ -600,7 +614,7 @@ foreach ($entry in @($Planned | Where-Object Status -EQ 'planned')) {
 }
 
 # Last step of the guide: the user closes the window only after this line.
-if ($PromptSession) {
+if ($PromptSession -OR $Window) {
     $guides = Get-Content -Path $LOGIN_GUIDE_FILE -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
     Write-Host ''
     Write-Host $guides[$(if ($guides.ContainsKey($Language)) { $Language } else { $DEFAULT_LANGUAGE })].done

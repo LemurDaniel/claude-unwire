@@ -19,7 +19,8 @@
 #   file before it is written.
 #   -PromptSession shows the login guide of data/login-guide.json in -Language, then asks for
 #   the cookie with a masked prompt (interactive, nothing on disk), -UseSession reads it from
-#   an environment variable (automation). The cookie never appears in output, logs or manifest.
+#   an environment variable (tests and mock runs only, never the agent). The cookie never
+#   appears in output, logs or manifest.
 #   A pasted cURL is read for every session it carries: the cookie, the Authorization header
 #   (Basic, Bearer, own schemes; Digest is rejected), auth headers like X-Auth-Token and a
 #   ';name=value' token in the URL path ('/ui/;stok=<VALUE>/', ';jsessionid=<VALUE>').
@@ -39,7 +40,7 @@
 #     Unwire: login for https://nas.local/wiki/        # the guide, then the masked prompt
 #     Session cookie (...): ****                        # "Copy as cURL" from the browser
 #
-#   $env:UNWIRE_COOKIE = 'session_id=<VALUE>'
+#   $env:UNWIRE_COOKIE = 'session_id=<VALUE>'          # tests and mock runs only
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/dashboard/' -OutputDirectory ./unwire/dashboard/assets -UseSession
 #
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://router.test' -OutputDirectory ./unwire/router/assets -PromptSession -SessionParameter sid
@@ -171,6 +172,8 @@ param (
     Sends the session cookie from the environment variable SessionVariable and switches to
     session mode: only the start page, *.htm/*.html pages and *.js, *.mjs, *.map files are
     requested, nothing on the denylist (logout, reboot, delete, ...), no redirects.
+    For tests and the mock runs only, never set by the agent: it would put the cookie
+    into its own shell. The agent uses PromptSession.
     #>
     [Parameter(
         Mandatory = $false

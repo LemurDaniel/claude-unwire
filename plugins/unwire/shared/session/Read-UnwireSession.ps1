@@ -6,7 +6,7 @@ function Read-UnwireSession {
     .DESCRIPTION
         -PromptSession shows the login guide of GuideFile in Language, then asks with a masked
         prompt (interactive, nothing on disk). -UseSession reads the environment variable
-        SessionVariable (automation). ConvertTo-UnwireSession reads the text for every session
+        SessionVariable (tests and mock runs only, never the agent). ConvertTo-UnwireSession reads the text for every session
         it carries.
 
         In the prompt, up to three pastes:
