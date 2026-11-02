@@ -54,7 +54,7 @@ somewhere in there.
    ```
    The script returns a summary (count per kind). Each candidate in the file has `File`
    (`bundle.js.map::src/api.ts` for code from a source map), `Line`, `Column`, `Kind`
-   (`fetch`, `axios`, `jquery`, `xhr`, `http-client`, `url-string`), `Method` (`null` when
+   (`fetch`, `axios`, `jquery`, `xhr`, `http-client`, `url-template`, `url-string`), `Method` (`null` when
    unknown), `Target`, `IsLiteralTarget` (`false` for URLs built at runtime) and a `Snippet`.
    - Bundles with a source map next to them are skipped, vendor code in maps too.
      Add `-IncludeVendor` only when the API client lives in a vendor package.
@@ -72,7 +72,7 @@ somewhere in there.
    - **Response**: from the code that reads the result (`res.data.items`, `if (r.status === 'ok')`).
    - **Auth**: login endpoint, token or session handling, headers set on every request.
    - **Names**: `operationId` from the calling function or UI context (`getConnectedDevices`).
-4. **Spec**: write `unwire/<name>/openapi.json` (OpenAPI 3.1, JSON) with these extensions
+4. **Spec**: write `unwire/<name>/openapi.json` (JSON, OpenAPI 3.1 for a new spec; keep the version of a discovered one, the Swagger converter writes 3.0.3) with these extensions
    on every operation:
 
    | Extension | Value |

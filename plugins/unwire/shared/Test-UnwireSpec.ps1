@@ -1,6 +1,6 @@
 # NOTE:
-#   Validates an Unwire openapi.json before unwire-module turns it into a PowerShell module:
-#   the OpenAPI 3.x structure the module needs, path parameters, unique operationIds,
+#   Validates an Unwire openapi.json before unwire-document renders it and unwire-module uses it:
+#   the OpenAPI 3.x structure both need, path parameters, unique operationIds,
 #   local $ref targets and the x-unwire-* extensions on every operation.
 #   Returns one finding per problem, nothing when the spec is valid.
 #

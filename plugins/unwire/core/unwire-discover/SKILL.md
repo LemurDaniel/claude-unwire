@@ -47,4 +47,4 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
 ## Output
 - `unwire/<name>/discover/*.json|yaml`: saved specs.
 - When a spec is taken over: `unwire/<name>/openapi.json` with
-  `x-unwire-source: "discover:<path>"` on the root object.
+  `x-unwire-source: "discover:<file name>"` on the root object and on every operation (set by `ConvertFrom-UnwireSwagger.ps1`; for an OpenAPI 3 spec set it yourself). The page tells documented and derived operations apart by it.

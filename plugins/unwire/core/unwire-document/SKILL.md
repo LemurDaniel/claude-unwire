@@ -1,6 +1,6 @@
 ---
 name: unwire-document
-description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.json as one self-contained, clickable HTML page (API.html) with groups, search, confidence and write filters, schemas and all open points. Use after unwire-analyze, or whenever someone wants to read or share what Unwire found.
+description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.json as one self-contained, clickable HTML page (API.html) with groups, search, filters for confidence, write and derived operations, schemas and all open points. Use after unwire-analyze, or whenever someone wants to read or share what Unwire found.
 ---
 
 # Unwire: Document
