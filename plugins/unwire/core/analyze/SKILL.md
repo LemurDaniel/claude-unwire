@@ -9,6 +9,8 @@ Reads the code the web UI ships to the browser. Every endpoint the UI calls is w
 somewhere in there.
 
 ## Ground rule
+- PowerShell 7: run the check of `${CLAUDE_PLUGIN_ROOT}/shared/pwsh-check.md` before the
+  first script, unless it already passed in this session.
 - Only home systems the user owns: run `${CLAUDE_PLUGIN_ROOT}/shared/Test-UnwireTarget.ps1`
   before the first download (skip it for a local folder). `RequiresConfirmation: true` means
   warn and get an explicit "continue at my own risk" through the AskUserQuestion tool, as

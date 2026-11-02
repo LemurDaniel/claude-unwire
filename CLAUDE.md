@@ -30,7 +30,7 @@ Every change must keep this true, it is the reason the plugin may run against re
 ```powershell
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
-./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json
+./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json
 ```
 Throwaway targets to run Unwire against, even with write calls: `examples/testbed/`
 (`docker compose up -d`, reset with `docker compose down`).

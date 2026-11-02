@@ -39,6 +39,10 @@ Open points (auth flow, URLs built at runtime, unknown schemas) live in the spec
 on the page, per operation and as one list.
 
 ## Usage
+> [!IMPORTANT]
+> **Needs PowerShell 7 installed** (`pwsh`). Claude checks it before the first step and helps
+> you install it, nothing gets installed without your OK. See [Requirements](#requirements).
+
 ```
 /unwire https://nas.example.test               # name derived from the host: Nas
 /unwire http://192.168.178.1 -Name FritzBox    # an IP has no name to derive
@@ -57,9 +61,6 @@ On Windows it then opens a separate window with a masked prompt, you paste the c
 and close the window when the download is done. Only the cookie is taken from it. The cookie stays in that window's memory:
 never in a file, a log or the chat. Unwire never logs in itself. Saying "with login" up front
 skips the first try.
-
-Example output: [examples/grafana/API.html](examples/grafana/API.html), rendered from
-[examples/grafana/openapi.json](examples/grafana/openapi.json).
 
 ## Try it on the testbed
 Throwaway targets on `127.0.0.1`, no volumes, made to be analyzed (Docker required). Details
@@ -86,14 +87,15 @@ Output goes to `/unwire/<name>/`. Reset every target with `docker compose down`.
 /plugin install unwire@claude-unwire
 ```
 
-## Layout
-A marketplace repository with one plugin, laid out like Infrastructure-as-Skills-Azure.
+### Requirements
+PowerShell 7+ (`pwsh`) on PATH, no modules. Unwire checks it before the first script and
+asks before anything gets installed.
 
-| Path | Content |
+| OS | Install |
 | --- | --- |
-| `.claude-plugin/marketplace.json` | Marketplace manifest, points to `plugins/unwire`. |
-| `plugins/unwire/` | The plugin: skills in `core/`, each with its scripts and tests, see [plugins/unwire/README.md](plugins/unwire/README.md). |
-| `examples/` | Example spec and its rendered page, plus a local testbed to run Unwire against, see [examples/testbed/README.md](examples/testbed/README.md). |
+| Windows | `winget install --id Microsoft.PowerShell --exact --source winget` |
+| macOS | `brew install --cask powershell` |
+| Linux | per distro, see [Installing PowerShell on Linux](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux) |
 
 ## Status
 v0.2.0: all scripts work and are tested, one full run against Gitea (518 operations).
@@ -103,7 +105,6 @@ Step 4, `unwire:code`, is not implemented yet.
 ```powershell
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
-./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
-| `docs/teaser/` | The README teaser: `teaser.html` and the GIF rendered from it, see [docs/teaser/README.md](docs/teaser/README.md). |
+./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/<name>/openapi.json   # re-render a page
 claude --plugin-dir ./plugins/unwire      # load the plugin locally
 ```

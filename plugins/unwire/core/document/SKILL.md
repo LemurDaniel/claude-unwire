@@ -8,6 +8,10 @@ description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.
 The documentation is what the user reads first: what exists, how sure it is, what is open.
 Client code (`unwire:code`) is planned, not implemented yet.
 
+## Ground rule
+PowerShell 7: run the check of `${CLAUDE_PLUGIN_ROOT}/shared/pwsh-check.md` before the
+first script, unless it already passed in this session.
+
 ## Steps
 1. **Enrich the spec** before rendering, the page shows what the spec says:
    - `summary` on every operation: short, imperative, from the UI context ("Search teams").
@@ -26,8 +30,31 @@ Client code (`unwire:code`) is planned, not implemented yet.
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/document/scripts/ConvertTo-UnwireHtml.ps1" -Path './unwire/<name>/openapi.json'
    ```
    Writes `unwire/<name>/API.html` next to the spec. The page works offline, no CDN.
-4. **Hand over**: give the user the path of `API.html`, the operation count per confidence,
-   the number of write operations and the three most important open points.
+   It returns `OutputFile` and `FileUri`, the `file:///` link to the page.
+4. **Hand over**: the operation count per confidence, the number of write operations and the
+   three most important open points. The reply ends with the link, `FileUri` copied exactly
+   from the script output (never built by hand), in the language of the conversation:
+   ```markdown
+   🌐 **[API.html im Browser öffnen](<FileUri>)**
+   Klick den Link oder öffne `<OutputFile>` im Browser.
+   ```
+   ```markdown
+   🌐 **[Open API.html in the browser](<FileUri>)**
+   Click the link or open `<OutputFile>` in your browser.
+   ```
+5. **Open**: right after the hand-over, ask with the **AskUserQuestion** tool, in the
+   language of the conversation:
+   - question: "API.html im Browser öffnen?" / "Open API.html in the browser?"
+   - option 1: "Öffnen" / "Open": opens the local file in the default browser.
+   - option 2: "Nicht jetzt" / "Not now": the link above stays.
+
+   Only option 1 opens it, one tool call that does nothing else. `Invoke-Item` uses the
+   default app of the OS (Windows, `open` on macOS, `xdg-open` on Linux):
+   ```powershell
+   pwsh -NoProfile -Command "Invoke-Item -LiteralPath '<OutputFile>'"
+   ```
+   It opens only the local page (no CDN, no request to the target). Fails it (no desktop,
+   no browser): say so, the link and the path stay.
 
 ## Rules
 - Rendering is deterministic: change the spec and render again, never edit `API.html`.

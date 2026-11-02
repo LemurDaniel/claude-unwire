@@ -1,0 +1,62 @@
+{
+  "minimumMajor": 7,
+  "check": "pwsh -NoProfile -Command '$PSVersionTable.PSVersion.Major'",
+  "platforms": {
+    "windows": {
+      "command": "winget install --id Microsoft.PowerShell --exact --source winget",
+      "docs": "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows"
+    },
+    "macos": {
+      "command": "brew install --cask powershell",
+      "docs": "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-macos"
+    },
+    "linux": {
+      "command": null,
+      "docs": "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux"
+    }
+  },
+  "en": {
+    "header": "PowerShell",
+    "question": "Unwire needs PowerShell 7 (pwsh), {FOUND}. Install it with: {COMMAND} (guide: {DOCS}). How do you want to go on?",
+    "found": {
+      "missing": "it was not found on this machine",
+      "outdated": "this machine has version {VERSION}"
+    },
+    "self": {
+      "label": "I install it myself",
+      "description": "You run the command in your own terminal, Unwire checks again after that."
+    },
+    "claude": {
+      "label": "Claude runs the command",
+      "description": "Runs the install command shown above once, then checks again. Changes the system, may ask for admin rights."
+    },
+    "cancel": {
+      "label": "Cancel",
+      "description": "No install, Unwire stops here."
+    },
+    "done": "Done? Unwire checks for PowerShell 7 again.",
+    "restart": "PowerShell 7 is installed but not on PATH of this session yet. Restart Claude Code, then run Unwire again."
+  },
+  "de": {
+    "header": "PowerShell",
+    "question": "Unwire braucht PowerShell 7 (pwsh), {FOUND}. Installieren mit: {COMMAND} (Anleitung: {DOCS}). Wie willst du weitermachen?",
+    "found": {
+      "missing": "es wurde auf diesem Rechner nicht gefunden",
+      "outdated": "auf diesem Rechner ist Version {VERSION}"
+    },
+    "self": {
+      "label": "Ich installiere selbst",
+      "description": "Du führst den Befehl in deinem eigenen Terminal aus, Unwire prüft danach erneut."
+    },
+    "claude": {
+      "label": "Claude führt Befehl aus",
+      "description": "Führt den Installationsbefehl oben einmal aus und prüft dann erneut. Ändert das System, fragt eventuell nach Adminrechten."
+    },
+    "cancel": {
+      "label": "Abbrechen",
+      "description": "Keine Installation, Unwire stoppt hier."
+    },
+    "done": "Fertig? Unwire prüft PowerShell 7 erneut.",
+    "restart": "PowerShell 7 ist installiert, aber in dieser Session noch nicht im PATH. Starte Claude Code neu und dann Unwire noch einmal."
+  }
+}

@@ -8,6 +8,9 @@ argument-hint: <url|folder> [-Name <api-name>] [-SkipCertificateCheck]
 Runs the Unwire chain for: `$ARGUMENTS`
 
 ## Ground rules
+- **PowerShell 7 first.** Every script needs `pwsh`: run the check of
+  `${CLAUDE_PLUGIN_ROOT}/shared/pwsh-check.md` before anything else, also before the target
+  check. Missing or older than 7: ask as described there, never install without an answer.
 - **Only home systems the user owns.** Before the first request, classify the target:
   ```powershell
   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/shared/Test-UnwireTarget.ps1" -Uri '<URL>'
@@ -80,8 +83,10 @@ unwire/<name>/
    user and ask whether to skip step 2.
 2. **Analyze** with the `unwire:analyze` skill: static code analysis into `openapi.json`,
    open points in the spec.
-3. **Document** with the `unwire:document` skill: `API.html`. Give the user its path and a short
-   summary (operations per confidence, write operations, top open points).
+3. **Document** with the `unwire:document` skill: `API.html`. Give the user a short
+   summary (operations per confidence, write operations, top open points) and end with the
+   browser link of its step 4 (`FileUri` from the script output), then ask whether to open
+   it in the browser (its step 5).
 4. **Code** (`unwire:code`) is not implemented yet: do not offer it. When the user asks for
    client code, say that this step does not exist yet.
 

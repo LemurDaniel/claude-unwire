@@ -11,8 +11,9 @@ param ()
 # ======================   RENDER API DOCUMENTATION   =======================
 # ===========================================================================
 #
-#   example_spec           Renders the example spec with title and operation count.
+#   title_and_count        Renders a spec with its title and operation count.
 #   default_output         Writes API.html next to the spec by default.
+#   file_uri               Returns a file URI to open the page in the browser.
 #   title_escaped          HTML-encodes the title.
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
@@ -21,32 +22,35 @@ param ()
 #
 
 BeforeAll {
-    $SCRIPT_PATH  = Join-Path -Path $PSScriptRoot -ChildPath '../scripts/ConvertTo-UnwireHtml.ps1'
-    $EXAMPLE_SPEC = Join-Path -Path $PSScriptRoot -ChildPath '../../../../../examples/grafana/openapi.json'
+    $SCRIPT_PATH = Join-Path -Path $PSScriptRoot -ChildPath '../scripts/ConvertTo-UnwireHtml.ps1'
     # The embedded spec between the JSON script tags of the page
-    $SPEC_BLOCK   = '(?s)<script type="application/json" id="unwire-spec">(?<json>.*?)</script>'
+    $SPEC_BLOCK  = '(?s)<script type="application/json" id="unwire-spec">(?<json>.*?)</script>'
 
     # Writes a spec into its own TestDrive folder and returns its path.
     function Set-TestSpec {
-        param ([System.String] $Title, [System.String] $Description = '')
+        param ([System.String] $Title, [System.String] $Description = '', [System.Collections.IDictionary] $Paths = @{})
         $folder = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString('N'))
         $null   = New-Item -ItemType Directory -Path $folder
         $file   = Join-Path -Path $folder -ChildPath 'openapi.json'
-        @{ openapi = '3.1.0'; info = @{ title = $Title; version = '1'; description = $Description }; paths = @{} } | ConvertTo-Json -Depth 5 | Set-Content -Path $file
+        @{ openapi = '3.1.0'; info = @{ title = $Title; version = '1'; description = $Description }; paths = $Paths } | ConvertTo-Json -Depth 10 | Set-Content -Path $file
         return $file
     }
 }
 
 Describe 'ConvertTo-UnwireHtml' {
-    It 'example_spec: renders the example spec with title and operation count' {
-        $outputFile = Join-Path -Path $TestDrive -ChildPath 'example.html'
+    It 'title_and_count: renders a spec with its title and operation count' {
+        $paths = @{
+            '/api/devices'      = @{ get = @{ responses = @{} }; post = @{ responses = @{} } }
+            '/api/devices/{id}' = @{ get = @{ responses = @{} }; parameters = @() }
+        }
+        $outputFile = Join-Path -Path $TestDrive -ChildPath 'router.html'
 
-        $result = & $SCRIPT_PATH -Path $EXAMPLE_SPEC -OutputFile $outputFile
+        $result = & $SCRIPT_PATH -Path (Set-TestSpec -Title 'Router (home)' -Paths $paths) -OutputFile $outputFile
         $html   = Get-Content -Path $outputFile -Raw
 
-        $result.Title      | Should -Be 'Grafana (NAS dashboard)'
-        $result.Operations | Should -Be 6
-        $html              | Should -Match '<title>Grafana \(NAS dashboard\)</title>'
+        $result.Title      | Should -Be 'Router (home)'
+        $result.Operations | Should -Be 3
+        $html              | Should -Match '<title>Router \(home\)</title>'
         $html              | Should -Not -Match '__UNWIRE_'
     }
 
@@ -57,6 +61,15 @@ Describe 'ConvertTo-UnwireHtml' {
 
         $result.OutputFile | Should -Be (Join-Path -Path (Split-Path -Path $specFile -Parent) -ChildPath 'API.html')
         $result.OutputFile | Should -Exist
+    }
+
+    It 'file_uri: returns a file URI to open the page in the browser' {
+        $outputFile = Join-Path -Path $TestDrive -ChildPath 'with space/API.html'
+
+        $result = & $SCRIPT_PATH -Path (Set-TestSpec -Title 'Router') -OutputFile $outputFile
+
+        $result.FileUri                          | Should -BeLike 'file:///*/with%20space/API.html'
+        ([System.Uri] $result.FileUri).LocalPath | Should -Be ([System.IO.Path]::GetFullPath($outputFile))
     }
 
     It 'title_escaped: HTML-encodes the title' {

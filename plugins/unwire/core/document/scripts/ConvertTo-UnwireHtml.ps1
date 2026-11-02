@@ -93,7 +93,7 @@ Write-Verbose "[ConvertTo-UnwireHtml] '$Title' with $OperationCount operations."
 # ===========================================================================
 #
 #   1. Fill    Replaces the placeholders in one pass, the spec escaped for <script>.
-#   2. Write   Writes the page and returns its path.
+#   2. Write   Writes the page and returns its path and file URI.
 #
 
 # ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ $Html = [System.Text.RegularExpressions.Regex]::Replace(
 
 # ---------------------------------------------------------------------------
 # Write
-#   Writes the page and returns its path.
+#   Writes the page and returns its path and file URI.
 # ---------------------------------------------------------------------------
 
 # Order of precedence: parameter > API.html next to the spec
@@ -137,8 +137,15 @@ if ($PSCmdlet.ShouldProcess($TargetFile, 'Write API documentation')) {
     Set-Content -Path $TargetFile -Value $Html -NoNewline -Encoding utf8NoBOM
 }
 
+# The link to open the page in the browser, built here, not by Claude: drive letters and
+# spaces need encoding.
+# - C:\Users\Jo Doe\unwire\gitea\API.html  => file:///C:/Users/Jo%20Doe/unwire/gitea/API.html
+$FullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($TargetFile)
+$FileUri  = [System.Uri]::new($FullPath).AbsoluteUri
+
 return [PSCustomObject]@{
     OutputFile = $TargetFile
+    FileUri    = $FileUri
     Title      = $Title
     Operations = $OperationCount
 }

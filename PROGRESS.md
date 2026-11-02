@@ -34,12 +34,17 @@ changing anything on the target. Client code for picked operations is planned (`
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
   Scripts do the mechanics (download, pre-filter, convert, validate, render); Claude reads
   the candidates, names operations, writes the spec.
+- **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`
+  runs before the first script (Bash tool, PS >= 7), then AskUserQuestion: install yourself
+  (recommended), Claude runs winget/brew (not on Linux, sudo), or cancel. No 5.1 fallback.
 - **Marketplace layout like Infrastructure-as-Skills** (2026-11-02). `plugins/unwire/core/<skill>/`
   with its own scripts, data or templates and tests; `shared/` for what several skills use.
 
 ## State
 
-- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 112 Pester tests.
+- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 119 Pester tests. The hand-over ends with a
+  `file:///` link to `API.html` (`FileUri` from `ConvertTo-UnwireHtml`), then asks to open
+  it in the default browser (`Invoke-Item`).
 - Live runs: Grafana (webpack, base tag, 243 candidates), Gitea without and with login
   (full run to `API.html`: 471 documented + 47 derived operations, 0 spec findings).
 - `examples/testbed`: Juice Shop, Grafana, Gitea, Uptime Kuma on 127.0.0.1, not started yet.
@@ -49,8 +54,9 @@ changing anything on the target. Client code for picked operations is planned (`
 - **`unwire:code` is a stub.** Open: which language(s), what shape; the old PowerShell
   module design (SKILL.md, templates) is in the history of `core/module/`.
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
-  like"). `examples/` is outside `plugins/unwire/` and missing after an install. Put a small
-  reference spec into `core/analyze/references/` and point the skills at it.
+  like"). The Grafana example in `examples/` was dropped on 2026-11-02 at the user's
+  request (git history has it). If wanted: a small reference spec in
+  `core/analyze/references/` and the skills pointing at it.
 - **D · Eval loop with the testbed** (tips 13 to 16). A checkable goal per target (e.g. Juice
   Shop: these endpoints must be found), a check separate from the run, a cap on runs and cost,
   results remembered between runs, like `evals/` in Infrastructure-as-Skills.
