@@ -1,14 +1,14 @@
 # NOTE:
 #   Pre-filters the frontend code of a web UI for endpoint candidates (fetch, axios, jQuery,
 #   XMLHttpRequest, HTTP clients, template URLs like '${base}/user/...', URL strings like
-#   '/api/...' or 'data.lua'), so unwire-analyze only has to read the code around each hit.
+#   '/api/...' or 'data.lua'), so unwire:analyze only has to read the code around each hit.
 #   Reads local files only, executes nothing.
 #
 #   Scans *.js, *.mjs, *.cjs, *.html, *.htm and the sourcesContent of *.js.map. A bundle with
 #   a source map next to it is skipped, the map holds the same code with real names.
 #
-#   ./plugins/unwire/core/unwire-analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets
-#   ./plugins/unwire/core/unwire-analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets -OutputFile ./unwire/router/candidates.json
+#   ./plugins/unwire/core/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets
+#   ./plugins/unwire/core/analyze/scripts/Get-UnwireJsCandidate.ps1 -Path ./unwire/router/assets -OutputFile ./unwire/router/candidates.json
 
 #
 #   Chapters:

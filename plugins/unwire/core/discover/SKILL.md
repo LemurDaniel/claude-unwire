@@ -1,5 +1,5 @@
 ---
-name: unwire-discover
+name: discover
 description: Step 1 of Unwire. Checks a web UI for published API documentation (openapi.json, swagger.json, /v3/api-docs, Swagger UI, ReDoc, GraphiQL) with GET requests only. Use before any code analysis, when someone wants the API of a device, router, NAS or web app.
 ---
 
@@ -19,7 +19,7 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
 ## Steps
 1. Run the probe from the plugin root (`${CLAUDE_PLUGIN_ROOT}`):
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-discover/scripts/Find-UnwireSpec.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/discover/scripts/Find-UnwireSpec.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/discover' -Verbose
    ```
    Run without `-SkipCertificateCheck`. An untrusted certificate stops the script after the
@@ -37,19 +37,19 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
 
    Swagger 2.0 to OpenAPI 3, with the x-unwire-* extensions set on every operation:
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-discover/scripts/ConvertFrom-UnwireSwagger.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/discover/scripts/ConvertFrom-UnwireSwagger.ps1" `
        -Path './unwire/<name>/discover/swagger.v1.json' -OutputFile './unwire/<name>/openapi.json'
    ```
    Run `Test-UnwireSpec.ps1` right after: published specs have bugs too (Gitea's uses one
    operationId twice). Fix them in `openapi.json` and record each fix in `x-unwire-open`.
 3. Judge the hit:
-   - **Complete**: covers the UI's features. Ask the user whether to skip `unwire-analyze`.
-   - **Partial** (e.g. only a public API, the UI uses more): continue with `unwire-analyze`
+   - **Complete**: covers the UI's features. Ask the user whether to skip `unwire:analyze`.
+   - **Partial** (e.g. only a public API, the UI uses more): continue with `unwire:analyze`
      and merge, the published spec wins on conflicts. When both live under different base
      URLs (Gitea: API under `/api/v1`, web routes under the app root), use the common root
      as the one server and prefix the API paths with their base: `/notifications` of the
      web UI and `/api/v1/notifications` of the API must stay two operations.
-   - **None**: continue with `unwire-analyze`.
+   - **None**: continue with `unwire:analyze`.
 
 ## Output
 - `unwire/<name>/discover/*.json|yaml`: saved specs.

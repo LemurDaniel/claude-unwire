@@ -1,9 +1,9 @@
 # NOTE:
-#   Converts a Swagger 2.0 spec (found by unwire-discover) into OpenAPI 3.0 for the rest of
+#   Converts a Swagger 2.0 spec (found by unwire:discover) into OpenAPI 3.0 for the rest of
 #   the chain: servers, components, request bodies, response content, security schemes.
 #   Adds the x-unwire-* extensions every operation needs, marked as taken from the device.
 #
-#   ./plugins/unwire/core/unwire-discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/gitea/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
+#   ./plugins/unwire/core/discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/gitea/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
 
 #
 #   Chapters:

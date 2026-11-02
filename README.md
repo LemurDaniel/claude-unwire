@@ -95,12 +95,12 @@ A marketplace repository with one plugin, laid out like Infrastructure-as-Skills
 
 ## Status
 v0.2.0: all scripts work and are tested, one full run against Gitea (518 operations).
-The module generation of `unwire-module` has not run yet.
+The module generation of `unwire:module` has not run yet.
 
 ## Development
 ```powershell
 Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
 Invoke-Pester -Path ./plugins/unwire
-./plugins/unwire/core/unwire-document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
+./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
 claude --plugin-dir ./plugins/unwire      # load the plugin locally
 ```

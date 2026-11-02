@@ -43,21 +43,21 @@ changing anything on the target. A PowerShell module for picked operations follo
 
 ## Open
 
-- **`unwire-module` has never run.** Skill and templates exist, nothing was generated yet.
+- **`unwire:module` has never run.** Skill and templates exist, nothing was generated yet.
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
   like"). `examples/` is outside `plugins/unwire/` and missing after an install. Put a small
-  reference spec into `core/unwire-analyze/references/` and point the skills at it.
+  reference spec into `core/analyze/references/` and point the skills at it.
 - **D · Eval loop with the testbed** (tips 13 to 16). A checkable goal per target (e.g. Juice
   Shop: these endpoints must be found), a check separate from the run, a cap on runs and cost,
   results remembered between runs, like `evals/` in Infrastructure-as-Skills.
 - Install through the marketplace (`/plugin marketplace add LemurDaniel/claude-unwire`) and
   `claude plugin validate` were not run, the CLI is not on PATH in the desktop app shell.
 - The analysis of candidates into operations was done by hand with a scratch script in the
-  Gitea run; whether `unwire-analyze` alone gets there is untested.
+  Gitea run; whether `unwire:analyze` alone gets there is untested.
 - Socket.IO apps (Uptime Kuma) are a known limit, not handled.
 
 ## Next
 
 Start a fresh session: bring up the testbed, create the Gitea admin, run the full chain
-against the local Gitea and then `unwire-module` for the tags `repository` and `issue`,
+against the local Gitea and then `unwire:module` for the tags `repository` and `issue`,
 calling the generated cmdlets for real against the throwaway instance.

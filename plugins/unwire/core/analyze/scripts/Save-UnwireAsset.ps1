@@ -1,5 +1,5 @@
 # NOTE:
-#   Downloads the static assets of a web UI for unwire-analyze: the start page, its frames,
+#   Downloads the static assets of a web UI for unwire:analyze: the start page, its frames,
 #   every same-origin script, the chunks those scripts reference (also the lazy chunks of a
 #   webpack runtime) and their source maps.
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
@@ -13,14 +13,14 @@
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
 #
-#   ./plugins/unwire/core/unwire-analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
-#   ./plugins/unwire/core/unwire-analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
+#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
+#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #
-#   ./plugins/unwire/core/unwire-analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession
+#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession
 #     Session cookie (name=value): ****                   # copied from the browser after the login
 #
 #   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'
-#   ./plugins/unwire/core/unwire-analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
+#   ./plugins/unwire/core/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
 
 #
 #   Chapters:

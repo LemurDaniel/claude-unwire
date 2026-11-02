@@ -1,12 +1,12 @@
 ---
-name: unwire-document
-description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.json as one self-contained, clickable HTML page (API.html) with groups, search, filters for confidence, write and derived operations, schemas and all open points. Use after unwire-analyze, or whenever someone wants to read or share what Unwire found.
+name: document
+description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.json as one self-contained, clickable HTML page (API.html) with groups, search, filters for confidence, write and derived operations, schemas and all open points. Use after unwire:analyze, or whenever someone wants to read or share what Unwire found.
 ---
 
 # Unwire: Document
 
 The documentation is what the user reads first: what exists, how sure it is, what is open.
-The PowerShell module (`unwire-module`) is optional and comes later, for the parts the user picks.
+The PowerShell module (`unwire:module`) is optional and comes later, for the parts the user picks.
 
 ## Steps
 1. **Enrich the spec** before rendering, the page shows what the spec says:
@@ -23,7 +23,7 @@ The PowerShell module (`unwire-module`) is optional and comes later, for the par
    ```
 3. **Render**:
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-document/scripts/ConvertTo-UnwireHtml.ps1" -Path './unwire/<name>/openapi.json'
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/document/scripts/ConvertTo-UnwireHtml.ps1" -Path './unwire/<name>/openapi.json'
    ```
    Writes `unwire/<name>/API.html` next to the spec. The page works offline, no CDN.
 4. **Hand over**: give the user the path of `API.html`, the operation count per confidence,

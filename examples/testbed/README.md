@@ -1,7 +1,7 @@
 # Unwire testbed
 Local targets Unwire may hit without any risk. Everything runs in throwaway containers bound to
 `127.0.0.1`, without volumes: `docker compose down` resets every target to a fresh state.
-Here even `unwire-module` may call write operations for real.
+Here even `unwire:module` may call write operations for real.
 
 | Target | URL | Login | What it tests |
 | --- | --- | --- | --- |

@@ -3,8 +3,8 @@
 #   Swagger UI, ReDoc and GraphiQL pages. Sends GET requests to well-known paths only and
 #   follows no redirects, so nothing on the target is changed.
 #
-#   ./plugins/unwire/core/unwire-discover/scripts/Find-UnwireSpec.ps1 -Uri 'http://192.168.178.1'
-#   ./plugins/unwire/core/unwire-discover/scripts/Find-UnwireSpec.ps1 -Uri 'https://nas.local:5001' -SkipCertificateCheck -OutputDirectory ./unwire/nas/discover
+#   ./plugins/unwire/core/discover/scripts/Find-UnwireSpec.ps1 -Uri 'http://192.168.178.1'
+#   ./plugins/unwire/core/discover/scripts/Find-UnwireSpec.ps1 -Uri 'https://nas.local:5001' -SkipCertificateCheck -OutputDirectory ./unwire/nas/discover
 
 #
 #   Chapters:
@@ -250,7 +250,7 @@ $Hits = [System.Collections.Generic.List[PSCustomObject]]::new()
 # ---------------------------------------------------------------------------
 
 if ($Hits.Count -EQ 0) {
-    Write-Warning "[Find-UnwireSpec] No published documentation found on '$BaseUri' -> continue with unwire-analyze."
+    Write-Warning "[Find-UnwireSpec] No published documentation found on '$BaseUri' -> continue with unwire:analyze."
 }
 
 return $Hits.ToArray()

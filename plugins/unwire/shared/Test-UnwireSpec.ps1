@@ -1,10 +1,10 @@
 # NOTE:
-#   Validates an Unwire openapi.json before unwire-document renders it and unwire-module uses it:
+#   Validates an Unwire openapi.json before unwire:document renders it and unwire:module uses it:
 #   the OpenAPI 3.x structure both need, path parameters, unique operationIds,
 #   local $ref targets and the x-unwire-* extensions on every operation.
 #   Returns one finding per problem, nothing when the spec is valid.
 #
-#   A spec taken over by unwire-discover (root x-unwire-source 'discover:...') was written
+#   A spec taken over by unwire:discover (root x-unwire-source 'discover:...') was written
 #   by the device, so missing x-unwire-* extensions are only warnings there.
 #
 #   ./plugins/unwire/shared/Test-UnwireSpec.ps1 -Path ./unwire/router/openapi.json
@@ -184,7 +184,7 @@ elseif ($Paths.Count -EQ 0) {
     Add-UnwireFinding -Severity Warning -Location 'paths' -Rule 'paths' -Message 'paths is empty, the module would have no functions.'
 }
 
-# A spec of unwire-discover comes from the device: missing x-unwire-* are only warnings.
+# A spec of unwire:discover comes from the device: missing x-unwire-* are only warnings.
 $IsDiscovered       = ([System.String] $Spec['x-unwire-source']).StartsWith('discover:')
 $ExtensionSeverity  = if ($IsDiscovered) { 'Warning' } else { 'Error' }
 

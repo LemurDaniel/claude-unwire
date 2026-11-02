@@ -1,5 +1,5 @@
 # Module template
-Copied by the `unwire-module` skill into `unwire/<name>/module/<Name>/`.
+Copied by the `unwire:module` skill into `unwire/<name>/module/<Name>/`.
 The placeholders are valid PowerShell identifiers, so the templates parse and lint as they are.
 
 | Placeholder | Replaced with |

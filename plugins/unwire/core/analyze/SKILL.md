@@ -1,6 +1,6 @@
 ---
-name: unwire-analyze
-description: Step 2 of Unwire. Derives an OpenAPI spec from the static frontend code of a web UI (HTML, JS bundles, source maps) without calling the API, and records everything it cannot resolve as open points in the spec. Use after unwire-discover found no complete spec.
+name: analyze
+description: Step 2 of Unwire. Derives an OpenAPI spec from the static frontend code of a web UI (HTML, JS bundles, source maps) without calling the API, and records everything it cannot resolve as open points in the spec. Use after unwire:discover found no complete spec.
 ---
 
 # Unwire: Analyze
@@ -20,7 +20,7 @@ somewhere in there.
 ## Steps
 1. **Assets**: download into `unwire/<name>/assets/`, or use the local folder the user gave.
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-analyze/scripts/Save-UnwireAsset.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/analyze/scripts/Save-UnwireAsset.ps1" `
        -Uri '<URL>' -OutputDirectory './unwire/<name>/assets'
    ```
    It follows the start page, its frames, same-origin scripts, the lazy chunks of a webpack
@@ -75,7 +75,7 @@ somewhere in there.
      nothing else; add `-SkipCertificateCheck` only when the user agreed for this host:
      ```powershell
      Start-Process pwsh -Wait -WorkingDirectory $PWD -ArgumentList @(
-         '-NoProfile', '-NoExit', '-File', '${CLAUDE_PLUGIN_ROOT}/core/unwire-analyze/scripts/Save-UnwireAsset.ps1',
+         '-NoProfile', '-NoExit', '-File', '${CLAUDE_PLUGIN_ROOT}/core/analyze/scripts/Save-UnwireAsset.ps1',
          '-Uri', '<URL>', '-OutputDirectory', './unwire/<name>/assets', '-PromptSession')
      ```
      Then check `unwire-assets.json` in a separate call, never the window. No manifest
@@ -97,7 +97,7 @@ somewhere in there.
      that was not `read`.
 2. **Candidates**: pre-filter, so not every bundle has to be read in full.
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/unwire-analyze/scripts/Get-UnwireJsCandidate.ps1" `
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/core/analyze/scripts/Get-UnwireJsCandidate.ps1" `
        -Path './unwire/<name>/assets' -OutputFile './unwire/<name>/candidates.json'
    ```
    The script returns a summary (count per kind). Each candidate in the file has `File`
@@ -139,21 +139,21 @@ somewhere in there.
      "3 URLs are built at runtime, path not resolvable (assets/app.js:210, 388, 902)."
    ]
    ```
-   Operation-level points stay in the operation's `x-unwire-open`. `unwire-document` shows
+   Operation-level points stay in the operation's `x-unwire-open`. `unwire:document` shows
    both on one page.
 6. **Validate**:
    ```powershell
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/shared/Test-UnwireSpec.ps1" -Path './unwire/<name>/openapi.json'
    ```
    Returns one finding per problem (`Severity`, `Location`, `Rule`, `Message`), nothing when
-   valid. Fix every `Error` before unwire-document. A `Warning` may stay, but low-confidence
+   valid. Fix every `Error` before unwire:document. A `Warning` may stay, but low-confidence
    operations without `x-unwire-open` should get their open points.
 
 ## Rules
 - Nothing is dropped silently: what cannot be resolved becomes an open point.
 - Write operations (`POST`, `PUT`, `PATCH`, `DELETE`, and GETs with verbs like `reboot`,
   `reset`, `delete`, `apply` in path or query) get `x-unwire-impact: "write"`.
-- A spec from `unwire-discover` wins on conflicts, the analysis only adds to it. Never
+- A spec from `unwire:discover` wins on conflicts, the analysis only adds to it. Never
   overwrite an existing operation: check that path and method are free before adding one.
 - Tag derived operations so the reader sees they are internal (e.g. `Web · Issues`), and
   set `x-unwire-source` to the file and line, never to `discover:...`: the page tells

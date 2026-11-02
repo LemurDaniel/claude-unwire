@@ -1,6 +1,6 @@
 ---
-name: unwire-module
-description: Optional step 4 of Unwire, only on request. Generates a native PowerShell script module (.psm1, one function per file, Pester tests against mocks) for the operations the user picked from an Unwire openapi.json. Use after unwire-document, or when an existing OpenAPI spec should become a PowerShell client.
+name: module
+description: Optional step 4 of Unwire, only on request. Generates a native PowerShell script module (.psm1, one function per file, Pester tests against mocks) for the operations the user picked from an Unwire openapi.json. Use after unwire:document, or when an existing OpenAPI spec should become a PowerShell client.
 ---
 
 # Unwire: Module
@@ -16,7 +16,7 @@ script module. No compiled C#, no AutoRest.
   is noise nobody reads. Write `meta.json.operations` with the picked operationIds.
 
 ## Layout
-Start from `${CLAUDE_PLUGIN_ROOT}/core/unwire-module/templates/` and replace `__NAME__` and `__PREFIX__`:
+Start from `${CLAUDE_PLUGIN_ROOT}/core/module/templates/` and replace `__NAME__` and `__PREFIX__`:
 ```
 unwire/<name>/module/<Name>/
   <Name>.psm1                         # dot-sources every file explicitly

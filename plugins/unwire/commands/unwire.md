@@ -59,8 +59,8 @@ Runs the Unwire chain for: `$ARGUMENTS`
   for every new host, the answer never carries over. Given in the arguments, it skips the
   question.
 - Code behind a login: the user logs in in their own browser and copies a request as cURL
-  (`unwire-analyze` has the guide: write all its steps out every time, before the
-  AskUserQuestion, never just announce them), `unwire-analyze` runs the download
+  (`unwire:analyze` has the guide: write all its steps out every time, before the
+  AskUserQuestion, never just announce them), `unwire:analyze` runs the download
   with `-PromptSession` in a separate window, they paste it at the masked prompt (scripts
   only). "with login" in the arguments skips the try without a session. Never ask for a
   password or for the cookie in the chat.
@@ -77,13 +77,13 @@ unwire/<name>/
 ```
 
 ## Steps
-1. **Discover** with the `unwire-discover` skill. If a complete spec is found, show it to the
+1. **Discover** with the `unwire:discover` skill. If a complete spec is found, show it to the
    user and ask whether to skip step 2.
-2. **Analyze** with the `unwire-analyze` skill: static code analysis into `openapi.json`,
+2. **Analyze** with the `unwire:analyze` skill: static code analysis into `openapi.json`,
    open points in the spec.
-3. **Document** with the `unwire-document` skill: `API.html`. Give the user its path and a short
+3. **Document** with the `unwire:document` skill: `API.html`. Give the user its path and a short
    summary (operations per confidence, write operations, top open points).
 4. **Module**: ask whether a PowerShell module is wanted and for which tags or paths. Only then
-   run the `unwire-module` skill for the picked operations.
+   run the `unwire:module` skill for the picked operations.
 
 Stop after each step when it fails, and report what is missing.

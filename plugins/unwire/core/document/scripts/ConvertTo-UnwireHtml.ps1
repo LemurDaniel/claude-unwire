@@ -3,8 +3,8 @@
 #   search, filters for confidence, write operations and open points, schemas, sources.
 #   No CDN, no network, the page opens offline from the file system.
 #
-#   ./plugins/unwire/core/unwire-document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/router/openapi.json
-#   ./plugins/unwire/core/unwire-document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/router/openapi.json -OutputFile ./docs/router.html
+#   ./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/router/openapi.json
+#   ./plugins/unwire/core/document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./unwire/router/openapi.json -OutputFile ./docs/router.html
 
 #
 #   Chapters:
