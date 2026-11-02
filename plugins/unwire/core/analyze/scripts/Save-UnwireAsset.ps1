@@ -172,6 +172,7 @@ $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot/../../../shared/ConvertTo-UnwireText.ps1
 . $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
+. $PSScriptRoot/../../../shared/Invoke-UnwireWebRequest.ps1
 
 $MANIFEST_FILE     = 'unwire-assets.json'
 $LOGIN_GUIDE_FILE  = Join-Path -Path $PSScriptRoot -ChildPath '../data/login-guide.json'
@@ -321,7 +322,7 @@ function Invoke-UnwireAssetRequest {
 
     $current = $Target
     for ($redirect = 0; $redirect -LE $MAX_REDIRECTS; $redirect++) {
-        $response = Invoke-WebRequest @RequestConfig -Uri $current
+        $response = Invoke-UnwireWebRequest -RequestConfig $RequestConfig -Uri $current
         if ($response.StatusCode -NOTIN $REDIRECT_CODES) {
             return [PSCustomObject]@{ Response = $response; FinalUri = $current; Reason = $null }
         }

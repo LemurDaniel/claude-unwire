@@ -66,7 +66,12 @@ Describe 'Save-UnwireAsset' {
         $Site = @{}
         Mock Invoke-WebRequest {
             $response = $Site[$Uri.AbsoluteUri]
-            if ($null -EQ $response) { New-TestResponse -StatusCode 404 } else { $response }
+            if ($null -EQ $response) { return New-TestResponse -StatusCode 404 }
+            # Mirrors pwsh 7.4+: a 3xx under MaximumRedirection 0 also writes this error.
+            if ($response.StatusCode -GE 300 -AND $response.StatusCode -LT 400) {
+                Write-Error -Message 'The maximum redirection count has been exceeded.' -ErrorId 'MaximumRedirectExceeded'
+            }
+            $response
         }
         $OutputDirectory = Join-Path -Path $TestDrive -ChildPath ([System.Guid]::NewGuid().ToString('N'))
     }

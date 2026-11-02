@@ -15,6 +15,7 @@ param ()
 #   swagger_yaml            Detects a Swagger YAML spec.
 #   swagger_ui              Reports a Swagger UI page as documentation.
 #   redirect_ignored        Ignores redirects, they usually lead to a login page.
+#   redirect_error_skipped  Skips a redirect pwsh reports as an error.
 #   no_hits                 Returns nothing and warns when no path has docs.
 #   saves_specs             Saves found specs into OutputDirectory.
 #   get_only                Never sends anything but GET.
@@ -77,6 +78,20 @@ Describe 'Find-UnwireSpec' {
         $hits = @(& $SCRIPT_PATH -Uri $BASE_URI -WarningAction SilentlyContinue)
 
         $hits.Count | Should -Be 0
+    }
+
+    It 'redirect_error_skipped: skips a redirect pwsh reports as an error' {
+        # pwsh 7.4+ reports a 3xx under MaximumRedirection 0 as MaximumRedirectExceeded.
+        Mock Invoke-WebRequest {
+            Write-Error -Message 'The maximum redirection count has been exceeded.' -ErrorId 'MaximumRedirectExceeded'
+            New-TestResponse -StatusCode 301
+        } -ParameterFilter { $Uri.AbsolutePath -EQ '/api-docs' }
+        Mock Invoke-WebRequest { New-TestResponse -StatusCode 200 -Content '{"openapi":"3.0.1","info":{"title":"Router API"}}' } -ParameterFilter { $Uri.AbsolutePath -EQ '/v3/api-docs' }
+
+        $hits = @(& $SCRIPT_PATH -Uri $BASE_URI)
+
+        $hits.Count   | Should -Be 1
+        $hits[0].Path | Should -Be 'v3/api-docs'
     }
 
     It 'no_hits: returns nothing and warns when no path has docs' {

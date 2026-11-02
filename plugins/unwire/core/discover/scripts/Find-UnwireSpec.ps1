@@ -71,6 +71,7 @@ $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot/../../../shared/ConvertTo-UnwireText.ps1
 . $PSScriptRoot/../../../shared/Get-UnwireCertificateError.ps1
+. $PSScriptRoot/../../../shared/Invoke-UnwireWebRequest.ps1
 
 $SPEC_PATHS_FILE  = Join-Path -Path $PSScriptRoot -ChildPath '../data/spec-paths.json'
 $SPEC_KINDS        = @('OpenApi', 'Swagger', 'OpenApiYaml')     # kinds that are saved as files
@@ -191,7 +192,7 @@ $Hits = [System.Collections.Generic.List[PSCustomObject]]::new()
     $target = [System.Uri]::new($BaseUri, $probePath.TrimStart('/'))
 
     try {
-        $response = Invoke-WebRequest @RequestConfig -Uri $target
+        $response = Invoke-UnwireWebRequest -RequestConfig $RequestConfig -Uri $target
     }
     catch [System.Net.Http.HttpRequestException] {
         # Untrusted certificate: the user decides about SkipCertificateCheck, never the script.
