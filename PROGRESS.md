@@ -92,8 +92,11 @@ changing anything on the target. On request a PowerShell module of picked operat
 
 - v0.5.0 on `master`, not pushed.
   Skills: unwire (entry), discover, analyze, document, code. 9 scripts plus
-  `shared/session/` (9 files), 289 Pester tests (plus 5 in `docs/screenshots`),
+  `shared/session/` (9 files), 294 Pester tests (plus 5 in `docs/screenshots`),
   ScriptAnalyzer clean.
+- `unwire:code` modules carry a `GETTING_STARTED.md` (import, connect, read, change, function
+  table), `Test-UnwireModule` requires it with the import and `Connect-<Name>`; `-OperationId`
+  takes a comma list in one string (`pwsh -File` passed `a,b` as one pick).
 - `Save-UnwireAsset`: webpack runtimes with one `if` per chunk and the automatic publicPath,
   `-Page`/`-Script` for paths built at runtime, `HttpAuth` for a 401 on the start page,
   session mode keeps inline scripts and `onclick`/`javascript:` code, guessed paths never
@@ -114,8 +117,9 @@ changing anything on the target. On request a PowerShell module of picked operat
 ## Open
 
 
-- **`unwire:code` never ran on a real spec.** Next real run: pick a few operations of
-  `examples/juiceshop` or a mock, write the module, run it by hand against the testbed.
+- **`unwire:code` module not yet run by hand.** First real run 2026-11-02 on the mock :3016
+  (Bearer): `unwire/mockbearer/module/MockBearer`, all 10 operations, check and analyzer
+  clean. Open: the user runs it against the testbed and reports.
 - **D · Eval loop with the testbed** (tips 13 to 16): a checkable goal per target, a check
   separate from the run, a cap on runs and cost, results remembered between runs.
 - Socket.IO apps are a known limit, not handled (Uptime Kuma, no longer in the testbed).

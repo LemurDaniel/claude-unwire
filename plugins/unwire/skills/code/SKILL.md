@@ -49,6 +49,7 @@ unwire/<name>/module/<Name>/
                                  session variable, one dot-source per function file
   meta.json                      guid, version, description, unwire: spec, target, picked,
                                  skipped
+  GETTING_STARTED.md             short guide for the user: import, connect, read, change
   data/security.schemes.json     components.securitySchemes of the spec, copied as it is
   functions/
     Invoke-<Name>Rest.ps1        the one place that sends (Invoke-WebRequest)
@@ -118,9 +119,15 @@ unwire/<name>/module/<Name>/
 
    Then `<Name>.psd1` (`New-Guid` for the GUID, every function by name), `<Name>.psm1`
    (one dot-source per file) and `meta.json` with the picked and the skipped operationIds.
+
+   Last `GETTING_STARTED.md`, the sections of the reference's in its order (import,
+   connect, read, change, anything else, the table of functions): where each session
+   value comes from (from the scheme's `description`), one real read and one write with
+   `-WhatIf` of this module, one row per function. Generic hosts in the examples
+   (`router.test`, `nas.example.test`), never the target's address.
 5. **Check**, no `Error` may remain, then ScriptAnalyzer when installed:
    ```powershell
-   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/code/scripts/Test-UnwireModule.ps1" -Path './unwire/<name>/module/<Name>' -Spec './unwire/<name>/openapi.json' -OperationId <picked operationIds>
+   pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/code/scripts/Test-UnwireModule.ps1" -Path './unwire/<name>/module/<Name>' -Spec './unwire/<name>/openapi.json' -OperationId 'opA,opB'
    pwsh -NoProfile -Command "Invoke-ScriptAnalyzer -Path './unwire/<name>/module/<Name>' -Recurse -Severity Warning, Error"
    ```
    Fix the module, never the check. A finding that cannot be fixed goes into the hand-over.
@@ -131,6 +138,7 @@ unwire/<name>/module/<Name>/
    Connect-<Name>
    Get-Command -Module <Name>
    ```
+   Name `GETTING_STARTED.md` as the guide for the next steps, as a link to the file.
    The module is a draft like the spec: every function sends what the code suggested.
 
 ## Rules

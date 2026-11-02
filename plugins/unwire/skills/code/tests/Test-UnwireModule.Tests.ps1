@@ -13,6 +13,8 @@ param ()
 #   reference_passes        The reference module passes, import included.
 #   picked_missing          A picked operation without a function is an error.
 #   not_picked              A function for an operation not picked is a warning.
+#   picked_comma_list       A comma list in one string counts as single picks,
+#                           also through pwsh -File.
 #   wrong_path              A path or method other than the spec's is an error.
 #   write_without_confirm   A write without ConfirmImpact High is an error.
 #   unsure_without_warning  A low or medium operation without Write-Warning is an error.
@@ -21,6 +23,8 @@ param ()
 #   storage                 Writing a file or an environment variable is an error.
 #   redirect                A wrapper that follows redirects is an error.
 #   manifest                Exports and dot-sources must list every function.
+#   guide                   A missing GETTING_STARTED.md, or one without the
+#                           import or the connect, is an error.
 #   naming                  A function without an approved verb and the prefix is an error.
 #   schemes                 A scheme other than the spec's is an error.
 #   chapters                Sections outside a chapter, a chapter missing in the
@@ -87,6 +91,17 @@ Describe 'Test-UnwireModule' {
         $findings                              | Should -HaveCount 4
         $findings.Severity | Sort-Object -Unique | Should -Be 'Warning'
         $findings.Rule | Sort-Object -Unique   | Should -Be 'selection'
+    }
+
+    It 'picked_comma_list: a comma list in one string counts as single picks' {
+        Invoke-TestCheck -OperationId ($PICKED -join ', ') | Should -HaveCount 0
+    }
+
+    It 'picked_comma_list: pwsh -File passes the comma list as one string, it still counts' {
+        $output = & pwsh -NoProfile -File $SCRIPT_PATH -Path $ModulePath -Spec $REFERENCE_SPEC -OperationId ($PICKED -join ',') -SkipImport
+
+        $LASTEXITCODE | Should -Be 0
+        $output       | Should -BeNullOrEmpty
     }
 
     It 'wrong_path: a path other than the spec is an error in the note and the request' {
@@ -167,6 +182,27 @@ Describe 'Test-UnwireModule' {
         $findings            | Should -HaveCount 1
         $findings[0].Rule    | Should -Be 'manifest'
         $findings[0].Message | Should -BeLike '*Suspend-ReferenceHardDevice*'
+    }
+
+    It 'guide: a module without GETTING_STARTED.md is an error' {
+        Remove-Item -Path (Join-Path -Path $ModulePath -ChildPath 'GETTING_STARTED.md')
+        $findings = Invoke-TestCheck
+
+        $findings             | Should -HaveCount 1
+        $findings[0].Rule     | Should -Be 'layout'
+        $findings[0].Location | Should -Be 'GETTING_STARTED.md'
+    }
+
+    It 'guide: a GETTING_STARTED.md without <Missing> is an error' -ForEach @(
+        @{ Missing = 'the import';  OldText = 'Import-Module ./ReferenceHard/ReferenceHard.psd1'; NewText = 'Import-Module ./Other.psd1' }
+        @{ Missing = 'the connect'; OldText = 'Connect-ReferenceHard';                            NewText = 'Connect-Other' }
+    ) {
+        Edit-TestFile -RelativePath 'GETTING_STARTED.md' -OldText $OldText -NewText $NewText
+        $findings = Invoke-TestCheck
+
+        $findings            | Should -HaveCount 1
+        $findings[0].Rule    | Should -Be 'layout'
+        $findings[0].Message | Should -BeLike "*must show '$OldText'*"
     }
 
     It 'naming: a function without an approved verb and the prefix is an error' {

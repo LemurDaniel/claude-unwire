@@ -43,7 +43,8 @@ param (
     <#
     [Optional]
     The operationIds the user picked. Each needs a function; without it only the
-    functions present are checked.
+    functions present are checked. A comma list in one string is split, so
+    'pwsh -File ... -OperationId a,b' works too.
     #>
     [Parameter()]
     [System.String[]]
@@ -168,14 +169,14 @@ function Get-UnwireCommandName {
 # =============================   LOAD INPUT   ==============================
 # ===========================================================================
 #
-#   1. Validations   Fails early on a missing folder or spec.
-#   2. Spec          Collects the operations and the security schemes.
+#   1. Validations   Fails early on a missing folder or spec, splits the picks.
+#   2. Spec         Collects the operations and the security schemes.
 #   3. Files         Parses every PowerShell file, a syntax error is a finding.
 #
 
 # ---------------------------------------------------------------------------
 # Validations
-#   Fails early on a missing folder or spec.
+#   Fails early on a missing folder or spec, splits the picks.
 # ---------------------------------------------------------------------------
 
 if (-NOT (Test-Path -Path $Path -PathType Container)) {
@@ -183,6 +184,11 @@ if (-NOT (Test-Path -Path $Path -PathType Container)) {
 }
 if (-NOT (Test-Path -Path $Spec -PathType Leaf)) {
     throw [System.ArgumentException]::new("Spec must be an existing openapi.json file, got '$Spec'.")
+}
+
+# pwsh -File passes 'a,b' as one string: 'a,b', ' c' => 'a', 'b', 'c'
+if ($null -NE $OperationId) {
+    $OperationId = @($OperationId -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -NE '' })
 }
 
 $ModuleRoot = (Resolve-Path -Path $Path).Path
@@ -223,8 +229,9 @@ Write-Verbose "[Test-UnwireModule] $ModuleName`: $($Files.Count) files, $($Opera
 # ============================   CHECK MODULE   =============================
 # ===========================================================================
 #
-#   1. Layout       Manifest, root module, meta.json, the wrapper, Connect.
-#   2. Functions    One function per file, exports and dot-sources agree.
+#   1. Layout       Manifest, root module, meta.json, the short guide, the wrapper,
+#                   Connect.
+#   2. Functions   One function per file, exports and dot-sources agree.
 #   3. Operations   Method, path, selection, writes, warnings and security.
 #   4. Requests     Only the wrapper sends, nothing stores a session value.
 #   5. Chapters     Sections only inside chapters, every chapter in the table of
@@ -234,12 +241,23 @@ Write-Verbose "[Test-UnwireModule] $ModuleName`: $($Files.Count) files, $($Opera
 
 # ---------------------------------------------------------------------------
 # Layout
-#   Manifest, root module, meta.json, the wrapper, Connect.
+#   Manifest, root module, meta.json, the short guide, the wrapper, Connect.
 # ---------------------------------------------------------------------------
 
-foreach ($required in "$ModuleName.psd1", "$ModuleName.psm1", 'meta.json', "functions/$Wrapper.ps1", 'data/security.schemes.json') {
+foreach ($required in "$ModuleName.psd1", "$ModuleName.psm1", 'meta.json', 'GETTING_STARTED.md', "functions/$Wrapper.ps1", 'data/security.schemes.json') {
     if (-NOT (Test-Path -Path (Join-Path -Path $ModuleRoot -ChildPath $required) -PathType Leaf)) {
         Add-UnwireFinding -Severity Error -Location $required -Rule 'layout' -Message "The module must have '$required', see references/ReferenceHard."
+    }
+}
+
+# The short guide is the user's first step: it must show the import and the connect.
+$GuideFile = Join-Path -Path $ModuleRoot -ChildPath 'GETTING_STARTED.md'
+if (Test-Path -Path $GuideFile -PathType Leaf) {
+    $guide = Get-Content -Path $GuideFile -Raw
+    foreach ($command in "Import-Module ./$ModuleName/$ModuleName.psd1", "Connect-$ModuleName") {
+        if (-NOT $guide.Contains($command)) {
+            Add-UnwireFinding -Severity Error -Location 'GETTING_STARTED.md' -Rule 'layout' -Message "GETTING_STARTED.md must show '$command', see references/ReferenceHard."
+        }
     }
 }
 
