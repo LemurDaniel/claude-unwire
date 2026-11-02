@@ -1,0 +1,159 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ReferenceSimple",
+    "version": "0.1.0",
+    "description": "Reference for unwire:analyze, the simple case: a UI without login, literal paths in its scripts. Copy the shape of this spec, never its paths, names or values. Draft, AI-derived."
+  },
+  "x-unwire-reference": true,
+  "servers": [
+    {
+      "url": "/",
+      "description": "Web UI root"
+    }
+  ],
+  "x-unwire-target": "http://router.test/",
+  "x-unwire-open": [
+    "Pages: loadPage builds 'pages/' + name + '.htm' (assets/js/app.js:50); the names come from menuPages in menu.htm, loaded with -Page.",
+    "Auth: no login page, no session in any request (assets/js/auth.js:2); every operation has security []."
+  ],
+  "paths": {
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Web · Status"
+        ],
+        "summary": "Get the status",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads version and wan.ip.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "wan": {
+                      "type": "object",
+                      "properties": {
+                        "ip": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/status.htm:4",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "The UI has no login, status.htm calls it on load.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session -. Response schema from the live answer: keys and types only, check it."
+        ]
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "tags": [
+          "Web · System"
+        ],
+        "summary": "Get the log",
+        "operationId": "getLogs",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "description": "Log level, the UI sends 'warn' (assets/pages/system.htm:4).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads entries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:29",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "The UI has no login.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/wifi": {
+      "post": {
+        "tags": [
+          "Web · Wi-Fi"
+        ],
+        "summary": "Set the Wi-Fi settings",
+        "operationId": "setWifi",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ssid": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "integer"
+                  },
+                  "isEnabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI does not read it.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/wifi.htm:10",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "The UI has no login.",
+        "x-unwire-open": [
+          "Response body unknown: the caller ignores it."
+        ]
+      }
+    }
+  }
+}

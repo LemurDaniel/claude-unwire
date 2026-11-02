@@ -170,7 +170,14 @@ somewhere in there.
      the scheme as `"x-unwire-value-prefix": "SID "`: the "Try it" block of API.html
      shows it and puts it in front of what the user types.
    - **Names**: `operationId` from the calling function or UI context (`getConnectedDevices`).
-4. **Spec**: write `unwire/<name>/openapi.json` (JSON, OpenAPI 3.1 for a new spec; keep the version of a discovered one, the Swagger converter writes 3.0.3) with these extensions
+4. **Spec**: first read both references in `${CLAUDE_PLUGIN_ROOT}/skills/analyze/references/`:
+   `reference.simple.openapi.json` (no login, literal paths) and
+   `reference.hard.openapi.json` (session in the URL, a call in an onclick attribute, paths
+   built at runtime, a guess with its reason). Copy their shape: fields, tags, sources,
+   auth evidence, open points. Never copy their paths, names or values, every operation
+   comes from the code of this target. Leave out their `x-unwire-reference` marker.
+
+   Then write `unwire/<name>/openapi.json` (JSON, OpenAPI 3.1 for a new spec; keep the version of a discovered one, the Swagger converter writes 3.0.3) with these extensions
    on every operation:
 
    | Extension | Value |

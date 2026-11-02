@@ -1,0 +1,331 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ReferenceHard",
+    "version": "0.1.0",
+    "description": "Reference for unwire:analyze, the hard case: code behind a login, the session in a URL parameter, a call in an onclick attribute, URLs built at runtime and guesses with their reasons. Copy the shape of this spec, never its paths, names or values. Draft, AI-derived."
+  },
+  "x-unwire-reference": true,
+  "servers": [
+    {
+      "url": "/",
+      "description": "Web UI root"
+    }
+  ],
+  "x-unwire-target": "http://router.test/",
+  "x-unwire-open": [
+    "Auth: login built by script (assets-nosession/js/login.js:16), it answers {sid}; js/auth.js adds sid to the query of every API call (assets/js/auth.js:3).",
+    "Pages: loadPage builds 'pages/' + name + '.htm' (assets/js/app.js:50), loaded with -Page; views: loadView imports './views/' + name + '.js' (assets/js/app.js:57), loaded with -Script.",
+    "Signed-in pages were read, not saved: their inline code is in assets/**/*.inline.js, a \"<redacted>\" value there is a server-rendered value, not code.",
+    "Navigation left out (2): location.href to /index.htm after the login, the help link.",
+    "Skipped scripts: 1 chart library from another origin."
+  ],
+  "components": {
+    "securitySchemes": {
+      "sidAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "sid",
+        "description": "Session id from POST /api/login, added to every API URL."
+      }
+    }
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Log in",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads sid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sid": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets-nosession/js/login.js:16",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "The login page calls it logged out.",
+        "x-unwire-open": [
+          "Creates a session: never sent by the live GET."
+        ]
+      }
+    },
+    "/api/devices": {
+      "get": {
+        "tags": [
+          "Web · Devices"
+        ],
+        "summary": "List the connected devices",
+        "operationId": "listDevices",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads devices[].name and devices[].ip.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "devices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "ip": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/views/devices.js:4",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "View behind the login, api.get adds sid.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/devices/{mac}/block": {
+      "post": {
+        "tags": [
+          "Web · Devices"
+        ],
+        "summary": "Block a device",
+        "operationId": "blockDevice",
+        "parameters": [
+          {
+            "name": "mac",
+            "in": "path",
+            "required": true,
+            "description": "MAC address, URL-encoded by the UI: '/api/devices/' + encodeURIComponent(mac) + '/block'.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isBlocked": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI does not read it.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/js/views/devices.js:14",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "View behind the login, api.post adds sid.",
+        "x-unwire-open": [
+          "Path assembled from three parts, the {mac} template is derived."
+        ]
+      }
+    },
+    "/api/reboot": {
+      "post": {
+        "tags": [
+          "Web · System"
+        ],
+        "summary": "Restart the device",
+        "operationId": "reboot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI does not read it.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/pages/system.htm.inline.js:6",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "Button on a page behind the login.",
+        "x-unwire-open": [
+          "Found in an onclick attribute of pages/system.htm, kept in the inline code of the signed-in page."
+        ]
+      }
+    },
+    "/cgi-bin/config.cgi": {
+      "post": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Set a config section",
+        "operationId": "setConfig",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "query",
+            "required": false,
+            "description": "Config section, the only caller sends 'lan'.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Not read by the UI.",
+            "content": {}
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:41",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "Helper of the signed-in UI, api.url adds sid.",
+        "x-unwire-open": [
+          "Body: form fields from the values object of the caller, no caller found, keys unknown."
+        ]
+      }
+    },
+    "/api/diag/{tool}": {
+      "get": {
+        "tags": [
+          "Web · System"
+        ],
+        "summary": "Run a diagnostic tool",
+        "operationId": "runDiagnostic",
+        "parameters": [
+          {
+            "name": "tool",
+            "in": "path",
+            "required": true,
+            "description": "Guessed from the strings 'ping' and 'traceroute' next to the call.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unknown, the caller only checks r.ok.",
+            "content": {}
+          }
+        },
+        "x-unwire-source": "assets/js/app.js:88",
+        "x-unwire-confidence": "low",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "sidAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: the caller sits in a helper used before and after the login.",
+        "x-unwire-open": [
+          "Path built at runtime: '/api/diag/' + tool, the values of tool are guessed.",
+          "A diagnostic may send traffic from the device: check it before a live GET."
+        ]
+      }
+    }
+  }
+}

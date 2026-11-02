@@ -115,4 +115,4 @@ push only after the user said so; message ends with the Co-Authored-By line.
 - 2026-11-02: the 16 Claude Code tips
   (aishwaryanr/awesome-generative-ai-guide, `youtube/claude-code-16-tips.md`) were reviewed
   against this repo; changes from it only with the user's approval per tip. Done: context
-  audit (tip 1), `PROGRESS.md` (tips 10, 12). Open in `PROGRESS.md`: C (tip 3), D (tips 13-16).
+  audit (tip 1), `PROGRESS.md` (tips 10, 12), reference specs (tip 3). Open in `PROGRESS.md`: D (tips 13-16).
