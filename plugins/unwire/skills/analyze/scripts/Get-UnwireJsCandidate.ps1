@@ -110,6 +110,7 @@ function Resolve-UnwireMethod {
     <#
         > Method in the call itself (axios.post, $.getJSON, xhr.open('GET'))  -> that method
         > Generic call (fetch, axios(), $.ajax, axios.request)                -> method option
+                                                                                in its own arguments,
                                                                                 within the lookahead
         > No method option found                                              -> unknown ($null)
     #>
@@ -120,9 +121,29 @@ function Resolve-UnwireMethod {
         { $_ -IN @('post', 'put', 'patch', 'delete', 'head') } { return $_.ToUpper() }
     }
 
-    # Generic call
-    $length      = [System.Math]::Min($METHOD_LOOKAHEAD, $Text.Length - $AfterIndex)
-    $optionMatch = [System.Text.RegularExpressions.Regex]::Match($Text.Substring($AfterIndex, $length), $METHOD_OPTION, $REGEX_OPTIONS)
+    # Generic call: only its own arguments, up to the closing parenthesis. The next call a few
+    # lines below may carry another method.
+    # "fetch(url, { headers: h() }).then(...) ... fetch(url, { method: 'POST' })" => "url, { headers: h() }"
+    $length    = [System.Math]::Min($METHOD_LOOKAHEAD, $Text.Length - $AfterIndex)
+    $arguments = $Text.Substring($AfterIndex, $length)
+    $depth     = 1           # the opening parenthesis of the call is already behind AfterIndex
+    $quote     = $null       # the quote char while inside a string
+    for ($index = 0; $index -LT $arguments.Length; $index++) {
+        $char = $arguments[$index]
+        if ($null -NE $quote) {
+            if ($char -EQ '\') { $index++ }
+            elseif ($char -EQ $quote) { $quote = $null }
+            continue
+        }
+        if ($char -IN [char]"'", [char]'"', [char]'`') { $quote = $char }
+        elseif ($char -EQ '(') { $depth++ }
+        elseif ($char -EQ ')') { $depth-- }
+        if ($depth -EQ 0) {
+            $arguments = $arguments.Substring(0, $index)
+            break
+        }
+    }
+    $optionMatch = [System.Text.RegularExpressions.Regex]::Match($arguments, $METHOD_OPTION, $REGEX_OPTIONS)
     if ($optionMatch.Success) {
         return $optionMatch.Groups['method'].Value.ToUpper()
     }

@@ -35,6 +35,9 @@ param ()
 #   webpack_chunk_if       Loads named chunks of a runtime with one if per chunk.
 #   referer                Sends the loading page as Referer, the start page without one.
 #   access_denied          Counts scripts that answer 401 or 403 and warns about a login.
+#   access_denied_guess    Does not count a guessed map probe that answers 401.
+#   http_auth              Reports a start page with 401 and WWW-Authenticate as HttpAuth.
+#   http_auth_none         No HttpAuth for a 401 without WWW-Authenticate or on a script.
 #   inline_imports         Follows the imports of inline module scripts.
 #   extra_scripts          Loads the scripts of -Script and follows their imports.
 #   extra_script_rules     Rejects a script that is no same-origin *.js before any request.
@@ -45,6 +48,8 @@ param ()
 #   session_cookie         Sends the cookie from the session variable.
 #   session_static_only    Requests only the start page, scripts and .htm pages, never endpoints.
 #   session_pages          Reads .htm frames, keeps only their inline scripts, values redacted.
+#   session_event_handlers Keeps the code of event handler attributes and javascript: links.
+#   session_http_auth      Warns when the start page still asks for HTTP auth in session mode.
 #   session_extra_pages    Reads the pages of -Page, also as one comma list.
 #   session_page_rules     Rejects a page that is no same-origin *.htm before any request.
 #   session_page_denylist  Never requests a denylisted extra page.
@@ -360,6 +365,43 @@ Describe 'Save-UnwireAsset' {
         $warnings             | Should -BeLike '*2 scripts or maps answered 401/403*session mode*'
     }
 
+    It 'access_denied_guess: does not count a guessed map probe that answers 401' {
+        $Site['http://router.test/']             = New-TestResponse -Content '<input type="password"><script src="/js/login.js"></script>'
+        $Site['http://router.test/js/login.js']  = New-TestResponse -Content 'login()'
+        $Site['http://router.test/js/login.js.map'] = New-TestResponse -StatusCode 401
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -WarningVariable warnings -WarningAction SilentlyContinue
+
+        $summary.AccessDenied | Should -Be 0
+        $summary.Failed       | Should -Be 1
+        $summary.LoginForm    | Should -BeTrue
+        $warnings             | Should -Not -BeLike '*answered 401/403*'
+    }
+
+    It 'http_auth: reports a start page with 401 and WWW-Authenticate as HttpAuth, <Scheme>' -ForEach @(
+        @{ Scheme = 'Basic';  Header = 'Basic realm="router"';                   Expected = '*HTTP Basic (401)*session mode*Authorization header*' }
+        @{ Scheme = 'Digest'; Header = 'Digest realm="router", nonce="abc", qop="auth"'; Expected = '*HTTP Digest (401)*local folder*' }
+    ) {
+        $Site['http://router.test/'] = New-TestResponse -StatusCode 401 -Headers @{ 'WWW-Authenticate' = @($Header) }
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -WarningVariable warnings -WarningAction SilentlyContinue
+
+        $summary.HttpAuth     | Should -Be $Scheme
+        $summary.AccessDenied | Should -Be 0
+        $summary.LoginForm    | Should -BeFalse
+        ($warnings -join "`n") | Should -BeLike $Expected
+    }
+
+    It 'http_auth_none: reports no HttpAuth for a 401 without WWW-Authenticate or on a script' {
+        $Site['http://router.test/']       = New-TestResponse -Content '<script src="/a.js"></script>'
+        $Site['http://router.test/a.js']   = New-TestResponse -StatusCode 401 -Headers @{ 'WWW-Authenticate' = @('Basic realm="router"') }
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe -WarningAction SilentlyContinue
+
+        $summary.HttpAuth     | Should -BeNullOrEmpty
+        $summary.AccessDenied | Should -Be 1
+    }
+
     It 'inline_imports: follows the imports of inline module scripts' {
         $Site['http://router.test/']              = New-TestResponse -Content '<script type="module">import { setConfig } from "/js/config.js"; import login from "./js/start.js"; import("/js/lazy.mjs");</script>'
         $Site['http://router.test/js/config.js']  = New-TestResponse -Content 'c()'
@@ -483,6 +525,35 @@ Describe 'Save-UnwireAsset' {
             Join-Path -Path $OutputDirectory -ChildPath 'main/status.htm' | Should -Not -Exist
             Join-Path -Path $OutputDirectory -ChildPath 'js/status.js'    | Should -Exist
             ($saved -join "`n")                                       | Should -Not -Match 'TOP-SECRET-KEY|203\.0\.113\.7'
+        }
+
+        It 'session_event_handlers: keeps the code of event handler attributes and javascript: links' {
+            $page = @(
+                '<button class="danger" onclick="api.post(&#39;/api/reboot&#39;, {})">Restart</button>'
+                "<a href='javascript:setConfig(&quot;lan&quot;)'>Save</a> <a href=`"/help.htm`">Help</a>"
+                '<script>var onload = "TOP-SECRET-KEY"; getLogs("warn");</script>'
+            ) -join "`n"
+            $Site['http://router.test/']             = New-TestResponse -Content '<frameset><frame src="/system.htm"></frameset>'
+            $Site['http://router.test/system.htm']   = New-TestResponse -Content $page
+
+            $null   = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
+            $inline = Get-Content -Path (Join-Path $OutputDirectory 'system.htm.inline.js') -Raw
+
+            $inline | Should -BeLike "*api.post('/api/reboot', {})*"
+            $inline | Should -BeLike '*setConfig("lan")*'
+            $inline | Should -BeLike '*getLogs("warn")*'
+            $inline | Should -Not -BeLike '*javascript:*'
+            $inline | Should -Not -BeLike '*help.htm*'
+            $inline | Should -Not -BeLike '*TOP-SECRET-KEY*'
+        }
+
+        It 'session_http_auth: warns when the start page still asks for HTTP auth in session mode' {
+            $Site['http://router.test/'] = New-TestResponse -StatusCode 401 -Headers @{ 'WWW-Authenticate' = @('Basic realm="router"') }
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -WarningVariable warnings -WarningAction SilentlyContinue
+
+            $summary.HttpAuth | Should -Be 'Basic'
+            ($warnings -join "`n") | Should -BeLike '*still asks for HTTP Basic*not accepted*'
         }
 
         It 'session_extra_pages: reads the pages of -Page, also as one comma list, with the start page as Referer' {

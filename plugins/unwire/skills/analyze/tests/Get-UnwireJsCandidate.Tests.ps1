@@ -13,6 +13,8 @@ param ()
 #
 #   fetch_literal       Finds fetch with a literal path, method unknown.
 #   fetch_options       Takes the method from the fetch options.
+#   fetch_own_options   Takes the method only from its own call, not the next.
+#   fetch_paren_string  Ignores a parenthesis inside a string of the options.
 #   axios_no_dupe       Finds axios.post once, not again as http-client.
 #   xhr_open            Finds XMLHttpRequest.open with method and path.
 #   jquery_getjson      Maps $.getJSON to GET.
@@ -59,6 +61,28 @@ Describe 'Get-UnwireJsCandidate' {
         $hits = @(& $SCRIPT_PATH -Path $folder)
 
         $hits[0].Method | Should -Be 'POST'
+    }
+
+    It 'fetch_own_options: takes the method only from its own call, not from the next one' {
+        $content = @(
+            "get: function (path) { return fetch(api.url(path), { headers: h() }).then(function (r) { return r.json(); }); },"
+            "post: function (path, body) { return fetch(api.url(path), { method: 'POST', body: body }); }"
+        ) -join "`n"
+        $folder = Set-TestAsset -Name 'app.js' -Content $content
+
+        $hits = @(& $SCRIPT_PATH -Path $folder | Where-Object -Property Kind -EQ -Value 'fetch')
+
+        $hits.Count     | Should -Be 2
+        $hits[0].Method | Should -BeNullOrEmpty
+        $hits[1].Method | Should -Be 'POST'
+    }
+
+    It 'fetch_paren_string: ignores a parenthesis inside a string of the options' {
+        $folder = Set-TestAsset -Name 'app.js' -Content "fetch('/api/a', { note: 'x)', method: 'PUT' })"
+
+        $hits = @(& $SCRIPT_PATH -Path $folder)
+
+        $hits[0].Method | Should -Be 'PUT'
     }
 
     It 'axios_no_dupe: finds axios.post once, not again as http-client' {

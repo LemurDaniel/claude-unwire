@@ -56,7 +56,11 @@ somewhere in there.
    - the summary reports `AccessDenied` above 0: scripts answered 401 or 403 although the
      Referer was sent,
    - the summary reports `LoginForm: True`: the start page is a login form (a password
-     field or a script named after a login), so only the code of the login page is there.
+     field or a script named after a login), so only the code of the login page is there,
+   - the summary reports `HttpAuth` (`Basic`, ...): the start page answered 401 and the
+     browser shows its own login dialog before any page loads. The cURL then carries an
+     `Authorization` header. `HttpAuth: Digest` gets no login question: offer the local
+     folder ("Save page as") right away, a Digest session cannot be passed.
 
    Never decide this yourself, also not when the login page's code already looks useful:
    the user picks with a login, without one, or cancel. Then:
@@ -115,8 +119,9 @@ somewhere in there.
    - In session mode only the start page, `*.htm`/`*.html` pages and frames, and `*.js`,
      `*.mjs`, `*.map` are requested, nothing on the denylist (logout, reboot, delete, ...),
      no redirects. Signed-in pages are read for their scripts and frames and never saved
-     (status `read`): they may hold personal data or tokens. Their inline script code is
-     saved as `<page>.inline.js` with the string values of `var x = "..."` redacted; read
+     (status `read`): they may hold personal data or tokens. Their inline script code
+     (script blocks, then the code of `onclick=...` and `javascript:` links) is saved as
+     `<page>.inline.js` with the string values of `var x = "..."` redacted; read
      it like any other script, a `"<redacted>"` value is a server-rendered value, not code.
    - The user's paste may span many lines ("Copy as cURL"), the prompt reads all of them.
      Never ask the user to paste terminal output into the chat, read the terminal yourself.

@@ -5,14 +5,16 @@
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
 #   Every asset goes out with the page that loaded it as Referer, like a browser: some
 #   devices answer 403 to scripts without it. Scripts that still answer 401 or 403
-#   are counted as AccessDenied: the code is probably behind a login, try session mode.
-#   A start page with a password field or a script named after a login (login.js) is
-#   reported as LoginForm: without a session only the code of the login page is there.
+#   are counted as AccessDenied (guessed paths not): the code is probably behind a login,
+#   try session mode. A start page with a password field or a script named after a login
+#   (login.js) is reported as LoginForm: without a session only the code of the login page
+#   is there. A start page that answers 401 with WWW-Authenticate is reported as HttpAuth
+#   (Basic, Digest): the whole UI is behind the browser's login dialog.
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
 #   the start page, *.htm/*.html pages and frames and *.js, *.mjs, *.map files, never an
 #   endpoint or redirect. Signed-in pages are read, never saved: only their inline script
-#   code is kept, with the string values of 'var x = "..."' assignments and of object
+#   code (script blocks, event handler attributes) is kept, with the string values of 'var x = "..."' assignments and of object
 #   properties redacted (plain paths stay). The session value itself is scrubbed from every
 #   file before it is written.
 #   -PromptSession shows the login guide of data/login-guide.json in -Language, then asks for
@@ -272,6 +274,11 @@ $SESSION_PAGE      = '\.html?$'
 $EXTRA_SCRIPT      = '\.m?js$'
 # Inline script blocks of a page: <script>...</script> without src
 $HTML_INLINE_SCRIPT = '(?is)<script\b(?![^>]*\bsrc\s*=)[^>]*>(?<code>.*?)</script>'
+# Every script block, removed before the event handlers are searched (a 'var onload = "x"' is no attribute)
+$HTML_ANY_SCRIPT    = '(?is)<script\b.*?</script>'
+# Event handler attributes and javascript: links, the code of buttons and menus:
+# <button onclick="api.post('/api/reboot')">, <a href="javascript:save()">
+$HTML_EVENT_HANDLER = '(?i)\s(?:on[a-z]+\s*=\s*|href\s*=\s*(?=["'']\s*javascript:))(?:"(?<code>[^"]*)"|''(?<code>[^'']*)'')'
 # Server-rendered values: var name = "value"; => var name = "<redacted>";
 $JS_STRING_ASSIGNMENT = '(?<head>\b(?:var|let|const)\s+[\w$]+\s*=\s*)(?<q>["''])(?:\\.|(?!\k<q>)[^\\\r\n])*\k<q>'
 # Server-rendered objects: {"sid":"value", user: 'value'} => {"sid":"<redacted>", user: "<redacted>"}
@@ -337,12 +344,18 @@ function Get-UnwireInlineScript {
         [System.String] $Text
     )
 
-    # Only the code between the tags; string values of simple assignments and of object
-    # properties are redacted, a signed-in page renders its data there
-    # (var wlanKey = "secret";, const data = {"sid":"secret"}). Plain paths stay for the analysis.
-    $blocks = [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_INLINE_SCRIPT)
+    # Only the code between the tags and in event handler attributes; string values of simple
+    # assignments and of object properties are redacted, a signed-in page renders its data
+    # there (var wlanKey = "secret";, const data = {"sid":"secret"}). Plain paths stay for the analysis.
+    $scriptBlocks = [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_INLINE_SCRIPT)
     | ForEach-Object { $_.Groups['code'].Value.Trim() }
-    | Where-Object { -NOT [System.String]::IsNullOrEmpty($_) }
+
+    # onclick="api.post(&#39;/api/reboot&#39;)" => api.post('/api/reboot'), href="javascript:save()" => save()
+    $markup   = [System.Text.RegularExpressions.Regex]::Replace($Text, $HTML_ANY_SCRIPT, '')
+    $handlers = [System.Text.RegularExpressions.Regex]::Matches($markup, $HTML_EVENT_HANDLER)
+    | ForEach-Object { ([System.Net.WebUtility]::HtmlDecode($_.Groups['code'].Value).Trim() -REPLACE '^javascript:\s*', '') }
+
+    $blocks = @($scriptBlocks) + @($handlers) | Where-Object { -NOT [System.String]::IsNullOrEmpty($_) }
     if ($null -EQ $blocks) {
         return $null
     }
@@ -730,7 +743,9 @@ foreach ($scriptUri in $ExtraScripts) {
 
 $SavedCount  = 0
 $GuessMisses = 0
-$IsLoginForm = $false     # reported in WRITE MANIFEST
+$IsLoginForm  = $false     # reported in WRITE MANIFEST
+$HttpAuth     = $null      # scheme of a 401 on the start page (Basic, Digest), reported in WRITE MANIFEST
+$AccessDenied = 0          # scripts and maps named in the code that answer 401/403, reported in WRITE MANIFEST
 
 :CRAWL while ($Queue.Count -GT 0) {
     $item = $Queue.Dequeue()
@@ -825,6 +840,19 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
         $record.Status = 'failed'
         $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
         Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
+
+        # A guessed path (chunk string, '<script>.map' probe) that answers 401/403 is no evidence.
+        $isDenied = $null -NE $result.Response -AND $result.Response.StatusCode -IN 401, 403
+        if ($isDenied -AND -NOT $item.Guessed -AND $item.Kind -IN 'js', 'map') {
+            $AccessDenied++
+        }
+        # 401 on the start page: the browser asks for HTTP auth before the UI loads at all.
+        # 'Basic realm="router"' => 'Basic'
+        $authenticate = if ($null -NE $result.Response -AND $null -NE $result.Response.Headers) { @($result.Response.Headers['WWW-Authenticate'])[0] } else { $null }
+        if ($item.Depth -EQ 0 -AND $result.Response.StatusCode -EQ 401 -AND -NOT [System.String]::IsNullOrEmpty($authenticate)) {
+            $HttpAuth = $authenticate.Trim().Split(' ')[0]
+            Write-Verbose "[Save-UnwireAsset] Start page asks for HTTP $HttpAuth."
+        }
         if ($item.Depth -EQ 0 -AND $IsSessionMode -AND $result.Reason -LIKE '*redirect*') {
             Write-Warning "[Save-UnwireAsset] Start page '$StartUri' redirects, the session cookie is probably expired: log in again and update the session."
         }
@@ -985,12 +1013,24 @@ if ($PromptSession) {
 }
 
 # Scripts or maps that answer 401/403 even with a Referer: the code is behind a login.
-$AccessDenied = @(
-    $Records
-    | Where-Object { $_.Status -EQ 'failed' -AND $_.Kind -IN @('js', 'map') -AND $_.Reason -IN @('HTTP 401', 'HTTP 403') }
-).Count
 if ($AccessDenied -GT 0 -AND -NOT $IsSessionMode) {
     Write-Warning "[Save-UnwireAsset] $AccessDenied scripts or maps answered 401/403 although the Referer was sent: the code is probably behind a login, use session mode."
+}
+
+<#
+    HTTP auth on the start page:
+    > Digest                -> no session can be passed (valid for one URL), the local folder
+    > Other, session mode   -> the session was not accepted
+    > Other                 -> the whole UI is behind the browser's login dialog, session mode
+#>
+if ($HttpAuth -EQ 'Digest') {
+    Write-Warning "[Save-UnwireAsset] The start page asks for HTTP Digest (401): Unwire cannot send a Digest session, save the UI in the browser ('Save page as') and analyze the local folder."
+}
+elseif ($null -NE $HttpAuth -AND $IsSessionMode) {
+    Write-Warning "[Save-UnwireAsset] The start page still asks for HTTP $HttpAuth (401) in session mode: the session was not accepted, copy a request whose cURL carries the Authorization header."
+}
+elseif ($null -NE $HttpAuth) {
+    Write-Warning "[Save-UnwireAsset] The start page asks for HTTP $HttpAuth (401): the whole UI is behind the browser's login dialog, use session mode with a cURL that carries the Authorization header."
 }
 
 if ($IsLoginForm -AND $IsSessionMode) {
@@ -1004,6 +1044,7 @@ return [PSCustomObject]@{
     OutputDirectory = $RootPath
     AccessDenied    = $AccessDenied
     LoginForm       = $IsLoginForm
+    HttpAuth        = $HttpAuth
     Manifest        = $ManifestPath
     Saved           = @($Records | Where-Object -Property Status -EQ -Value 'saved').Count
     Skipped         = @($Records | Where-Object -Property Status -EQ -Value 'skipped').Count
