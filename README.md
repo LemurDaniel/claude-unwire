@@ -14,7 +14,7 @@ Client code for the parts you need is planned (`unwire:code`, not implemented ye
 > explicit "at my own risk" confirmation.
 
 > [!WARNING]
-> **Prototype.** Unwire is an early prototype (v0.3.0). It is tested against a few home
+> **Prototype.** Unwire is an early prototype (v0.4.0). It is tested against a few home
 > systems only, its output can be incomplete or wrong, and its interfaces may change without
 > notice. Treat every generated spec and page as a draft to review, not as fact.
 
@@ -140,7 +140,7 @@ asks before anything gets installed.
 | Linux | per distro, see [Installing PowerShell on Linux](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux) |
 
 ## Status
-v0.3.0: all scripts work and are tested, one full run against Gitea (518 operations).
+v0.4.0: all scripts work and are tested, with an optional live GET of the safe operations. Full runs against Gitea (518 operations), the Juice Shop and a mock router with 7 login methods (see [examples](examples/README.md)).
 Installs in Claude Code, Copilot CLI, Codex and Gemini CLI.
 Step 4, `unwire:code`, is not implemented yet.
 

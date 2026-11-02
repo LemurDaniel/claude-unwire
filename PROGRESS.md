@@ -60,7 +60,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## State
 
-- v0.3.0 on `master`, 5 commits not pushed (manifests not bumped since the live GET).
+- v0.4.0 on `master`, not pushed.
   Skills: unwire (entry), discover, analyze, document, code (stub). 8 scripts plus
   `shared/session/` (9 files), 223 Pester tests (plus 5 in `docs/screenshots`),
   ScriptAnalyzer clean.
@@ -82,8 +82,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
-- **Version bump**: live GET, mock router fixes, Open in browser, `x-unwire-target`; all
-  three manifests and the README notice (v0.3.0).
 - **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
   50 × 404, then MaxGuessMisses. Harmless, but noise.
 - **Path values for the live GET** come only from the user: GETs with path parameters stay
@@ -97,6 +95,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Next
 
-The version bump, then the whole
+The whole
 `/unwire` chain in the chat against one mock variant (e.g. :3014): does `unwire:analyze`
 alone, without a scratch script, get to the spec in `examples/mocks/sid/`?
