@@ -6,7 +6,7 @@
 #   Public, mixed or unresolvable means: warn the user and ask for an explicit confirmation
 #   (AskUserQuestion) before any request, at their own risk.
 #
-#   ./plugins/unwire/shared/Test-UnwireTarget.ps1 -Uri 'https://nfs.fritz.box/gitea/'
+#   ./plugins/unwire/shared/Test-UnwireTarget.ps1 -Uri 'https://nas.home.arpa/wiki/'
 
 #
 #   Chapters:
@@ -18,7 +18,7 @@
 param (
     <#
     [Required]
-    URI of the target, e.g. 'http://192.168.178.1' or 'https://nas.local/gitea/'.
+    URI of the target, e.g. 'http://192.168.178.1' or 'https://nas.local/wiki/'.
     #>
     [Parameter(
         Mandatory = $true

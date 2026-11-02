@@ -146,7 +146,7 @@ if ($PSCmdlet.ShouldProcess($TargetFile, 'Write API documentation')) {
 
 # The link to open the page in the browser, built here, not by Claude: drive letters and
 # spaces need encoding.
-# - C:\Users\Jo Doe\unwire\gitea\API.html  => file:///C:/Users/Jo%20Doe/unwire/gitea/API.html
+# - C:\Users\Jo Doe\unwire\wiki\API.html  => file:///C:/Users/Jo%20Doe/unwire/wiki/API.html
 $FullPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($TargetFile)
 $FileUri  = [System.Uri]::new($FullPath).AbsoluteUri
 

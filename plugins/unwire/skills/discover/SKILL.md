@@ -46,16 +46,18 @@ GraphQL introspection: a GraphiQL page is reported as a hit, the schema stays an
    pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/discover/scripts/ConvertFrom-UnwireSwagger.ps1" `
        -Path './unwire/<name>/discover/swagger.v1.json' -OutputFile './unwire/<name>/openapi.json'
    ```
-   Run `Test-UnwireSpec.ps1` right after: published specs have bugs too (Gitea's uses one
-   operationId twice). Fix them in `openapi.json` and record each fix in `x-unwire-open`.
+   Run `Test-UnwireSpec.ps1` right after: published specs have bugs too (e.g. one
+   operationId used twice). Fix them in `openapi.json` and record each fix in `x-unwire-open`.
 3. Judge the hit:
    - **Complete**: covers the UI's features. Ask the user whether to skip `unwire:analyze`.
    - **Partial** (e.g. only a public API, the UI uses more): continue with `unwire:analyze`
      and merge, the published spec wins on conflicts. When both live under different base
-     URLs (Gitea: API under `/api/v1`, web routes under the app root), use the common root
+     URLs (e.g. API under `/api/v1`, web routes under the app root), use the common root
      as the one server and prefix the API paths with their base: `/notifications` of the
      web UI and `/api/v1/notifications` of the API must stay two operations.
    - **None**: continue with `unwire:analyze`.
+
+Report the result as observed (paths, status codes), no guess about vendor or product.
 
 ## Output
 - `unwire/<name>/discover/*.json|yaml`: saved specs.

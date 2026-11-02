@@ -56,6 +56,9 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
   A visible change also retakes the README screenshot (`./docs/screenshots/New-UnwireScreenshot.ps1`),
   no test checks that one.
 - Examples and docs use generic hosts (`router.test`, `nas.example.test`), not the user's.
+- No product or vendor names in what the plugin ships (skills, scripts, data, templates):
+  the agent reads them as hints ("typical for <vendor>") and biases its analysis. Generic
+  wording only ("some devices"); tests, testbed and repo docs may name products.
 
 - SKILL.md text works in every agent: a Claude-only name (`${CLAUDE_PLUGIN_ROOT}`,
   AskUserQuestion, Bash tool) points at "Outside Claude Code" in `skills/unwire/SKILL.md`,

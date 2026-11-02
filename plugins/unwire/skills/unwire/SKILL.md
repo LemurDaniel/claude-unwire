@@ -46,6 +46,8 @@ from Claude Code:
 - Every request to the target goes through the Unwire scripts, never an own
   `Invoke-WebRequest`, `curl` or fetch. A script that cannot do what the target needs is
   an open point to report, never a reason to work around it.
+- Report what was observed (status codes, file names, code), not a guess about the vendor
+  or product ("typical for ..."): such a guess is no evidence and steers the analysis.
 - Unwire is a prototype and its specs are AI-derived: present every result as a draft to
   review, with its open points, never as verified fact.
 
@@ -58,9 +60,9 @@ from Claude Code:
 - `-Name` (optional): short name of the API, used for the output folder (lowercase,
   `unwire/nfs/`), PascalCase as the display name (`Nfs`). When it is missing,
   derive it and name it in the first reply:
-  - URL with a path: its last segment, `https://nas.example.test/gitea/` → `Gitea`
+  - URL with a path: its last segment, `https://nas.example.test/wiki/` → `Wiki`
     (several apps behind one reverse proxy).
-  - host name: its first label, `nfs.fritz.box` → `Nfs`, `fritz.box` → `Fritz`.
+  - host name: its first label, `nfs.home.arpa` → `Nfs`, `router.test` → `Router`.
   - folder: its name, `./saved-ui` → `SavedUi`.
   - IP address: no name to derive, ask the user.
 

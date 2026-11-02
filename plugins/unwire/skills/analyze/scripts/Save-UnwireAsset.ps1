@@ -4,7 +4,7 @@
 #   webpack runtime) and their source maps.
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
 #   Every asset goes out with the page that loaded it as Referer, like a browser: some
-#   devices (TP-Link) answer 403 to scripts without it. Scripts that still answer 401 or 403
+#   devices answer 403 to scripts without it. Scripts that still answer 401 or 403
 #   are counted as AccessDenied: the code is probably behind a login, try session mode.
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
@@ -19,12 +19,12 @@
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #
-#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/gitea/' -OutputDirectory ./unwire/gitea/assets -PromptSession -Language en
-#     Unwire: login for https://nas.local/gitea/        # the guide, then the masked prompt
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/wiki/' -OutputDirectory ./unwire/wiki/assets -PromptSession -Language en
+#     Unwire: login for https://nas.local/wiki/        # the guide, then the masked prompt
 #     Session cookie (...): ****                        # "Copy as cURL" from the browser
 #
-#   $env:UNWIRE_COOKIE = 'grafana_session=<VALUE>'
-#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/grafana/' -OutputDirectory ./unwire/grafana/assets -UseSession
+#   $env:UNWIRE_COOKIE = 'session_id=<VALUE>'
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/dashboard/' -OutputDirectory ./unwire/dashboard/assets -UseSession
 
 #
 #   Chapters:
@@ -183,7 +183,7 @@ $DEFAULT_LANGUAGE  = 'en'
 $MAX_REDIRECTS     = 5
 $REDIRECT_CODES    = @(301, 302, 303, 307, 308)
 $SOURCE_MAP_HEADER = @('SourceMap', 'X-SourceMap')
-# <base href="/grafana/">, <script src="/js/app.js">, <link rel="modulepreload" href="/js/chunk.js">, <frame src="menu.html">
+# <base href="/app/">, <script src="/js/app.js">, <link rel="modulepreload" href="/js/chunk.js">, <frame src="menu.html">
 $HTML_BASE_REF     = '<base\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_SCRIPT_REF  = '<script\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_PRELOAD_REF  = '<link\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+\.m?js(?:\?[^"''\s>]*)?)'
@@ -551,14 +551,14 @@ if ($PromptSession) {
 elseif ($UseSession) {
     $variableCookie = [System.Environment]::GetEnvironmentVariable($SessionVariable)
     if ([System.String]::IsNullOrWhiteSpace($variableCookie)) {
-        throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'grafana_session=<VALUE>'.")
+        throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'session_id=<VALUE>'.")
     }
     $SessionCookie = ConvertTo-UnwireCookieHeader -Text $variableCookie
 }
 
 # A bare value without its name is the most common copy mistake.
 if ($IsSessionMode -AND $SessionCookie -NOTMATCH '^[^=\s;]+=\S') {
-    throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'i_like_gitea=<VALUE>' or 'grafana_session=<VALUE>', with the name from the browser's cookie list. Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
+    throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'sid=<VALUE>' or 'session_id=<VALUE>', with the name from the browser's cookie list. Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
 }
 
 # ---------------------------------------------------------------------------

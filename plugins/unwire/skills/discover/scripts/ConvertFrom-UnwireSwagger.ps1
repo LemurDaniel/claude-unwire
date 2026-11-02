@@ -3,7 +3,7 @@
 #   the chain: servers, components, request bodies, response content, security schemes.
 #   Adds the x-unwire-* extensions every operation needs, marked as taken from the device.
 #
-#   ./plugins/unwire/skills/discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/gitea/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
+#   ./plugins/unwire/skills/discover/scripts/ConvertFrom-UnwireSwagger.ps1 -Path ./unwire/wiki/discover/swagger.v1.json -OutputFile ./unwire/gitea/openapi.json
 
 #
 #   Chapters:
@@ -301,7 +301,7 @@ Convert-UnwireRef -Node $Swagger
 $Consumes = if (@($Swagger['consumes']).Count -GT 0 -AND $null -NE $Swagger['consumes']) { @($Swagger['consumes']) } else { @($DEFAULT_MEDIA) }
 $Produces = if (@($Swagger['produces']).Count -GT 0 -AND $null -NE $Swagger['produces']) { @($Swagger['produces']) } else { @($DEFAULT_MEDIA) }
 
-# host 'nas.local', basePath '/gitea/api/v1', schemes https, http => 'https://nas.local/gitea/api/v1', ...
+# host 'nas.local', basePath '/wiki/api/v1', schemes https, http => 'https://nas.local/wiki/api/v1', ...
 # Without host the server URL stays relative to the page, as Swagger 2.0 defines it.
 $BasePath = if ([System.String]::IsNullOrEmpty($Swagger['basePath'])) { '/' } else { $Swagger['basePath'] }
 $Servers  = if ([System.String]::IsNullOrEmpty($Swagger['host'])) {
