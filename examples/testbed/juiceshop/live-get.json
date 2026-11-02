@@ -1,16 +1,33 @@
 {
   "target": "http://localhost:3000",
-  "testedAt": "2026-11-02T06:59:18.6494630+01:00",
+  "testedAt": "2026-11-02T15:21:01.0750569+01:00",
   "sessionKinds": [
     "cookie",
     "header:Authorization"
   ],
-  "requests": 66,
+  "requests": 62,
   "operations": [
     {
-      "operationId": "getApplicationConfiguration",
-      "path": "/rest/admin/application-configuration",
-      "uri": "http://localhost:3000/rest/admin/application-configuration",
+      "operationId": "getTwoFactorStatus",
+      "path": "/rest/2fa/status",
+      "uri": "http://localhost:3000/rest/2fa/status",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "whoAmI",
+      "path": "/rest/user/whoami",
+      "uri": "http://localhost:3000/rest/user/whoami",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -25,178 +42,7 @@
       }
     },
     {
-      "operationId": "getApplicationVersion",
-      "path": "/rest/admin/application-version",
-      "uri": "http://localhost:3000/rest/admin/application-version",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "nftUnlocked",
-      "path": "/rest/web3/nftUnlocked",
-      "uri": "http://localhost:3000/rest/web3/nftUnlocked",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "nftMintListen",
-      "path": "/rest/web3/nftMintListen",
-      "uri": "http://localhost:3000/rest/web3/nftMintListen",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "findChallenges",
-      "path": "/api/Challenges/",
-      "uri": "http://localhost:3000/api/Challenges/",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "repeatNotification",
-      "path": "/rest/repeat-notification",
-      "uri": "http://localhost:3000/rest/repeat-notification",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "text/plain",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "text/plain",
-        "error": null
-      }
-    },
-    {
-      "operationId": "continueCode",
-      "path": "/rest/continue-code",
-      "uri": "http://localhost:3000/rest/continue-code",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "continueCodeFindIt",
-      "path": "/rest/continue-code-findIt",
-      "uri": "http://localhost:3000/rest/continue-code-findIt",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "continueCodeFixIt",
-      "path": "/rest/continue-code-fixIt",
-      "uri": "http://localhost:3000/rest/continue-code-fixIt",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getSnippetChallenges",
-      "path": "/snippets",
-      "uri": "http://localhost:3000/snippets",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getSnippet",
-      "path": "/snippets/{key}",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'key'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "getSnippetFixes",
-      "path": "/snippets/fixes/{key}",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'key'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "findUserAuthenticationDetails",
+      "operationId": "listAuthenticationDetails",
       "path": "/rest/user/authentication-details/",
       "uri": "http://localhost:3000/rest/user/authentication-details/",
       "status": "tested",
@@ -231,9 +77,18 @@
       "session": null
     },
     {
-      "operationId": "whoAmI",
-      "path": "/rest/user/whoami",
-      "uri": "http://localhost:3000/rest/user/whoami",
+      "operationId": "getSecurityQuestionByEmail",
+      "path": "/rest/user/security-question",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for the query 'email'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "listSecurityQuestions",
+      "path": "/api/SecurityQuestions/",
+      "uri": "http://localhost:3000/api/SecurityQuestions/",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -257,7 +112,7 @@
       "session": null
     },
     {
-      "operationId": "deluxeStatus",
+      "operationId": "getDeluxeStatus",
       "path": "/rest/deluxe-membership",
       "uri": "http://localhost:3000/rest/deluxe-membership",
       "status": "tested",
@@ -268,32 +123,15 @@
         "error": null
       },
       "session": {
-        "status": 200,
+        "status": 400,
         "mediaType": "application/json",
         "error": null
       }
     },
     {
-      "operationId": "findSecurityQuestions",
-      "path": "/api/SecurityQuestions/",
-      "uri": "http://localhost:3000/api/SecurityQuestions/",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "findSecurityQuestionBy",
-      "path": "/rest/user/security-question",
-      "uri": "http://localhost:3000/rest/user/security-question",
+      "operationId": "getImageCaptcha",
+      "path": "/rest/image-captcha/",
+      "uri": "http://localhost:3000/rest/image-captcha/",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -302,19 +140,19 @@
         "error": null
       },
       "session": {
-        "status": 500,
+        "status": 200,
         "mediaType": "application/json",
         "error": null
       }
     },
     {
-      "operationId": "twoFactorStatus",
-      "path": "/rest/2fa/status",
-      "uri": "http://localhost:3000/rest/2fa/status",
+      "operationId": "searchProducts",
+      "path": "/rest/products/search",
+      "uri": "http://localhost:3000/rest/products/search",
       "status": "tested",
       "reason": null,
       "anonymous": {
-        "status": 401,
+        "status": 200,
         "mediaType": "application/json",
         "error": null
       },
@@ -325,11 +163,63 @@
       }
     },
     {
-      "operationId": "findBasket",
-      "path": "/rest/basket/{bid}",
+      "operationId": "listProducts",
+      "path": "/api/Products/",
+      "uri": "http://localhost:3000/api/Products/",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getProduct",
+      "path": "/api/Products/{id}",
       "uri": null,
       "status": "skipped",
-      "reason": "needs a value for 'bid'",
+      "reason": "needs a value for 'id'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "getProductReviews",
+      "path": "/rest/products/{id}/reviews",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'id'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "listQuantities",
+      "path": "/api/Quantitys/",
+      "uri": "http://localhost:3000/api/Quantitys/",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getBasket",
+      "path": "/rest/basket/{id}",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'id'",
       "anonymous": null,
       "session": null
     },
@@ -369,7 +259,7 @@
       }
     },
     {
-      "operationId": "getAllOrders",
+      "operationId": "listAllOrders",
       "path": "/rest/order-history/orders",
       "uri": "http://localhost:3000/rest/order-history/orders",
       "status": "tested",
@@ -386,13 +276,13 @@
       }
     },
     {
-      "operationId": "searchProducts",
-      "path": "/rest/products/search",
-      "uri": "http://localhost:3000/rest/products/search",
+      "operationId": "listAddresses",
+      "path": "/api/Addresss",
+      "uri": "http://localhost:3000/api/Addresss",
       "status": "tested",
       "reason": null,
       "anonymous": {
-        "status": 200,
+        "status": 401,
         "mediaType": "application/json",
         "error": null
       },
@@ -403,25 +293,8 @@
       }
     },
     {
-      "operationId": "findProducts",
-      "path": "/api/Products/",
-      "uri": "http://localhost:3000/api/Products/",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getProduct",
-      "path": "/api/Products/{id}",
+      "operationId": "getAddress",
+      "path": "/api/Addresss/{id}",
       "uri": null,
       "status": "skipped",
       "reason": "needs a value for 'id'",
@@ -429,18 +302,9 @@
       "session": null
     },
     {
-      "operationId": "getProductReviews",
-      "path": "/rest/products/{id}/reviews",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'id'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "getAllQuantities",
-      "path": "/api/Quantitys/",
-      "uri": "http://localhost:3000/api/Quantitys/",
+      "operationId": "listDeliveryMethods",
+      "path": "/api/Deliverys",
+      "uri": "http://localhost:3000/api/Deliverys",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -455,7 +319,59 @@
       }
     },
     {
-      "operationId": "findFeedbacks",
+      "operationId": "getDeliveryMethod",
+      "path": "/api/Deliverys/{id}",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'id'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "listCards",
+      "path": "/api/Cards",
+      "uri": "http://localhost:3000/api/Cards",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getCard",
+      "path": "/api/Cards/{id}",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'id'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "getWalletBalance",
+      "path": "/rest/wallet/balance",
+      "uri": "http://localhost:3000/rest/wallet/balance",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 401,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "listFeedbacks",
       "path": "/api/Feedbacks/",
       "uri": "http://localhost:3000/api/Feedbacks/",
       "status": "tested",
@@ -489,13 +405,30 @@
       }
     },
     {
-      "operationId": "getImageCaptcha",
-      "path": "/rest/image-captcha/",
-      "uri": "http://localhost:3000/rest/image-captcha/",
+      "operationId": "listRecycles",
+      "path": "/api/Recycles/",
+      "uri": "http://localhost:3000/api/Recycles/",
       "status": "tested",
       "reason": null,
       "anonymous": {
-        "status": 500,
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "listMemories",
+      "path": "/rest/memories/",
+      "uri": "http://localhost:3000/rest/memories/",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
         "mediaType": "application/json",
         "error": null
       },
@@ -523,9 +456,9 @@
       }
     },
     {
-      "operationId": "findRecycles",
-      "path": "/api/Recycles/",
-      "uri": "http://localhost:3000/api/Recycles/",
+      "operationId": "getApplicationConfiguration",
+      "path": "/rest/admin/application-configuration",
+      "uri": "http://localhost:3000/rest/admin/application-configuration",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -540,104 +473,9 @@
       }
     },
     {
-      "operationId": "getAddresses",
-      "path": "/api/Addresss",
-      "uri": "http://localhost:3000/api/Addresss",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 401,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getAddress",
-      "path": "/api/Addresss/{id}",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'id'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "getWalletBalance",
-      "path": "/rest/wallet/balance",
-      "uri": "http://localhost:3000/rest/wallet/balance",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 401,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getDeliveryMethods",
-      "path": "/api/Deliverys",
-      "uri": "http://localhost:3000/api/Deliverys",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getDeliveryMethod",
-      "path": "/api/Deliverys/{id}",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'id'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "getCards",
-      "path": "/api/Cards",
-      "uri": "http://localhost:3000/api/Cards",
-      "status": "tested",
-      "reason": null,
-      "anonymous": {
-        "status": 401,
-        "mediaType": "application/json",
-        "error": null
-      },
-      "session": {
-        "status": 200,
-        "mediaType": "application/json",
-        "error": null
-      }
-    },
-    {
-      "operationId": "getCard",
-      "path": "/api/Cards/{id}",
-      "uri": null,
-      "status": "skipped",
-      "reason": "needs a value for 'id'",
-      "anonymous": null,
-      "session": null
-    },
-    {
-      "operationId": "getMemories",
-      "path": "/rest/memories/",
-      "uri": "http://localhost:3000/rest/memories/",
+      "operationId": "getApplicationVersion",
+      "path": "/rest/admin/application-version",
+      "uri": "http://localhost:3000/rest/admin/application-version",
       "status": "tested",
       "reason": null,
       "anonymous": {
@@ -682,6 +520,152 @@
       "session": {
         "status": 500,
         "mediaType": null,
+        "error": null
+      }
+    },
+    {
+      "operationId": "listChallenges",
+      "path": "/api/Challenges/",
+      "uri": "http://localhost:3000/api/Challenges/",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "repeatNotification",
+      "path": "/rest/repeat-notification",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for the query 'challenge'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "getContinueCode",
+      "path": "/rest/continue-code",
+      "uri": "http://localhost:3000/rest/continue-code",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getContinueCodeFindIt",
+      "path": "/rest/continue-code-findIt",
+      "uri": "http://localhost:3000/rest/continue-code-findIt",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getContinueCodeFixIt",
+      "path": "/rest/continue-code-fixIt",
+      "uri": "http://localhost:3000/rest/continue-code-fixIt",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "listSnippetChallenges",
+      "path": "/snippets",
+      "uri": "http://localhost:3000/snippets",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "getSnippet",
+      "path": "/snippets/{key}",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'key'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "getSnippetFixes",
+      "path": "/snippets/fixes/{key}",
+      "uri": null,
+      "status": "skipped",
+      "reason": "needs a value for 'key'",
+      "anonymous": null,
+      "session": null
+    },
+    {
+      "operationId": "getNftUnlocked",
+      "path": "/rest/web3/nftUnlocked",
+      "uri": "http://localhost:3000/rest/web3/nftUnlocked",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      }
+    },
+    {
+      "operationId": "listenNftMint",
+      "path": "/rest/web3/nftMintListen",
+      "uri": "http://localhost:3000/rest/web3/nftMintListen",
+      "status": "tested",
+      "reason": null,
+      "anonymous": {
+        "status": 200,
+        "mediaType": "application/json",
+        "error": null
+      },
+      "session": {
+        "status": 200,
+        "mediaType": "application/json",
         "error": null
       }
     }

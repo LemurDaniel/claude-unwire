@@ -3,7 +3,7 @@ The screenshot of `API.html` in the README, taken from the Juice Shop example in
 
 | File | Content |
 | --- | --- |
-| `api-html.png` | `examples/juiceshop/API.html`, 1280 x 860 at scale 2, embedded in the README. |
+| `api-html.png` | `examples/testbed/juiceshop/API.html`, 1280 x 860 at scale 2, embedded in the README. |
 | `New-UnwireScreenshot.ps1` | Takes it with headless Edge and a throwaway profile. |
 | `tests/` | Pester tests of the script, Edge mocked. |
 

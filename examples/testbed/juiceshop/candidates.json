@@ -1,0 +1,655 @@
+{
+  "sources": [
+    "api-docs/index.html",
+    "api-docs/swagger-initializer.js",
+    "api-docs/swagger-ui-bundle.js",
+    "api-docs/swagger-ui-standalone-preset.js",
+    "index.html",
+    "main.js",
+    "polyfills.js",
+    "runtime.js",
+    "vendor.js"
+  ],
+  "candidates": [
+    {
+      "File": "api-docs/swagger-initializer.js",
+      "Line": 6,
+      "Column": 10,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://petstore.swagger.io/v2/swagger.json",
+      "IsLiteralTarget": true,
+      "Snippet": "es will be replaced by docker/configurator, when it runs in a docker-container window.ui = SwaggerUIBundle({ url: \"https://petstore.swagger.io/v2/swagger.json\", dom_id: '#swagger-ui', deepLinking: true, presets: [ SwaggerUIBundle.presets.apis, SwaggerUISt"
+    },
+    {
+      "File": "api-docs/swagger-ui-bundle.js",
+      "Line": 2,
+      "Column": 701924,
+      "Kind": "jquery",
+      "Method": "GET",
+      "Target": "C",
+      "IsLiteralTarget": false,
+      "Snippet": "s.getSnippetGenerators()?.keySeq().first()),[L,B]=(0,Pe.useState)(s?.getDefaultExpanded()),$=s.getSnippetGenerators(),V=$.get(C),U=V.get(\"fn\")(o),handleSetIsExpanded=()=>{B(!L)},handleGetBtnStyle=o=>o===C?Lo:Do,handlePreventYScrollingBeyondElement"
+    },
+    {
+      "File": "api-docs/swagger-ui-bundle.js",
+      "Line": 2,
+      "Column": 804496,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "o",
+      "IsLiteralTarget": false,
+      "Snippet": ">{delete Pu[o]}))},JSONRefError,wrapError,getDoc,split:refs_split,extractFromDoc,fetchJSON:function fetchJSON(o){return fetch(o,{headers:{Accept:wu},loadSpec:!0}).then((o=>o.text())).then((o=>to.load(o)))},extract,jsonPointerToArray,unescapeJsonPo"
+    },
+    {
+      "File": "api-docs/swagger-ui-bundle.js",
+      "Line": 2,
+      "Column": 1010929,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "o",
+      "IsLiteralTarget": false,
+      "Snippet": "low\",C=this.redirects>0?this.redirects:void 0;try{return(await s({url:o.uri,signal:u,userFetch:async(o,s)=>{let i=await fetch(o,s);try{i.headers.delete(\"Content-Type\")}catch{i=new Response(i.body,{...i,headers:new Headers(i.headers)}),i.headers.de"
+    },
+    {
+      "File": "api-docs/swagger-ui-bundle.js",
+      "Line": 2,
+      "Column": 1159847,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${i}/debug?url=${encodeURIComponent(this.state.url)}",
+      "IsLiteralTarget": true,
+      "Snippet": "?Pe.createElement(\"span\",{className:\"float-right\"},Pe.createElement(\"a\",{target:\"_blank\",rel:\"noopener noreferrer\",href:`${i}/debug?url=${encodeURIComponent(this.state.url)}`},Pe.createElement(ValidatorImage,{src:`${i}?url=${encodeURIComponent(this.state.url)}`,alt:\"Online validator badge\"})))"
+    },
+    {
+      "File": "api-docs/swagger-ui-bundle.js",
+      "Line": 2,
+      "Column": 1342066,
+      "Kind": "jquery",
+      "Method": "GET",
+      "Target": "username",
+      "IsLiteralTarget": true,
+      "Snippet": "eme\")||\"\").toLowerCase();let $=this.getValue(),V=i.allErrors().filter((o=>o.get(\"authId\")===u));if(\"basic\"===B){let s=$?$.get(\"username\"):null;return Pe.createElement(\"div\",null,Pe.createElement(\"h4\",null,Pe.createElement(\"code\",null,u||o.get(\"name\")),\" ("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 275,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/admin",
+      "IsLiteralTarget": true,
+      "Snippet": "(4650),M=c(529);let s=(()=>{class T{constructor(b){this.http=b,this.hostServer=S.N.hostServer,this.host=this.hostServer+\"/rest/admin\"}getApplicationConfiguration(){return this.configObservable||(this.configObservable=this.http.get(this.host+\"/applicatio"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 826,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/web3",
+      "IsLiteralTarget": true,
+      "Snippet": "(4650),M=c(529);let s=(()=>{class T{constructor(b){this.http=b,this.hostServer=I.N.hostServer,this.host=this.hostServer+\"/rest/web3\"}nftUnlocked(){return this.http.get(this.host+\"/nftUnlocked\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}nftMintListen(){"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 1103,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Challenges/?key=nftMintChallenge",
+      "IsLiteralTarget": true,
+      "Snippet": ".host+\"/nftMintListen\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}checkNftMinted(){return this.http.get(this.hostServer+\"/api/Challenges/?key=nftMintChallenge\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}submitKey(b){return this.http.post(this.host+\"/submitKey\",{privateKey:b}).pi"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 2751,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "/rest/admin/application-configuration",
+      "IsLiteralTarget": true,
+      "Snippet": "ement:[]}){return(0,S.Z)(function*(){const L=document.querySelector(A);if(2===P.replacement?.length){M||(M=(yield(yield fetch(\"/rest/admin/application-configuration\")).json()).config);const G=P.replacement[1].split(\".\");let nt=M;for(const H of G)nt=nt[H];y=y.replace(P.replacement[0],n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 3766,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "/rest/admin/application-configuration",
+      "IsLiteralTarget": true,
+      "Snippet": "querySelector(A);if(P&&P.innerHTML===y)break;yield T(100)}})}function p(A){return(0,S.Z)(function*(){M||(M=(yield(yield fetch(\"/rest/admin/application-configuration\")).json()).config);let y=s[M.hackingInstructor.hintPlaybackSpeed];y??(y=1),yield T(A*y)})}function F(A){return(0,S.Z)(fu"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 44935,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Users",
+      "IsLiteralTarget": true,
+      "Snippet": ">{class n{constructor(e){this.http=e,this.isLoggedIn=new Rt.xQ,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Users\"}find(e){return this.http.get(this.hostServer+\"/rest/user/authentication-details/\",{params:e}).pipe((0,v.U)(o=>o.data),("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 44993,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/authentication-details/",
+      "IsLiteralTarget": true,
+      "Snippet": "t.xQ,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Users\"}find(e){return this.http.get(this.hostServer+\"/rest/user/authentication-details/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45351,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/login",
+      "IsLiteralTarget": true,
+      "Snippet": ".pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}login(e){return this.isLoggedIn.next(!0),this.http.post(this.hostServer+\"/rest/user/login\",e).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))}getLoggedInState(){return this.isLoggedIn.asObservable()}ch"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45542,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/change-password?current=",
+      "IsLiteralTarget": true,
+      "Snippet": "ow o}))}getLoggedInState(){return this.isLoggedIn.asObservable()}changePassword(e){return this.http.get(this.hostServer+\"/rest/user/change-password?current=\"+e.current+\"&new=\"+e.new+\"&repeat=\"+e.repeat).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o.error}))}resetPassword(e){retu"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45733,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/reset-password",
+      "IsLiteralTarget": true,
+      "Snippet": "\"+e.repeat).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o.error}))}resetPassword(e){return this.http.post(this.hostServer+\"/rest/user/reset-password\",e).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o}))}whoAmI(){return this.http.get(this.hostServer+\"/rest/user/whoami\").pi"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45857,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/whoami",
+      "IsLiteralTarget": true,
+      "Snippet": "st/user/reset-password\",e).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o}))}whoAmI(){return this.http.get(this.hostServer+\"/rest/user/whoami\").pipe((0,v.U)(e=>e.user),(0,_.K)(e=>{throw e}))}oauthLogin(e){return this.http.get(\"https://www.googleapis.com/oauth2/v"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 46089,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/saveLoginIp",
+      "IsLiteralTarget": true,
+      "Snippet": "www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=\"+e)}saveLastLoginIp(){return this.http.get(this.hostServer+\"/rest/saveLoginIp\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}deluxeStatus(){return this.http.get(this.hostServer+\"/rest/deluxe-membership"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 46204,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/deluxe-membership",
+      "IsLiteralTarget": true,
+      "Snippet": "rver+\"/rest/saveLoginIp\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}deluxeStatus(){return this.http.get(this.hostServer+\"/rest/deluxe-membership\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}upgradeToDeluxe(e,o){return this.http.post(this.hostServer+\"/rest/delux"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 46337,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/deluxe-membership",
+      "IsLiteralTarget": true,
+      "Snippet": "-membership\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}upgradeToDeluxe(e,o){return this.http.post(this.hostServer+\"/rest/deluxe-membership\",{paymentMode:e,paymentId:o}).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 48707,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/BasketItems",
+      "IsLiteralTarget": true,
+      "Snippet": "=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.itemTotal=new Rt.xQ,this.host=this.hostServer+\"/api/BasketItems\"}find(e){return this.http.get(`${this.hostServer}/rest/basket/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 48755,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.hostServer}/rest/basket/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "erver=O.N.hostServer,this.itemTotal=new Rt.xQ,this.host=this.hostServer+\"/api/BasketItems\"}find(e){return this.http.get(`${this.hostServer}/rest/basket/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 49268,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.hostServer}/rest/basket/${e}/checkout",
+      "IsLiteralTarget": true,
+      "Snippet": "rn this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}checkout(e,o,a){return this.http.post(`${this.hostServer}/rest/basket/${e}/checkout`,{couponData:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 49444,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.hostServer}/rest/basket/${e}/coupon/${o}",
+      "IsLiteralTarget": true,
+      "Snippet": "ta:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this.http.put(`${this.hostServer}/rest/basket/${e}/coupon/${o}`,{}).pipe((0,v.U)(a=>a.discount),(0,_.K)(a=>{throw a}))}updateNumberOfCartItems(){this.find(parseInt(sessionStorage.getI"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 62105,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/track-order",
+      "IsLiteralTarget": true,
+      "Snippet": "op:10px}\"]}),n})(),Kt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/track-order\"}find(e){return e=encodeURIComponent(e),this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o),(0,_.K)(o=>{throw o}))}}re"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 69678,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Feedbacks",
+      "IsLiteralTarget": true,
+      "Snippet": "dding:0}\"]}),n})(),Pt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Feedbacks\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return th"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 70228,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/captcha",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),fe=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/captcha\"}getCaptcha(){return this.http.get(this.host+\"/\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 86624,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/SecurityAnswers",
+      "IsLiteralTarget": true,
+      "Snippet": "er-word}\"]}),n})(),xe=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/SecurityAnswers\"}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=funct"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 86979,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/SecurityQuestions",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),zt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/SecurityQuestions\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}findBy(e){return"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 87153,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user/security-question?email=",
+      "IsLiteralTarget": true,
+      "Snippet": "this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}findBy(e){return this.http.get(this.hostServer+\"/rest/user/security-question?email=\"+e).pipe((0,v.U)(o=>o.question),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 107418,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/products",
+      "IsLiteralTarget": true,
+      "Snippet": "}var E=c(5412);let Xt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/products\"}get(e){return this.http.get(`${this.host}/${e}/reviews`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}create(e,o){ret"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 119207,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Products",
+      "IsLiteralTarget": true,
+      "Snippet": "ht:13px}\"]}),n})(),Lt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Products\"}search(e){return this.http.get(`${this.hostServer}/rest/products/search?q=${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{th"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 119254,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.hostServer}/rest/products/search?q=${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Products\"}search(e){return this.http.get(`${this.hostServer}/rest/products/search?q=${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 120434,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Quantitys",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),te=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Quantitys\"}getAll(){return this.http.get(this.host+\"/\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}put(e,o){return this.http.p"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 160917,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Complaints",
+      "IsLiteralTarget": true,
+      "Snippet": "Same:!0}:null}}let Se=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Complaints\"}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=funct"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 167302,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/chatbot",
+      "IsLiteralTarget": true,
+      "Snippet": "dth:60%}\"]}),n})(),ke=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/chatbot\"}getChatbotStatus(){return this.http.get(this.host+\"/status\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}getResponse(e,o)"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174020,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Recycles",
+      "IsLiteralTarget": true,
+      "Snippet": "x-small}']}),n})(),Ie=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Recycles\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return th"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174470,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Addresss",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),dt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Addresss\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`$"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 190200,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${O.N.hostServer}/rest/2fa/verify",
+      "IsLiteralTarget": true,
+      "Snippet": "_ngcontent-%COMP%]{flex:1 1 auto}\"]}),n})(),Oe=(()=>{class n{constructor(e){this.http=e}verify(e){return this.http.post(`${O.N.hostServer}/rest/2fa/verify`,{tmpToken:localStorage.getItem(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 190386,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${O.N.hostServer}/rest/2fa/status",
+      "IsLiteralTarget": true,
+      "Snippet": "(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))}status(){return this.http.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{passw"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 190500,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${O.N.hostServer}/rest/2fa/setup",
+      "IsLiteralTarget": true,
+      "Snippet": "p.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 190654,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${O.N.hostServer}/rest/2fa/disable",
+      "IsLiteralTarget": true,
+      "Snippet": ",{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post(`${O.N.hostServer}/rest/2fa/disable`,{password:e}).pipe((0,v.U)(()=>{}),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 202940,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/image-captcha/",
+      "IsLiteralTarget": true,
+      "Snippet": ")=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getCaptcha(){return this.http.get(this.hostServer+\"/rest/image-captcha/\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 203230,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/user",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),Le=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/user\"}erase(e){return this.http.post(this.host+\"/erasure-request\",e).pipe((0,_.K)(o=>{throw o}))}dataExport(e){return this.ht"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 233105,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/wallet/balance",
+      "IsLiteralTarget": true,
+      "Snippet": ",$.d,u.X$]}),n})(),ce=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/wallet/balance\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}put(e){return this.http.put(this.h"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 233539,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Deliverys",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),Mt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Deliverys\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`$"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 233979,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Cards",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),ue=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Cards\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`$"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 261170,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/order-history",
+      "IsLiteralTarget": true,
+      "Snippet": "ght:20%}\"]}),n})(),pe=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/order-history\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getAll(){return this.http.get(this"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 276836,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.basketService.hostServer}/ftp/order_${this.orderId}.pdf",
+      "IsLiteralTarget": true,
+      "Snippet": "(a=>{this.address=a},a=>{console.log(a)})},o=>{console.log(o)})},e=>{console.log(e)})}openConfirmationPDF(){window.open(`${this.basketService.hostServer}/ftp/order_${this.orderId}.pdf`,\"_blank\")}}return n.\\u0275fac=function(e){return new(e||n)(t.Y36(T.e),t.Y36(dt),t.Y36(Kt),t.Y36(N.gz),t.Y36(X))},n.\\u02"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 295496,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.basketService.hostServer}/ftp/order_${e}.pdf",
+      "IsLiteralTarget": true,
+      "Snippet": "(Ae,{width:\"500px\",height:\"max-content\",data:{productData:a}})},o=>{console.log(o)})}openConfirmationPDF(e){window.open(`${this.basketService.hostServer}/ftp/order_${e}.pdf`,\"_blank\")}trackOrder(e){var o=this;this.ngZone.run((0,I.Z)(function*(){return yield o.router.navigate([\"/track-result\"]"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 305528,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/memories",
+      "IsLiteralTarget": true,
+      "Snippet": "ayBuffer(i)})};let De=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/memories\"}addMemory(e,o){const a=new FormData;return a.append(\"image\",o,e),a.append(\"caption\",e),this.http.post(this.host,a).pipe"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324072,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/api/Challenges",
+      "IsLiteralTarget": true,
+      "Snippet": "dIn:\"root\"}),n})(),st=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Challenges\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}repeatNotificatio"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324251,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/repeat-notification",
+      "IsLiteralTarget": true,
+      "Snippet": "\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}repeatNotification(e){return this.http.get(this.hostServer+\"/rest/repeat-notification\",{params:{challenge:e},responseType:\"text\"}).pipe((0,_.K)(o=>{throw o}))}continueCode(){return this.http.get(this.hostSe"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324403,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code",
+      "IsLiteralTarget": true,
+      "Snippet": "ams:{challenge:e},responseType:\"text\"}).pipe((0,_.K)(o=>{throw o}))}continueCode(){return this.http.get(this.hostServer+\"/rest/continue-code\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFindIt(){return this.http.get(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324539,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code-findIt",
+      "IsLiteralTarget": true,
+      "Snippet": "code\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFindIt(){return this.http.get(this.hostServer+\"/rest/continue-code-findIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFixIt(){return this.http.get(this.hostServer+\"/rest"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324681,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code-fixIt",
+      "IsLiteralTarget": true,
+      "Snippet": "indIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFixIt(){return this.http.get(this.hostServer+\"/rest/continue-code-fixIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}restoreProgress(e){return this.http.put(this.hostServer+\"/rest/"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324821,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code/apply/",
+      "IsLiteralTarget": true,
+      "Snippet": "-fixIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}restoreProgress(e){return this.http.put(this.hostServer+\"/rest/continue-code/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFindIt(e){return this.http.put(this.hostServer+\"/re"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324965,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code-findIt/apply/",
+      "IsLiteralTarget": true,
+      "Snippet": "ly/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFindIt(e){return this.http.put(this.hostServer+\"/rest/continue-code-findIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFixIt(e){return this.http.put(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 325115,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/continue-code-fixIt/apply/",
+      "IsLiteralTarget": true,
+      "Snippet": "ply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFixIt(e){return this.http.put(this.hostServer+\"/rest/continue-code-fixIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 401780,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/admin",
+      "IsLiteralTarget": true,
+      "Snippet": "01),$e=c(3447);let ge=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/admin\"}getApplicationVersion(){return this.http.get(this.host+\"/application-version\").pipe((0,v.U)(e=>e.version),(0,_.K)(e=>{t"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 402171,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.hostServer}/rest/languages",
+      "IsLiteralTarget": true,
+      "Snippet": "}),n})(),cu=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getLanguages(){return this.http.get(`${this.hostServer}/rest/languages`).pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 426725,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/rest/country-mapping",
+      "IsLiteralTarget": true,
+      "Snippet": "ss n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getCountryMapping(){return this.http.get(this.hostServer+\"/rest/country-mapping\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "vendor.js",
+      "Line": 1,
+      "Column": 220277,
+      "Kind": "xhr",
+      "Method": "GET",
+      "Target": "g",
+      "IsLiteralTarget": false,
+      "Snippet": "ion(At,ae){var d,a;void 0!==(a=\"function\"==typeof(d=function(){\"use strict\";function u(g,b,L){var B=new XMLHttpRequest;B.open(\"GET\",g),B.responseType=\"blob\",B.onload=function(){S(B.response,b,L)},B.onerror=function(){console.error(\"could not download fi"
+    },
+    {
+      "File": "vendor.js",
+      "Line": 1,
+      "Column": 220465,
+      "Kind": "xhr",
+      "Method": "HEAD",
+      "Target": "g",
+      "IsLiteralTarget": false,
+      "Snippet": "e,b,L)},B.onerror=function(){console.error(\"could not download file\")},B.send()}function c(g){var b=new XMLHttpRequest;b.open(\"HEAD\",g,!1);try{b.send()}catch{}return 200<=b.status&&299>=b.status}function p(g){try{g.dispatchEvent(new MouseEvent(\"click\"))}"
+    }
+  ]
+}

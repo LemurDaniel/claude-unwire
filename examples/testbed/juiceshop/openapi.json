@@ -1,0 +1,4025 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JuiceShop",
+    "version": "0.1.0",
+    "description": "Derived by Unwire from the static frontend code of http://localhost:3000 (Angular bundle main.js, no source map). Draft, AI-derived: review every operation."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Web UI root (hostServer is \".\" in the environment, assets/main.js:1:2227)"
+    }
+  ],
+  "x-unwire-target": "http://localhost:3000/",
+  "x-unwire-open": [
+    "Discover: /api-docs/ is a Swagger UI, its swagger-initializer.js points to an external example spec (petstore.swagger.io), no spec of this target; /api-docs answered 301, /api/openapi.json and /api/swagger.json 500.",
+    "Auth: login (POST /rest/user/login) answers authentication.token; the UI stores it in localStorage and a cookie 'token' (8 h) and the HTTP interceptor sends Authorization: Bearer <token> and X-User-Email on every call (assets/main.js:1:454072). Per operation auth comes from the route guards: login guard (token present), admin and accounting guards (data.role in the decoded token).",
+    "X-User-Email header: sent by the interceptor when localStorage email is set, purpose unknown.",
+    "Socket.IO: the UI connects to <root>/socket.io and emits notification received, verifyLocalXssChallenge, verifySvgInjectionChallenge, verifyCloseNotificationsChallenge; listens to challenge solved, code challenge solved, server started. Not described in this spec.",
+    "External calls left out: https://www.googleapis.com/oauth2/v1/userinfo (OAuth login), cdnjs scripts (cookieconsent, jquery), skipped by the crawl.",
+    "Navigation left out (4): window.location.replace to /profile and /dataerasure (server-rendered pages, two places each), window.open of /ftp/order_<id>.pdf (order confirmation PDF, two places).",
+    "Lazy chunks: the webpack runtime builds <id>.js; the crawl did not find 67, 745, 202, 98 and common, loaded with -Script. They hold no own API calls (web3 modules use the service in main.js).",
+    "Source maps: main.js.map, vendor.js.map and the others answered with no source map (SPA fallback), names come from the minified bundle.",
+    "Many request bodies are objects passed through from forms; their keys are not in the services, marked per operation."
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "authentication.token from POST /rest/user/login (or /rest/2fa/verify), sent by the HTTP interceptor. The guards decode it and read data.role."
+      }
+    }
+  },
+  "paths": {
+    "/rest/user/login": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Log in",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads authentication.token, authentication.bid (and umail).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authentication": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "bid": {
+                          "type": "integer"
+                        },
+                        "umail": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45279",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Login page (route login, no guard) calls it logged out.",
+        "x-unwire-open": [
+          "Creates a session: never sent by the live GET.",
+          "Body: the user object of the login form (email, password); a 2FA account answers with a tmp token instead (2fa/enter)."
+        ]
+      }
+    },
+    "/rest/2fa/verify": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Verify the TOTP code after login",
+        "operationId": "verifyTwoFactor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tmpToken": {
+                    "type": "string"
+                  },
+                  "totpToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads authentication.token and bid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authentication": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "bid": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:190168",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Route 2fa/enter (no guard), sends the tmp token from the login answer in the body.",
+        "x-unwire-open": [
+          "Creates a session: never sent by the live GET."
+        ]
+      }
+    },
+    "/rest/2fa/status": {
+      "get": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Get the 2FA status of the user",
+        "operationId": "getTwoFactorStatus",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole (setup state, secret and QR data on setup).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "setup": {
+                      "type": "boolean"
+                    },
+                    "secret": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "setupToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:190356",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/two-factor-authentication, user settings.",
+        "x-unwire-open": [
+          "Response keys not read field by field in the service, check them.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
+      }
+    },
+    "/rest/2fa/setup": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Enable 2FA",
+        "operationId": "setupTwoFactor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "setupToken": {
+                    "type": "string"
+                  },
+                  "initialToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:190465",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/two-factor-authentication, user settings.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/2fa/disable": {
+      "post": {
+        "tags": [
+          "Web · Auth"
+        ],
+        "summary": "Disable 2FA",
+        "operationId": "disableTwoFactor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:190621",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/two-factor-authentication, user settings.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/user/whoami": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Get the logged-in user",
+        "operationId": "whoAmI",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads user (id, email, ...).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45811",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: contact, recycle and chatbot pages (no guard) call it, also logged out.",
+        "x-unwire-open": [
+          "auth unclear: called on pages without guard, the answer without token is unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
+      }
+    },
+    "/rest/user/authentication-details/": {
+      "get": {
+        "tags": [
+          "Web · Admin"
+        ],
+        "summary": "List users with authentication details",
+        "operationId": "listAuthenticationDetails",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:44948",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role admin: route administration, guard checks data.role admin in the token (assets/main.js:1:399037).",
+        "x-unwire-open": [
+          "Query: params object of the caller, keys unknown.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Users/": {
+      "post": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Register a user",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45185",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Register page (route register, no guard) calls it logged out.",
+        "x-unwire-open": [
+          "Body: user object of the register form, keys not visible in the service (email, password, passwordRepeat, securityQuestion likely), check them."
+        ]
+      }
+    },
+    "/api/Users/{id}": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Get a user",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User id, appended as /${id}.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45089",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: user service, caller not mapped.",
+        "x-unwire-open": [
+          "auth unclear: no caller with guard found."
+        ]
+      }
+    },
+    "/rest/user/change-password": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Change the password",
+        "operationId": "changePassword",
+        "parameters": [
+          {
+            "name": "current",
+            "in": "query",
+            "required": true,
+            "description": "Current password.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "new",
+            "in": "query",
+            "required": true,
+            "description": "New password.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repeat",
+            "in": "query",
+            "required": true,
+            "description": "New password again.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45487",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/change-password, user settings.",
+        "x-unwire-open": [
+          "A GET that changes data: x-unwire-impact write, never sent by the live GET.",
+          "Passwords go in the query string, they end up in logs."
+        ]
+      }
+    },
+    "/rest/user/reset-password": {
+      "post": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Reset the password with the security answer",
+        "operationId": "resetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:45678",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Page forgot-password (no guard), logged out.",
+        "x-unwire-open": [
+          "Body: object of the forgot-password form, keys not in the service."
+        ]
+      }
+    },
+    "/rest/user/security-question": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Get the security question of an email",
+        "operationId": "getSecurityQuestionByEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "description": "Email address, appended unencoded.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads question.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "question": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:87106",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Page forgot-password (no guard), logged out.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/SecurityQuestions/": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "List the security questions",
+        "operationId": "listSecurityQuestions",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:86980",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Register page (no guard) loads the choices logged out.",
+        "x-unwire-open": [
+          "Query: params object of the caller, keys unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/SecurityAnswers/": {
+      "post": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Save the security answer",
+        "operationId": "saveSecurityAnswer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:86625",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Register page (no guard), right after the registration.",
+        "x-unwire-open": [
+          "Body keys not in the service (UserId, answer, SecurityQuestionId likely), check them.",
+          "auth unclear: called during registration, before the login."
+        ]
+      }
+    },
+    "/rest/saveLoginIp": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Store the IP of this login",
+        "operationId": "saveLastLoginIp",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:46034",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Called after the login, reads the user.",
+        "x-unwire-open": [
+          "A GET that stores data (name: save...): x-unwire-impact write."
+        ]
+      }
+    },
+    "/rest/deluxe-membership": {
+      "get": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Get the deluxe membership status",
+        "operationId": "getDeluxeStatus",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:46152",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route deluxe-membership, login guard (token in localStorage).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 400 application/json, with session HTTP 400 application/json."
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · User"
+        ],
+        "summary": "Buy the deluxe membership",
+        "operationId": "upgradeToDeluxe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paymentMode": {
+                    "type": "string"
+                  },
+                  "paymentId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:46278",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route deluxe-membership / payment, login guard.",
+        "x-unwire-open": [
+          "Changes the wallet or a card: payment."
+        ]
+      }
+    },
+    "/rest/user/erasure-request": {
+      "post": {
+        "tags": [
+          "Web · Privacy"
+        ],
+        "summary": "Request the erasure of the account",
+        "operationId": "requestErasure",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:203243",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Privacy pages of the logged-in user.",
+        "x-unwire-open": [
+          "Body keys not in the service.",
+          "Deletes the account data."
+        ]
+      }
+    },
+    "/rest/user/data-export": {
+      "post": {
+        "tags": [
+          "Web · Privacy"
+        ],
+        "summary": "Export the user data",
+        "operationId": "requestDataExport",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Read as a whole (the export).",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:203334",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/data-export, user settings; with image captcha.",
+        "x-unwire-open": [
+          "Body keys not in the service (format, answer of the image captcha likely)."
+        ]
+      }
+    },
+    "/rest/image-captcha/": {
+      "get": {
+        "tags": [
+          "Web · Privacy"
+        ],
+        "summary": "Get an image captcha",
+        "operationId": "getImageCaptcha",
+        "responses": {
+          "200": {
+            "description": "Read as a whole (image).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    },
+                    "UserId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:202941",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Page privacy-security/data-export only.",
+        "x-unwire-open": [
+          "Each call may create a captcha on the server.",
+          "Live GET 2026-11-02: without session HTTP 500 application/json, with session HTTP 200 application/json. Response schema from the live answer: keys and types only, check it."
+        ]
+      }
+    },
+    "/rest/products/search": {
+      "get": {
+        "tags": [
+          "Web · Products"
+        ],
+        "summary": "Search products",
+        "operationId": "searchProducts",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Search text, inserted unencoded by the UI.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:119223",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Start page and search (no guard) list products logged out; also used by accounting.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Products/": {
+      "get": {
+        "tags": [
+          "Web · Products"
+        ],
+        "summary": "List products",
+        "operationId": "listProducts",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:119208",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Product catalog, no guard.",
+        "x-unwire-open": [
+          "Query: params object of the caller, keys unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Products/{id}": {
+      "get": {
+        "tags": [
+          "Web · Products"
+        ],
+        "summary": "Get a product",
+        "operationId": "getProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product id.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "d",
+            "in": "query",
+            "required": false,
+            "description": "Cache buster, the UI sends new Date().toDateString().",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:119453",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Product details and order history; catalog without guard.",
+        "x-unwire-open": []
+      },
+      "put": {
+        "tags": [
+          "Web · Accounting"
+        ],
+        "summary": "Update a product (price)",
+        "operationId": "updateProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:119600",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: route accounting, guard checks data.role accounting in the token.",
+        "x-unwire-open": [
+          "Body: product fields from the accounting page (price likely), not in the service."
+        ]
+      }
+    },
+    "/rest/products/{id}/reviews": {
+      "get": {
+        "tags": [
+          "Web · Reviews"
+        ],
+        "summary": "Get the reviews of a product",
+        "operationId": "getProductReviews",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:107435",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Product details dialog, no guard.",
+        "x-unwire-open": []
+      },
+      "put": {
+        "tags": [
+          "Web · Reviews"
+        ],
+        "summary": "Write a review",
+        "operationId": "createProductReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:107539",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: review form in the product dialog, no guard.",
+        "x-unwire-open": [
+          "Body keys not in the service (message, author likely).",
+          "auth unclear: the dialog has no guard."
+        ]
+      }
+    },
+    "/rest/products/reviews": {
+      "patch": {
+        "tags": [
+          "Web · Reviews"
+        ],
+        "summary": "Edit a review",
+        "operationId": "updateProductReview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:107650",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Edit dialog of an own review.",
+        "x-unwire-open": [
+          "Body keys not in the service (id, message likely)."
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · Reviews"
+        ],
+        "summary": "Like a review",
+        "operationId": "likeProductReview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:107753",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Like button in the product dialog, for logged-in users.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/Quantitys/": {
+      "get": {
+        "tags": [
+          "Web · Accounting"
+        ],
+        "summary": "List stock quantities",
+        "operationId": "listQuantities",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:120451",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: route accounting, guard checks data.role accounting.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
+      }
+    },
+    "/api/Quantitys/{id}": {
+      "put": {
+        "tags": [
+          "Web · Accounting"
+        ],
+        "summary": "Update a stock quantity",
+        "operationId": "updateQuantity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Quantity id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:120435",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: route accounting.",
+        "x-unwire-open": [
+          "Body keys not in the service (quantity likely)."
+        ]
+      }
+    },
+    "/rest/basket/{id}": {
+      "get": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Get a basket",
+        "operationId": "getBasket",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket id (sessionStorage bid).",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.Products[].BasketItem.quantity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "Products": {
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "BasketItem": {
+                                "type": "object",
+                                "properties": {
+                                  "quantity": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "type": "array"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:48726",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket id from sessionStorage bid, set by the login.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/BasketItems/{id}": {
+      "get": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Get a basket item",
+        "operationId": "getBasketItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket item id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:48708",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket page, after the login.",
+        "x-unwire-open": []
+      },
+      "put": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Change a basket item",
+        "operationId": "updateBasketItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket item id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:48708",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket page, after the login.",
+        "x-unwire-open": [
+          "Body keys not in the service (quantity likely)."
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Remove a basket item",
+        "operationId": "deleteBasketItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket item id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:48708",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket page, after the login.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/BasketItems/": {
+      "post": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Add a product to the basket",
+        "operationId": "addBasketItem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:48708",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Add-to-basket button, after the login (basket id from login).",
+        "x-unwire-open": [
+          "Body keys not in the service (ProductId, BasketId, quantity likely)."
+        ]
+      }
+    },
+    "/rest/basket/{id}/checkout": {
+      "post": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Place the order",
+        "operationId": "checkoutBasket",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "couponData": {
+                    "type": "string"
+                  },
+                  "orderDetails": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads orderConfirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orderConfirmation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:49230",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Order summary page, after the login.",
+        "x-unwire-open": [
+          "orderDetails: address, delivery and payment ids of the order summary, keys not in the service."
+        ]
+      }
+    },
+    "/rest/basket/{id}/coupon/{coupon}": {
+      "put": {
+        "tags": [
+          "Web · Basket"
+        ],
+        "summary": "Apply a coupon",
+        "operationId": "applyCoupon",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Basket id.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "coupon",
+            "in": "path",
+            "required": true,
+            "description": "Coupon code, inserted unencoded.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads discount.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "discount": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:49406",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Payment page, after the login.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/track-order/{id}": {
+      "get": {
+        "tags": [
+          "Web · Orders"
+        ],
+        "summary": "Track an order",
+        "operationId": "trackOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Order id, URL-encoded by the UI.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:62125",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Route track-result (no guard), the order id is the key.",
+        "x-unwire-open": [
+          "Response keys not read in the service."
+        ]
+      }
+    },
+    "/rest/order-history": {
+      "get": {
+        "tags": [
+          "Web · Orders"
+        ],
+        "summary": "Get the own orders",
+        "operationId": "getOrderHistory",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:261171",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route order-history, own orders of the logged-in user.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 500 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/order-history/orders": {
+      "get": {
+        "tags": [
+          "Web · Accounting"
+        ],
+        "summary": "List all orders",
+        "operationId": "listAllOrders",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:261277",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: route accounting, guard checks data.role accounting.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 403 application/json, with session HTTP 403 application/json."
+        ]
+      }
+    },
+    "/rest/order-history/{id}/delivery-status": {
+      "put": {
+        "tags": [
+          "Web · Accounting"
+        ],
+        "summary": "Toggle the delivery status of an order",
+        "operationId": "toggleDeliveryStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Order id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:261375",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: route accounting.",
+        "x-unwire-open": [
+          "Body keys not in the service (deliveryStatus likely)."
+        ]
+      }
+    },
+    "/api/Addresss": {
+      "get": {
+        "tags": [
+          "Web · Address"
+        ],
+        "summary": "List the own addresses",
+        "operationId": "listAddresses",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174471",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Routes address/*, login guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Addresss/{id}": {
+      "get": {
+        "tags": [
+          "Web · Address"
+        ],
+        "summary": "Get an address",
+        "operationId": "getAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Address id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174471",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Routes address/*, login guard.",
+        "x-unwire-open": []
+      },
+      "put": {
+        "tags": [
+          "Web · Address"
+        ],
+        "summary": "Update an address",
+        "operationId": "updateAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Address id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174471",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route address/edit/:addressId, login guard.",
+        "x-unwire-open": [
+          "Body: address form, keys not in the service."
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Web · Address"
+        ],
+        "summary": "Delete an address",
+        "operationId": "deleteAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Address id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174471",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route address/saved, login guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/Addresss/": {
+      "post": {
+        "tags": [
+          "Web · Address"
+        ],
+        "summary": "Create an address",
+        "operationId": "createAddress",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174471",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route address/create, login guard.",
+        "x-unwire-open": [
+          "Body: address form, keys not in the service."
+        ]
+      }
+    },
+    "/api/Deliverys": {
+      "get": {
+        "tags": [
+          "Web · Delivery"
+        ],
+        "summary": "List delivery methods",
+        "operationId": "listDeliveryMethods",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233540",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: route delivery-method has no guard, it is part of the checkout.",
+        "x-unwire-open": [
+          "auth unclear: checkout step without guard.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
+      }
+    },
+    "/api/Deliverys/{id}": {
+      "get": {
+        "tags": [
+          "Web · Delivery"
+        ],
+        "summary": "Get a delivery method",
+        "operationId": "getDeliveryMethod",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Delivery method id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233540",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: order summary, no guard.",
+        "x-unwire-open": [
+          "auth unclear: checkout step without guard."
+        ]
+      }
+    },
+    "/api/Cards": {
+      "get": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "List the saved cards",
+        "operationId": "listCards",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233980",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: route saved-payment-methods has no guard, cards belong to the user.",
+        "x-unwire-open": [
+          "auth unclear: route without guard.",
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Cards/{id}": {
+      "get": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "Get a saved card",
+        "operationId": "getCard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Card id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233980",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Order summary, cards belong to the user.",
+        "x-unwire-open": []
+      },
+      "delete": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "Delete a saved card",
+        "operationId": "deleteCard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Card id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233980",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Payment page, cards belong to the user.",
+        "x-unwire-open": []
+      }
+    },
+    "/api/Cards/": {
+      "post": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "Save a card",
+        "operationId": "saveCard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233980",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Payment page, cards belong to the user.",
+        "x-unwire-open": [
+          "Body: card form, keys not in the service."
+        ]
+      }
+    },
+    "/rest/wallet/balance": {
+      "get": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "Get the wallet balance",
+        "operationId": "getWalletBalance",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233106",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route wallet, balance of the logged-in user.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 401 application/json, with session HTTP 200 application/json."
+        ]
+      },
+      "put": {
+        "tags": [
+          "Web · Payment"
+        ],
+        "summary": "Top up the wallet",
+        "operationId": "addWalletBalance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:233106",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route wallet / payment, logged-in user.",
+        "x-unwire-open": [
+          "Body keys not in the service (balance, paymentId likely)."
+        ]
+      }
+    },
+    "/api/Feedbacks/": {
+      "get": {
+        "tags": [
+          "Web · Feedback"
+        ],
+        "summary": "List feedback",
+        "operationId": "listFeedbacks",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:69679",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Auth unclear: about page (no guard) and administration (role admin) both call it.",
+        "x-unwire-open": [
+          "Query: params object of the caller, keys unknown.",
+          "auth unclear: public on the about page, also used by the admin page.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · Feedback"
+        ],
+        "summary": "Send feedback",
+        "operationId": "createFeedback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:69679",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Contact page (no guard) with captcha, also logged out (whoAmI is optional there).",
+        "x-unwire-open": [
+          "Body: contact form, keys not in the service (comment, rating, captchaId, captcha, UserId likely)."
+        ]
+      }
+    },
+    "/api/Feedbacks/{id}": {
+      "delete": {
+        "tags": [
+          "Web · Admin"
+        ],
+        "summary": "Delete feedback",
+        "operationId": "deleteFeedback",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Feedback id.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:69679",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role admin: route administration, guard checks data.role admin.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/captcha/": {
+      "get": {
+        "tags": [
+          "Web · Feedback"
+        ],
+        "summary": "Get a captcha for the contact form",
+        "operationId": "getCaptcha",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole (captchaId, captcha likely).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "captchaId": {
+                      "type": "integer"
+                    },
+                    "captcha": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:70229",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Contact page (no guard), logged out.",
+        "x-unwire-open": [
+          "Each call may create a captcha on the server.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/api/Complaints/": {
+      "post": {
+        "tags": [
+          "Web · Feedback"
+        ],
+        "summary": "File a complaint",
+        "operationId": "createComplaint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:160918",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: route complain has no guard, the form uses the user.",
+        "x-unwire-open": [
+          "Body keys not in the service (message, UserId likely).",
+          "File upload: the complaint page uploads to /file-upload separately.",
+          "auth unclear: route without guard."
+        ]
+      }
+    },
+    "/file-upload": {
+      "post": {
+        "tags": [
+          "Web · Feedback"
+        ],
+        "summary": "Upload a file for a complaint",
+        "operationId": "uploadComplaintFile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Not read by the UI.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:162101",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "ng2-file-upload sets authToken Bearer from localStorage.",
+        "x-unwire-open": [
+          "Multipart via FileUploader: field name not visible (library default file), MIME types pdf, xml, zip.",
+          "Method: POST is the default of the upload library, not literal."
+        ]
+      }
+    },
+    "/api/Recycles/": {
+      "get": {
+        "tags": [
+          "Web · Recycle"
+        ],
+        "summary": "List recycle requests",
+        "operationId": "listRecycles",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174021",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Recycle page reads the user first (whoAmI).",
+        "x-unwire-open": [
+          "Query: params object of the caller, keys unknown.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
+      },
+      "post": {
+        "tags": [
+          "Web · Recycle"
+        ],
+        "summary": "Request a recycle pickup",
+        "operationId": "createRecycle",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:174021",
+        "x-unwire-confidence": "medium",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Recycle page reads the user first (whoAmI).",
+        "x-unwire-open": [
+          "Body: recycle form, keys not in the service."
+        ]
+      }
+    },
+    "/rest/memories/": {
+      "get": {
+        "tags": [
+          "Web · Photo wall"
+        ],
+        "summary": "List the photo wall",
+        "operationId": "listMemories",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:305529",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Route photo-wall (no guard), visible logged out.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/memories": {
+      "post": {
+        "tags": [
+          "Web · Photo wall"
+        ],
+        "summary": "Add a photo to the wall",
+        "operationId": "addMemory",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "caption": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:305545",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: upload form on photo-wall, no guard.",
+        "x-unwire-open": [
+          "auth unclear: route without guard."
+        ]
+      }
+    },
+    "/rest/chatbot/status": {
+      "get": {
+        "tags": [
+          "Web · Chatbot"
+        ],
+        "summary": "Get the chatbot status",
+        "operationId": "getChatbotStatus",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole (status, body, action, token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    },
+                    "body": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:167318",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Auth unclear: route chatbot (no guard) reads the user (whoAmI).",
+        "x-unwire-open": [
+          "auth unclear: route without guard.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json. It answered without a session, security may be []."
+        ]
+      }
+    },
+    "/rest/chatbot/respond": {
+      "post": {
+        "tags": [
+          "Web · Chatbot"
+        ],
+        "summary": "Send a message to the chatbot",
+        "operationId": "getChatbotResponse",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads body, action and token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:167421",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Route chatbot; the answer can carry a new token the UI stores.",
+        "x-unwire-open": [
+          "The answer may set a new token (localStorage, cookie)."
+        ]
+      }
+    },
+    "/rest/admin/application-configuration": {
+      "get": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Get the application configuration",
+        "operationId": "getApplicationConfiguration",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads config.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "config": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:289",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Start page and many unguarded pages load it logged out.",
+        "x-unwire-open": [
+          "Also fetched by plain fetch() in a helper (assets/main.js), same path.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/admin/application-version": {
+      "get": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Get the application version",
+        "operationId": "getApplicationVersion",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:401794",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Navbar, logged out.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/languages": {
+      "get": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "List the UI languages",
+        "operationId": "getLanguages",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "lang": {
+                        "type": "string"
+                      },
+                      "icons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "shortKey": {
+                        "type": "string"
+                      },
+                      "percentage": {
+                        "type": "number"
+                      },
+                      "gauge": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:402135",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Navbar language menu, logged out.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/country-mapping": {
+      "get": {
+        "tags": [
+          "Web · Config"
+        ],
+        "summary": "Get the country mapping",
+        "operationId": "getCountryMapping",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:426668",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Helper without login context.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 500, with session HTTP 500."
+        ]
+      }
+    },
+    "/api/Challenges/": {
+      "get": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "List challenges",
+        "operationId": "listChallenges",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "description": "Filter, the web3 service sends key=nftMintChallenge; other callers pass a params object.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324073",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Route score-board (no guard).",
+        "x-unwire-open": [
+          "Query: params object of the score board, keys unknown besides key.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/repeat-notification": {
+      "get": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Repeat a challenge notification",
+        "operationId": "repeatNotification",
+        "parameters": [
+          {
+            "name": "challenge",
+            "in": "query",
+            "required": true,
+            "description": "Challenge name.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Text (responseType text).",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324192",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": [
+          "Triggers a notification over the socket."
+        ]
+      }
+    },
+    "/rest/continue-code": {
+      "get": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Get the continue code",
+        "operationId": "getContinueCode",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads continueCode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "continueCode": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324351",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board / settings, no guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/continue-code-findIt": {
+      "get": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Get the continue code (find it)",
+        "operationId": "getContinueCodeFindIt",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads continueCode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "continueCode": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324481",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/continue-code-fixIt": {
+      "get": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Get the continue code (fix it)",
+        "operationId": "getContinueCodeFixIt",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads continueCode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "continueCode": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324624",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/continue-code/apply/{code}": {
+      "put": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Restore the progress",
+        "operationId": "restoreProgress",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "Continue code.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324765",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/continue-code-findIt/apply/{code}": {
+      "put": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Restore the progress (find it)",
+        "operationId": "restoreProgressFindIt",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "Continue code.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:324903",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/continue-code-fixIt/apply/{code}": {
+      "put": {
+        "tags": [
+          "Web · Challenges"
+        ],
+        "summary": "Restore the progress (fix it)",
+        "operationId": "restoreProgressFixIt",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "Continue code.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads data.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:325054",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/snippets": {
+      "get": {
+        "tags": [
+          "Web · Code snippets"
+        ],
+        "summary": "List challenges with code snippets",
+        "operationId": "listSnippetChallenges",
+        "responses": {
+          "200": {
+            "description": "JSON, the UI reads challenges.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challenges": {
+                      "items": {},
+                      "type": "array"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:323278",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board, no guard.",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/snippets/{key}": {
+      "get": {
+        "tags": [
+          "Web · Code snippets"
+        ],
+        "summary": "Get the code snippet of a challenge",
+        "operationId": "getSnippet",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Challenge key.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:323176",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Code snippet dialog of the score board, no guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/snippets/fixes/{key}": {
+      "get": {
+        "tags": [
+          "Web · Code snippets"
+        ],
+        "summary": "Get the fix options of a snippet",
+        "operationId": "getSnippetFixes",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Challenge key.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:323620",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Code snippet dialog, no guard.",
+        "x-unwire-open": []
+      }
+    },
+    "/snippets/fixes": {
+      "post": {
+        "tags": [
+          "Web · Code snippets"
+        ],
+        "summary": "Check a selected fix",
+        "operationId": "checkSnippetFix",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "selectedFix": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:323620",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Code snippet dialog, no guard.",
+        "x-unwire-open": [
+          "Solving changes the progress on the server."
+        ]
+      }
+    },
+    "/snippets/verdict": {
+      "post": {
+        "tags": [
+          "Web · Code snippets"
+        ],
+        "summary": "Check the selected vulnerable lines",
+        "operationId": "checkSnippetVerdict",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "selectedLines": {
+                    "items": {
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:325442",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Code snippet dialog, no guard.",
+        "x-unwire-open": [
+          "Solving changes the progress on the server."
+        ]
+      }
+    },
+    "/rest/web3/nftUnlocked": {
+      "get": {
+        "tags": [
+          "Web · Web3"
+        ],
+        "summary": "Get the NFT unlock state",
+        "operationId": "getNftUnlocked",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:839",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Route juicy-nft (no guard).",
+        "x-unwire-open": [
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/web3/nftMintListen": {
+      "get": {
+        "tags": [
+          "Web · Web3"
+        ],
+        "summary": "Listen for an NFT mint",
+        "operationId": "listenNftMint",
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:942",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": true,
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Web3 pages (no guard).",
+        "x-unwire-open": [
+          "Name suggests it starts a listener on the server: check before a live GET.",
+          "Live GET 2026-11-02: without session HTTP 200 application/json, with session HTTP 200 application/json."
+        ]
+      }
+    },
+    "/rest/web3/submitKey": {
+      "post": {
+        "tags": [
+          "Web · Web3"
+        ],
+        "summary": "Submit a private key",
+        "operationId": "submitKey",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "privateKey": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:1186",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Route juicy-nft (no guard).",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/web3/walletNFTVerify": {
+      "post": {
+        "tags": [
+          "Web · Web3"
+        ],
+        "summary": "Verify an NFT wallet",
+        "operationId": "verifyNftWallet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:1302",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Web3 pages (no guard).",
+        "x-unwire-open": []
+      }
+    },
+    "/rest/web3/walletExploitAddress": {
+      "post": {
+        "tags": [
+          "Web · Web3"
+        ],
+        "summary": "Send a wallet address",
+        "operationId": "sendWalletAddress",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletAddress": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON, read as a whole.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-unwire-source": "assets/main.js:1:1433",
+        "x-unwire-confidence": "high",
+        "x-unwire-verified": false,
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Web3 pages (no guard).",
+        "x-unwire-open": []
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Web · Auth",
+      "description": "Login, 2FA verify and 2FA settings."
+    },
+    {
+      "name": "Web · User",
+      "description": "Registration, the own account, password and security question."
+    },
+    {
+      "name": "Web · Privacy",
+      "description": "Data export and erasure request of the own account."
+    },
+    {
+      "name": "Web · Admin",
+      "description": "Administration page, guard requires role admin."
+    },
+    {
+      "name": "Web · Accounting",
+      "description": "Accounting page, guard requires role accounting: stock, prices, all orders."
+    },
+    {
+      "name": "Web · Products",
+      "description": "Product catalog and search, public."
+    },
+    {
+      "name": "Web · Reviews",
+      "description": "Product reviews in the product dialog."
+    },
+    {
+      "name": "Web · Basket",
+      "description": "Basket, coupons and checkout."
+    },
+    {
+      "name": "Web · Orders",
+      "description": "Order tracking and own order history."
+    },
+    {
+      "name": "Web · Address",
+      "description": "Saved addresses, login guard."
+    },
+    {
+      "name": "Web · Delivery",
+      "description": "Delivery methods in the checkout."
+    },
+    {
+      "name": "Web · Payment",
+      "description": "Saved cards and wallet."
+    },
+    {
+      "name": "Web · Feedback",
+      "description": "Contact form, captcha, complaints and file upload."
+    },
+    {
+      "name": "Web · Recycle",
+      "description": "Recycle requests."
+    },
+    {
+      "name": "Web · Photo wall",
+      "description": "Photo wall, public list and upload."
+    },
+    {
+      "name": "Web · Chatbot",
+      "description": "Support chatbot."
+    },
+    {
+      "name": "Web · Config",
+      "description": "Configuration, version, languages loaded by the start page."
+    },
+    {
+      "name": "Web · Challenges",
+      "description": "Score board, notifications and progress codes."
+    },
+    {
+      "name": "Web · Code snippets",
+      "description": "Code snippet dialogs of the score board."
+    },
+    {
+      "name": "Web · Web3",
+      "description": "NFT and wallet pages."
+    }
+  ]
+}

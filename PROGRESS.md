@@ -45,8 +45,14 @@ changing anything on the target. Client code for picked operations is planned (`
   a Bearer header). Session values never reach a file, a log or the chat. Asset session mode
   loads code only (start page, `*.htm`, `*.js`, `*.mjs`, `*.map`), pages read, never saved.
 - **Two reference specs show the shape** (2026-11-02, Claude Code tip 3). `skills/analyze/references/`:
-  a simple and a hard case from the mock router, generic, marked `x-unwire-reference`; step 4
-  reads both before writing a spec, copies the shape, never paths or names.
+  a simple and a hard case of an invented storage device, marked `x-unwire-reference`; step 4
+  reads both, copies the shape, never paths or names. No path, operationId or scheme may
+  match a testbed example (a test checks): the first version came from the mock router and
+  handed the sid run its answers.
+- **Confidence, parameter names, live GET hints are rules** (2026-11-02, from the runs against
+  :3014 and Juice Shop). `high` only with method, path and body literal at the call; path
+  parameters named after the code's variable; the agent applies the live GET's `security`
+  hints (2xx without session → `[]`).
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`.
 - **The login question is asked, never decided; Referer like a browser** (2026-11-02).
@@ -70,8 +76,8 @@ changing anything on the target. Client code for picked operations is planned (`
   count as `AccessDenied`. `Get-UnwireJsCandidate` reads the method only from the call's own
   arguments.
 - Examples (committed, checked for secrets):
-  - `examples/juiceshop/`: live GET 33 of 46, 30 of 89 operations verified, 8 more 200 with
-    the Bearer header; open: `order-history/orders` 403 (admin), two 500s.
+  - `examples/testbed/juiceshop/` (user decision 2026-11-02, replaces `examples/juiceshop/`):
+    the second run, 88 operations, with `candidates.json`; its `assets/` git-ignored (6.8 MB). B2B missing (see Open).
   - `examples/mocks/<variant>/`: all 7 mock variants after the fixes, 14 candidates each
     with and without login, live GET 5 of 5 per variant (401 → 200), Digest rejected by
     design, 0 session values in any file. The specs were built by a scratch script from
@@ -82,6 +88,12 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
+- **Embedded Swagger UI spec**: `/api-docs/swagger-ui-init.js` carries the spec as
+  `swaggerDoc`; `Find-UnwireSpec` misses it and finds only the Petstore default (Juice Shop
+  B2B lost in the second run, 88 instead of 89).
+- **`examples/testbed/juiceshop/`** has three wrong `security` values (`/api/Quantitys/`,
+  `/rest/chatbot/status`, `/rest/user/whoami`: 200 without session, still `bearerAuth`),
+  from the run before the live GET hint rule.
 - **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
   50 × 404, then MaxGuessMisses. Harmless, but noise.
 - **Path values for the live GET** come only from the user: GETs with path parameters stay
@@ -95,6 +107,7 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Next
 
-The whole
-`/unwire` chain in the chat against one mock variant (e.g. :3014): does `unwire:analyze`
-alone, without a scratch script, get to the spec in `examples/mocks/sid/`?
+Embedded Swagger UI spec in `Find-UnwireSpec`, then repeat both runs in fresh sessions
+(`/unwire http://127.0.0.1:3014 -Name MockSid`, `/unwire http://localhost:3000 -Name JuiceShop`)
+and compare with `examples/`: the first runs found all 10 mock operations and 88 of 89 Juice
+Shop operations, but the references still shared the mock's paths then.

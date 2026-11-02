@@ -68,9 +68,9 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
   network mocked. Test values only, never a real cookie, token or host of the user.
 - Output of real targets goes to `/unwire/<name>/` (git-ignored, anchored to the root:
   a bare `unwire/` would also hide `plugins/unwire/`). It never gets committed. Exception:
-  `examples/juiceshop/` and `examples/mocks/` (testbed targets, checked for secrets), the user's reference for feedback.
-- Every change of `tmpl.api.html` or `assets/icon.svg` (the embedded favicon) re-renders `examples/juiceshop/API.html` in the same step
-  (`ConvertTo-UnwireHtml.ps1 -Path ./examples/juiceshop/openapi.json`), a Pester test fails otherwise.
+  `examples/testbed/juiceshop/` and `examples/mocks/` (testbed targets, checked for secrets), the user's reference for feedback.
+- Every change of `tmpl.api.html` or `assets/icon.svg` (the embedded favicon) re-renders `examples/testbed/juiceshop/API.html` in the same step
+  (`ConvertTo-UnwireHtml.ps1 -Path ./examples/testbed/juiceshop/openapi.json`), a Pester test fails otherwise.
   A visible change also retakes the README screenshot (`./docs/screenshots/New-UnwireScreenshot.ps1`),
   no test checks that one.
 - Examples and docs use generic hosts (`router.test`, `nas.example.test`), not the user's.

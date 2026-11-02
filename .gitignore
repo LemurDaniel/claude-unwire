@@ -4,3 +4,6 @@
 
 # Local settings of the testbed, .env.example holds the test values
 examples/testbed/.env
+
+# Downloaded Juice Shop bundle (6.8 MB), the spec and its page stay committed
+examples/testbed/juiceshop/assets/
