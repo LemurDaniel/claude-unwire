@@ -82,8 +82,9 @@ changing anything on the target. Client code for picked operations is planned (`
   count as `AccessDenied`. `Get-UnwireJsCandidate` reads the method only from the call's own
   arguments.
 - Examples (committed, checked for secrets):
-  - `examples/juiceshop/` (replaced by the second run, user decision 2026-11-02):
-    the second run, 88 operations, with `candidates.json`; its `assets/` git-ignored (6.8 MB). B2B missing (see Open).
+  - `examples/juiceshop/`: the fourth run (2026-11-02), 90 operations incl. the B2B API from the
+    embedded Swagger UI spec, `Test-UnwireCoverage` 0 of 160 missing, path parameters named
+    after the code, `security` from the live GET applied; `assets/` git-ignored.
   - `examples/mocks/<variant>/`: all 7 mock variants after the fixes, 14 candidates each
     with and without login, live GET 5 of 5 per variant (401 → 200), Digest rejected by
     design, 0 session values in any file. The specs were built by a scratch script from
@@ -94,9 +95,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
-- **`examples/juiceshop/`** has three wrong `security` values (`/api/Quantitys/`,
-  `/rest/chatbot/status`, `/rest/user/whoami`: 200 without session, still `bearerAuth`),
-  from the run before the live GET hint rule.
 - **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:
   50 × 404, then MaxGuessMisses. Harmless, but noise.
 - **Path values for the live GET** come only from the user: GETs with path parameters stay
@@ -110,7 +108,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Next
 
-A fresh Juice Shop run in a new session (`/unwire http://localhost:3000 -Name JuiceShop`): it
-should now find the embedded B2B spec (`Find-UnwireSpec` follows `/api-docs` → `/api-docs/` and
-reads `swagger-ui-init.js`), reach 89 operations with `Test-UnwireCoverage` empty, and replace
-`examples/juiceshop/`.
+D · eval loop with the testbed (tips 13 to 16): `examples/mocks/sid` and `examples/juiceshop`
+as checkable goals (operations found, none invented, coverage empty), a check script separate
+from the run, a cap on runs and cost.

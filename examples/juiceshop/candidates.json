@@ -1,9 +1,16 @@
 {
   "sources": [
-    "api-docs/index.html",
-    "api-docs/swagger-initializer.js",
-    "api-docs/swagger-ui-bundle.js",
-    "api-docs/swagger-ui-standalone-preset.js",
+    "103.js",
+    "112.js",
+    "202.js",
+    "472.js",
+    "535.js",
+    "613.js",
+    "67.js",
+    "745.js",
+    "859.js",
+    "98.js",
+    "common.js",
     "index.html",
     "main.js",
     "polyfills.js",
@@ -12,64 +19,314 @@
   ],
   "candidates": [
     {
-      "File": "api-docs/swagger-initializer.js",
-      "Line": 6,
-      "Column": 10,
+      "File": "202.js",
+      "Line": 1,
+      "Column": 14011,
       "Kind": "url-string",
       "Method": null,
-      "Target": "https://petstore.swagger.io/v2/swagger.json",
+      "Target": "https://ethereum-sepolia.blockpi.network/v1/rpc/public",
       "IsLiteralTarget": true,
-      "Snippet": "es will be replaced by docker/configurator, when it runs in a docker-container window.ui = SwaggerUIBundle({ url: \"https://petstore.swagger.io/v2/swagger.json\", dom_id: '#swagger-ui', deepLinking: true, presets: [ SwaggerUIBundle.presets.apis, SwaggerUISt"
+      "Snippet": "hainId:\"0xaa36a7\",chainName:\"Sepolia Test Network\",nativeCurrency:{name:\"SepoliaETH\",symbol:\"ETH\",decimals:18},rpcUrls:[\"https://ethereum-sepolia.blockpi.network/v1/rpc/public\"],blockExplorerUrls:[\"https://sepolia.etherscan.io/\"]}]});const Te=\"11155111\",Ge=String(re.chain?.id);re&&Ge!==Te?(L.ses"
     },
     {
-      "File": "api-docs/swagger-ui-bundle.js",
-      "Line": 2,
-      "Column": 701924,
-      "Kind": "jquery",
-      "Method": "GET",
-      "Target": "C",
-      "IsLiteralTarget": false,
-      "Snippet": "s.getSnippetGenerators()?.keySeq().first()),[L,B]=(0,Pe.useState)(s?.getDefaultExpanded()),$=s.getSnippetGenerators(),V=$.get(C),U=V.get(\"fn\")(o),handleSetIsExpanded=()=>{B(!L)},handleGetBtnStyle=o=>o===C?Lo:Do,handlePreventYScrollingBeyondElement"
-    },
-    {
-      "File": "api-docs/swagger-ui-bundle.js",
-      "Line": 2,
-      "Column": 804496,
+      "File": "202.js",
+      "Line": 1,
+      "Column": 425821,
       "Kind": "fetch",
       "Method": null,
-      "Target": "o",
-      "IsLiteralTarget": false,
-      "Snippet": ">{delete Pu[o]}))},JSONRefError,wrapError,getDoc,split:refs_split,extractFromDoc,fetchJSON:function fetchJSON(o){return fetch(o,{headers:{Accept:wu},loadSpec:!0}).then((o=>o.text())).then((o=>to.load(o)))},extract,jsonPointerToArray,unescapeJsonPo"
+      "Target": "https://binaries.soliditylang.org/bin/list.json",
+      "IsLiteralTarget": true,
+      "Snippet": ";Ye.addEventListener(\"message\",({data:G})=>{const{id:ue,input:$,version:K,command:B}=G;if(\"fetch-compiler-versions\"===B)fetch(\"https://binaries.soliditylang.org/bin/list.json\").then(Le=>Le.json()).then(Le=>{postMessage({id:ue,result:Le})}).catch(Le=>{postMessage({id:ue,error:Le.message})});else"
     },
     {
-      "File": "api-docs/swagger-ui-bundle.js",
-      "Line": 2,
-      "Column": 1010929,
-      "Kind": "fetch",
+      "File": "67.js",
+      "Line": 1,
+      "Column": 3101,
+      "Kind": "url-string",
       "Method": null,
-      "Target": "o",
-      "IsLiteralTarget": false,
-      "Snippet": "low\",C=this.redirects>0?this.redirects:void 0;try{return(await s({url:o.uri,signal:u,userFetch:async(o,s)=>{let i=await fetch(o,s);try{i.headers.delete(\"Content-Type\")}catch{i=new Response(i.body,{...i,headers:new Headers(i.headers)}),i.headers.de"
+      "Target": "https://ethereum-sepolia.blockpi.network/v1/rpc/public",
+      "IsLiteralTarget": true,
+      "Snippet": "hainId:\"0xaa36a7\",chainName:\"Sepolia Test Network\",nativeCurrency:{name:\"SepoliaETH\",symbol:\"ETH\",decimals:18},rpcUrls:[\"https://ethereum-sepolia.blockpi.network/v1/rpc/public\"],blockExplorerUrls:[\"https://sepolia.etherscan.io/\"]}]});const r=\"11155111\",c=String(o.chain?.id);o&&c!==r?(t.session=!"
     },
     {
-      "File": "api-docs/swagger-ui-bundle.js",
-      "Line": 2,
-      "Column": 1159847,
+      "File": "745.js",
+      "Line": 1,
+      "Column": 2726,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum-sepolia.blockpi.network/v1/rpc/public",
+      "IsLiteralTarget": true,
+      "Snippet": "hainId:\"0xaa36a7\",chainName:\"Sepolia Test Network\",nativeCurrency:{name:\"SepoliaETH\",symbol:\"ETH\",decimals:18},rpcUrls:[\"https://ethereum-sepolia.blockpi.network/v1/rpc/public\"],blockExplorerUrls:[\"https://sepolia.etherscan.io/\"]}]});const s=\"11155111\",l=String(o.chain?.id);o&&l!==s?(e.session=!"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 189567,
       "Kind": "url-template",
       "Method": null,
-      "Target": "${i}/debug?url=${encodeURIComponent(this.state.url)}",
+      "Target": "${this.baseUrl}/api?module=${z}${$}${this.apiKey?",
       "IsLiteralTarget": true,
-      "Snippet": "?Pe.createElement(\"span\",{className:\"float-right\"},Pe.createElement(\"a\",{target:\"_blank\",rel:\"noopener noreferrer\",href:`${i}/debug?url=${encodeURIComponent(this.state.url)}`},Pe.createElement(ValidatorImage,{src:`${i}?url=${encodeURIComponent(this.state.url)}`,alt:\"Online validator badge\"})))"
+      "Snippet": "}getUrl(z,q){const $=Object.keys(q).reduce((Ie,_e)=>{const Fe=q[_e];return null!=Fe&&(Ie+=`&${_e}=${Fe}`),Ie},\"\");return`${this.baseUrl}/api?module=${z}${$}${this.apiKey?`&apikey=${this.apiKey}`:\"\"}`}getPostUrl(){return`${this.baseUrl}/api`}getPostData(z,q){return q.module=z,q.apikey=this.a"
     },
     {
-      "File": "api-docs/swagger-ui-bundle.js",
-      "Line": 2,
-      "Column": 1342066,
-      "Kind": "jquery",
-      "Method": "GET",
-      "Target": "username",
+      "File": "98.js",
+      "Line": 1,
+      "Column": 189666,
+      "Kind": "url-template",
+      "Method": null,
+      "Target": "${this.baseUrl}/api",
       "IsLiteralTarget": true,
-      "Snippet": "eme\")||\"\").toLowerCase();let $=this.getValue(),V=i.allErrors().filter((o=>o.get(\"authId\")===u));if(\"basic\"===B){let s=$?$.get(\"username\"):null;return Pe.createElement(\"div\",null,Pe.createElement(\"h4\",null,Pe.createElement(\"code\",null,u||o.get(\"name\")),\" ("
+      "Snippet": "{Fe}`),Ie},\"\");return`${this.baseUrl}/api?module=${z}${$}${this.apiKey?`&apikey=${this.apiKey}`:\"\"}`}getPostUrl(){return`${this.baseUrl}/api`}getPostData(z,q){return q.module=z,q.apikey=this.apiKey,q}fetch(z,q,$){return t(this,void 0,void 0,function*(){const xe"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 189746,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "z",
+      "IsLiteralTarget": false,
+      "Snippet": "${this.apiKey}`:\"\"}`}getPostUrl(){return`${this.baseUrl}/api`}getPostData(z,q){return q.module=z,q.apikey=this.apiKey,q}fetch(z,q,$){return t(this,void 0,void 0,function*(){const xe=$?this.getPostUrl():this.getUrl(z,q),Ie=$?this.getPostData(z,q):n"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 190625,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "l,{perform:{get:()=>super.perform}});return t(this,void 0,void 0,function*(){switch(z){case\"getBlockNumber\":return this.fetch(\"proxy\",{action:\"eth_blockNumber\"});case\"getGasPrice\":return this.fetch(\"proxy\",{action:\"eth_gasPrice\"});case\"getBalance\":retur"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 190697,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "n*(){switch(z){case\"getBlockNumber\":return this.fetch(\"proxy\",{action:\"eth_blockNumber\"});case\"getGasPrice\":return this.fetch(\"proxy\",{action:\"eth_gasPrice\"});case\"getBalance\":return this.fetch(\"account\",{action:\"balance\",address:q.address,tag:q.blockTa"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 190765,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "account",
+      "IsLiteralTarget": true,
+      "Snippet": "n:\"eth_blockNumber\"});case\"getGasPrice\":return this.fetch(\"proxy\",{action:\"eth_gasPrice\"});case\"getBalance\":return this.fetch(\"account\",{action:\"balance\",address:q.address,tag:q.blockTag});case\"getTransactionCount\":return this.fetch(\"proxy\",{action:\"eth_g"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 190872,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": ":return this.fetch(\"account\",{action:\"balance\",address:q.address,tag:q.blockTag});case\"getTransactionCount\":return this.fetch(\"proxy\",{action:\"eth_getTransactionCount\",address:q.address,tag:q.blockTag});case\"getCode\":return this.fetch(\"proxy\",{action:\"e"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 190981,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "eturn this.fetch(\"proxy\",{action:\"eth_getTransactionCount\",address:q.address,tag:q.blockTag});case\"getCode\":return this.fetch(\"proxy\",{action:\"eth_getCode\",address:q.address,tag:q.blockTag});case\"getStorageAt\":return this.fetch(\"proxy\",{action:\"eth_getS"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191083,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "Code\":return this.fetch(\"proxy\",{action:\"eth_getCode\",address:q.address,tag:q.blockTag});case\"getStorageAt\":return this.fetch(\"proxy\",{action:\"eth_getStorageAt\",address:q.address,position:q.position,tag:q.blockTag});case\"sendTransaction\":return this.fet"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191213,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "xy\",{action:\"eth_getStorageAt\",address:q.address,position:q.position,tag:q.blockTag});case\"sendTransaction\":return this.fetch(\"proxy\",{action:\"eth_sendRawTransaction\",hex:q.signedTransaction},!0).catch(xe=>c(\"sendTransaction\",xe,q.signedTransaction));ca"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191385,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": ".signedTransaction},!0).catch(xe=>c(\"sendTransaction\",xe,q.signedTransaction));case\"getBlock\":if(q.blockTag)return this.fetch(\"proxy\",{action:\"eth_getBlockByNumber\",tag:q.blockTag,boolean:q.includeTransactions?\"true\":\"false\"});throw new Error(\"getBlock"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191582,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "Transactions?\"true\":\"false\"});throw new Error(\"getBlock by blockHash not implemented\");case\"getTransaction\":return this.fetch(\"proxy\",{action:\"eth_getTransactionByHash\",txhash:q.transactionHash});case\"getTransactionReceipt\":return this.fetch(\"proxy\",{ac"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191698,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "his.fetch(\"proxy\",{action:\"eth_getTransactionByHash\",txhash:q.transactionHash});case\"getTransactionReceipt\":return this.fetch(\"proxy\",{action:\"eth_getTransactionReceipt\",txhash:q.transactionHash});case\"call\":{if(\"latest\"!==q.blockTag)throw new Error(\"Et"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 191971,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "not support blockTag for call\");const xe=n(q.transaction);xe.module=\"proxy\",xe.action=\"eth_call\";try{return yield this.fetch(\"proxy\",xe,!0)}catch(Ie){return c(\"call\",Ie,q.transaction)}}case\"estimateGas\":{const xe=n(q.transaction);xe.module=\"proxy\",xe.a"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 192150,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "proxy",
+      "IsLiteralTarget": true,
+      "Snippet": "tion)}}case\"estimateGas\":{const xe=n(q.transaction);xe.module=\"proxy\",xe.action=\"eth_estimateGas\";try{return yield this.fetch(\"proxy\",xe,!0)}catch(Ie){return c(\"estimateGas\",Ie,q.transaction)}}case\"getLogs\":{const xe={action:\"getLogs\"};if(q.filter.fromB"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 192818,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "logs",
+      "IsLiteralTarget": true,
+      "Snippet": "rowError(\"unsupported topic format\",H.Logger.errors.UNSUPPORTED_OPERATION,{topic0:Fe}),xe.topic0=Fe}const Ie=yield this.fetch(\"logs\",xe);let _e={};for(let Fe=0;Fe<Ie.length;Fe++){const ie=Ie[Fe];if(null==ie.blockHash){if(null==_e[ie.blockNumber]){const"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 193149,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "stats",
+      "IsLiteralTarget": true,
+      "Snippet": "ckHash=_e[ie.blockNumber]}}return Ie}case\"getEtherPrice\":return\"homestead\"!==this.network.name?0:parseFloat((yield this.fetch(\"stats\",{action:\"ethprice\"})).ethusd)}return $.perform.call(this,z,q)})}getHistory(z,q,$){return t(this,void 0,void 0,function*"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 193412,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "account",
+      "IsLiteralTarget": true,
+      "Snippet": "e={action:\"txlist\",address:yield this.resolveName(z),startblock:q??0,endblock:$??99999999,sort:\"asc\"};return(yield this.fetch(\"account\",xe)).map(_e=>{[\"contractAddress\",\"to\"].forEach(function(ie){\"\"==_e[ie]&&delete _e[ie]}),null==_e.creates&&null!=_e.cont"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 202524,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/v3/",
+      "IsLiteralTarget": true,
+      "Snippet": ".UNSUPPORTED_OPERATION,{operation:\"InfuraProvider.getWebSocketProvider()\"}),super(xe.url.replace(/^http/i,\"ws\").replace(\"/v3/\",\"/ws/v3/\"),z),(0,L.defineReadOnly)(this,\"apiKey\",$.projectId),(0,L.defineReadOnly)(this,\"projectId\",$.projectId),(0,L.d"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 203944,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "/v3/",
+      "IsLiteralTarget": true,
+      "Snippet": "pported network\",H.Logger.errors.INVALID_ARGUMENT,{argument:\"network\",value:z})}const xe={allowGzip:!0,url:\"https://\"+$+\"/v3/\"+q.projectId,throttleCallback:(Ie,_e)=>(q.projectId===U&&(0,O.vh)(),Promise.resolve(!0))};return null!=q.projectSecret&&"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 204489,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum.api.nodesmith.io/v1/mainnet/jsonrpc",
+      "IsLiteralTarget": true,
+      "Snippet": "h will be discontinued on 2019-12-20; please migrate to another platform.\");let $=null;switch(z.name){case\"homestead\":$=\"https://ethereum.api.nodesmith.io/v1/mainnet/jsonrpc\";break;case\"ropsten\":$=\"https://ethereum.api.nodesmith.io/v1/ropsten/jsonrpc\";break;case\"rinkeby\":$=\"https://ethereum.ap"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 204566,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum.api.nodesmith.io/v1/ropsten/jsonrpc",
+      "IsLiteralTarget": true,
+      "Snippet": "et $=null;switch(z.name){case\"homestead\":$=\"https://ethereum.api.nodesmith.io/v1/mainnet/jsonrpc\";break;case\"ropsten\":$=\"https://ethereum.api.nodesmith.io/v1/ropsten/jsonrpc\";break;case\"rinkeby\":$=\"https://ethereum.api.nodesmith.io/v1/rinkeby/jsonrpc\";break;case\"goerli\":$=\"https://ethereum.api"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 204643,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum.api.nodesmith.io/v1/rinkeby/jsonrpc",
+      "IsLiteralTarget": true,
+      "Snippet": "/v1/mainnet/jsonrpc\";break;case\"ropsten\":$=\"https://ethereum.api.nodesmith.io/v1/ropsten/jsonrpc\";break;case\"rinkeby\":$=\"https://ethereum.api.nodesmith.io/v1/rinkeby/jsonrpc\";break;case\"goerli\":$=\"https://ethereum.api.nodesmith.io/v1/goerli/jsonrpc\";break;case\"kovan\":$=\"https://ethereum.api.no"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 204719,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum.api.nodesmith.io/v1/goerli/jsonrpc",
+      "IsLiteralTarget": true,
+      "Snippet": "o/v1/ropsten/jsonrpc\";break;case\"rinkeby\":$=\"https://ethereum.api.nodesmith.io/v1/rinkeby/jsonrpc\";break;case\"goerli\":$=\"https://ethereum.api.nodesmith.io/v1/goerli/jsonrpc\";break;case\"kovan\":$=\"https://ethereum.api.nodesmith.io/v1/kovan/jsonrpc\";break;default:de.throwArgumentError(\"unsupport"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 204793,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://ethereum.api.nodesmith.io/v1/kovan/jsonrpc",
+      "IsLiteralTarget": true,
+      "Snippet": "h.io/v1/rinkeby/jsonrpc\";break;case\"goerli\":$=\"https://ethereum.api.nodesmith.io/v1/goerli/jsonrpc\";break;case\"kovan\":$=\"https://ethereum.api.nodesmith.io/v1/kovan/jsonrpc\";break;default:de.throwArgumentError(\"unsupported network\",\"network\",arguments[0])}return $+\"?apiKey=\"+q}}const we=new H"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 206010,
+      "Kind": "url-string",
+      "Method": null,
+      "Target": "https://${$}/v1/lb/${q.applicationId}",
+      "IsLiteralTarget": true,
+      "Snippet": "hrowError(\"unsupported network\",H.Logger.errors.INVALID_ARGUMENT,{argument:\"network\",value:z})}const Ie={headers:{},url:`https://${$}/v1/lb/${q.applicationId}`};return null!=q.applicationSecretKey&&(Ie.user=\"\",Ie.password=q.applicationSecretKey),Ie}isCommunityResource(){return t"
+    },
+    {
+      "File": "98.js",
+      "Line": 1,
+      "Column": 291923,
+      "Kind": "fetch",
+      "Method": null,
+      "Target": "R",
+      "IsLiteralTarget": false,
+      "Snippet": "ls&&(M.credentials=Y.credentials),Y.redirect&&(M.redirect=Y.redirect),Y.referrer&&(M.referrer=Y.referrer)}const h=yield fetch(R,M),I=yield h.arrayBuffer(),F={};return h.headers.forEach?h.headers.forEach((Y,T)=>{F[T.toLowerCase()]=Y}):h.headers.key"
     },
     {
       "File": "main.js",
@@ -84,6 +341,16 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 381,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/application-configuration\"",
+      "IsLiteralTarget": false,
+      "Snippet": "is.hostServer+\"/rest/admin\"}getApplicationConfiguration(){return this.configObservable||(this.configObservable=this.http.get(this.host+\"/application-configuration\").pipe((0,t.U)(b=>b.config,(0,I.K)(b=>{throw b})))),this.configObservable}}return T.\\u0275fac=function(b){return new(b||"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 826,
       "Kind": "url-string",
       "Method": null,
@@ -94,12 +361,72 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 869,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/nftUnlocked\"",
+      "IsLiteralTarget": false,
+      "Snippet": "ctor(b){this.http=b,this.hostServer=I.N.hostServer,this.host=this.hostServer+\"/rest/web3\"}nftUnlocked(){return this.http.get(this.host+\"/nftUnlocked\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}nftMintListen(){return this.http.get(this.host+\"/nftMintListen\").pipe((0,S.U"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 974,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/nftMintListen\"",
+      "IsLiteralTarget": false,
+      "Snippet": "eturn this.http.get(this.host+\"/nftUnlocked\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}nftMintListen(){return this.http.get(this.host+\"/nftMintListen\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}checkNftMinted(){return this.http.get(this.hostServer+\"/api/Challenges/?key="
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 1082,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/api/Challenges/?key=nftMintChallenge\"",
+      "IsLiteralTarget": false,
+      "Snippet": "rn this.http.get(this.host+\"/nftMintListen\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}checkNftMinted(){return this.http.get(this.hostServer+\"/api/Challenges/?key=nftMintChallenge\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}submitKey(b){return this.http.post(this.host+\"/submitKey\",{privateKey:b}).pi"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 1103,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/Challenges/?key=nftMintChallenge",
       "IsLiteralTarget": true,
       "Snippet": ".host+\"/nftMintListen\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}checkNftMinted(){return this.http.get(this.hostServer+\"/api/Challenges/?key=nftMintChallenge\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}submitKey(b){return this.http.post(this.host+\"/submitKey\",{privateKey:b}).pi"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 1215,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/submitKey\"",
+      "IsLiteralTarget": false,
+      "Snippet": "tServer+\"/api/Challenges/?key=nftMintChallenge\").pipe((0,S.U)(b=>b),(0,t.K)(b=>{throw b}))}submitKey(b){return this.http.post(this.host+\"/submitKey\",{privateKey:b}).pipe((0,S.U)(u=>u),(0,t.K)(u=>{throw u}))}verifyNFTWallet(b){return this.http.post(this.host+\"/walletNF"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 1337,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/walletNFTVerify\"",
+      "IsLiteralTarget": false,
+      "Snippet": "ost(this.host+\"/submitKey\",{privateKey:b}).pipe((0,S.U)(u=>u),(0,t.K)(u=>{throw u}))}verifyNFTWallet(b){return this.http.post(this.host+\"/walletNFTVerify\",{walletAddress:b}).pipe((0,S.U)(u=>u),(0,t.K)(u=>{throw u}))}walletAddressSend(b){return this.http.post(this.host+\"/wal"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 1470,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/walletExploitAddress\"",
+      "IsLiteralTarget": false,
+      "Snippet": "st+\"/walletNFTVerify\",{walletAddress:b}).pipe((0,S.U)(u=>u),(0,t.K)(u=>{throw u}))}walletAddressSend(b){return this.http.post(this.host+\"/walletExploitAddress\",{walletAddress:b}).pipe((0,S.U)(u=>u),(0,t.K)(u=>{throw u}))}}return T.\\u0275fac=function(b){return new(b||T)(U.LFG(M.e"
     },
     {
       "File": "main.js",
@@ -134,12 +461,52 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 44972,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/user/authentication-details/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "this.isLoggedIn=new Rt.xQ,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Users\"}find(e){return this.http.get(this.hostServer+\"/rest/user/authentication-details/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 44993,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/user/authentication-details/",
       "IsLiteralTarget": true,
       "Snippet": "t.xQ,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Users\"}find(e){return this.http.get(this.hostServer+\"/rest/user/authentication-details/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45112,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "+\"/rest/user/authentication-details/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45209,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}login(e){return this.isLoggedIn.next(!0),this.http.post(this.hostServ"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45329,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.hostServer+\"/rest/user/login\"",
+      "IsLiteralTarget": false,
+      "Snippet": ".post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}login(e){return this.isLoggedIn.next(!0),this.http.post(this.hostServer+\"/rest/user/login\",e).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))}getLoggedInState(){return this.isLoggedIn.asObservable()}ch"
     },
     {
       "File": "main.js",
@@ -154,12 +521,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 45521,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/user/change-password?current=\"",
+      "IsLiteralTarget": false,
+      "Snippet": "tion),(0,_.K)(o=>{throw o}))}getLoggedInState(){return this.isLoggedIn.asObservable()}changePassword(e){return this.http.get(this.hostServer+\"/rest/user/change-password?current=\"+e.current+\"&new=\"+e.new+\"&repeat=\"+e.repeat).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o.error}))}resetPassword(e){retu"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 45542,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/user/change-password?current=",
       "IsLiteralTarget": true,
       "Snippet": "ow o}))}getLoggedInState(){return this.isLoggedIn.asObservable()}changePassword(e){return this.http.get(this.hostServer+\"/rest/user/change-password?current=\"+e.current+\"&new=\"+e.new+\"&repeat=\"+e.repeat).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o.error}))}resetPassword(e){retu"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 45711,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.hostServer+\"/rest/user/reset-password\"",
+      "IsLiteralTarget": false,
+      "Snippet": "&new=\"+e.new+\"&repeat=\"+e.repeat).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o.error}))}resetPassword(e){return this.http.post(this.hostServer+\"/rest/user/reset-password\",e).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o}))}whoAmI(){return this.http.get(this.hostServer+\"/rest/user/whoami\").pi"
     },
     {
       "File": "main.js",
@@ -174,12 +561,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 45836,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/user/whoami\"",
+      "IsLiteralTarget": false,
+      "Snippet": "(this.hostServer+\"/rest/user/reset-password\",e).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o}))}whoAmI(){return this.http.get(this.hostServer+\"/rest/user/whoami\").pipe((0,v.U)(e=>e.user),(0,_.K)(e=>{throw e}))}oauthLogin(e){return this.http.get(\"https://www.googleapis.com/oauth2/v"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 45857,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/user/whoami",
       "IsLiteralTarget": true,
       "Snippet": "st/user/reset-password\",e).pipe((0,v.U)(o=>o.user),(0,_.K)(o=>{throw o}))}whoAmI(){return this.http.get(this.hostServer+\"/rest/user/whoami\").pipe((0,v.U)(e=>e.user),(0,_.K)(e=>{throw e}))}oauthLogin(e){return this.http.get(\"https://www.googleapis.com/oauth2/v"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 46068,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/saveLoginIp\"",
+      "IsLiteralTarget": false,
+      "Snippet": "is.http.get(\"https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=\"+e)}saveLastLoginIp(){return this.http.get(this.hostServer+\"/rest/saveLoginIp\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}deluxeStatus(){return this.http.get(this.hostServer+\"/rest/deluxe-membership"
     },
     {
       "File": "main.js",
@@ -194,12 +601,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 46183,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/deluxe-membership\"",
+      "IsLiteralTarget": false,
+      "Snippet": ".http.get(this.hostServer+\"/rest/saveLoginIp\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}deluxeStatus(){return this.http.get(this.hostServer+\"/rest/deluxe-membership\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}upgradeToDeluxe(e,o){return this.http.post(this.hostServer+\"/rest/delux"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 46204,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/deluxe-membership",
       "IsLiteralTarget": true,
       "Snippet": "rver+\"/rest/saveLoginIp\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}deluxeStatus(){return this.http.get(this.hostServer+\"/rest/deluxe-membership\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}upgradeToDeluxe(e,o){return this.http.post(this.hostServer+\"/rest/delux"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 46315,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.hostServer+\"/rest/deluxe-membership\"",
+      "IsLiteralTarget": false,
+      "Snippet": "stServer+\"/rest/deluxe-membership\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}upgradeToDeluxe(e,o){return this.http.post(this.hostServer+\"/rest/deluxe-membership\",{paymentMode:e,paymentId:o}).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new("
     },
     {
       "File": "main.js",
@@ -224,32 +651,72 @@
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 48755,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 48750,
+      "Kind": "http-client",
+      "Method": "GET",
       "Target": "${this.hostServer}/rest/basket/${e}",
       "IsLiteralTarget": true,
-      "Snippet": "erver=O.N.hostServer,this.itemTotal=new Rt.xQ,this.host=this.hostServer+\"/api/BasketItems\"}find(e){return this.http.get(`${this.hostServer}/rest/basket/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data"
+      "Snippet": "hostServer=O.N.hostServer,this.itemTotal=new Rt.xQ,this.host=this.hostServer+\"/api/BasketItems\"}find(e){return this.http.get(`${this.hostServer}/rest/basket/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data"
     },
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 49268,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 48864,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "s.http.get(`${this.hostServer}/rest/basket/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 48962,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "et(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 49060,
+      "Kind": "http-client",
+      "Method": "DELETE",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 49160,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}checkout(e,o,a){return this.http.post(`${this.hostServer}/rest/basket"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 49262,
+      "Kind": "http-client",
+      "Method": "POST",
       "Target": "${this.hostServer}/rest/basket/${e}/checkout",
       "IsLiteralTarget": true,
-      "Snippet": "rn this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}checkout(e,o,a){return this.http.post(`${this.hostServer}/rest/basket/${e}/checkout`,{couponData:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this"
+      "Snippet": "){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}checkout(e,o,a){return this.http.post(`${this.hostServer}/rest/basket/${e}/checkout`,{couponData:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this"
     },
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 49444,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 49439,
+      "Kind": "http-client",
+      "Method": "PUT",
       "Target": "${this.hostServer}/rest/basket/${e}/coupon/${o}",
       "IsLiteralTarget": true,
-      "Snippet": "ta:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this.http.put(`${this.hostServer}/rest/basket/${e}/coupon/${o}`,{}).pipe((0,v.U)(a=>a.discount),(0,_.K)(a=>{throw a}))}updateNumberOfCartItems(){this.find(parseInt(sessionStorage.getI"
+      "Snippet": "ponData:o,orderDetails:a}).pipe((0,v.U)(r=>r.orderConfirmation),(0,_.K)(r=>{throw r}))}applyCoupon(e,o){return this.http.put(`${this.hostServer}/rest/basket/${e}/coupon/${o}`,{}).pipe((0,v.U)(a=>a.discount),(0,_.K)(a=>{throw a}))}updateNumberOfCartItems(){this.find(parseInt(sessionStorage.getI"
     },
     {
       "File": "main.js",
@@ -264,12 +731,52 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 62173,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/track-order\"}find(e){return e=encodeURIComponent(e),this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov="
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 69678,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/Feedbacks",
       "IsLiteralTarget": true,
       "Snippet": "dding:0}\"]}),n})(),Pt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Feedbacks\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return th"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 69719,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "ructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Feedbacks\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 69821,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 69914,
+      "Kind": "http-client",
+      "Method": "DELETE",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275"
     },
     {
       "File": "main.js",
@@ -284,6 +791,16 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 70273,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "or(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/captcha\"}getCaptcha(){return this.http.get(this.host+\"/\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 86624,
       "Kind": "url-string",
       "Method": null,
@@ -294,12 +811,42 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 86671,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/SecurityAnswers\"}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 86979,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/SecurityQuestions",
       "IsLiteralTarget": true,
       "Snippet": "dIn:\"root\"}),n})(),zt=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/SecurityQuestions\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}findBy(e){return"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 87028,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/SecurityQuestions\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}findBy(e){return this.http.get(this.hostServer+\"/rest/user/s"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 87132,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/user/security-question?email=\"",
+      "IsLiteralTarget": false,
+      "Snippet": "return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}findBy(e){return this.http.get(this.hostServer+\"/rest/user/security-question?email=\"+e).pipe((0,v.U)(o=>o.question),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n."
     },
     {
       "File": "main.js",
@@ -324,6 +871,46 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 107458,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}/reviews",
+      "IsLiteralTarget": true,
+      "Snippet": "tructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/products\"}get(e){return this.http.get(`${this.host}/${e}/reviews`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}create(e,o){return this.http.put(`${this.host}/${e}/reviews`,o).pipe((0"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 107567,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}/reviews",
+      "IsLiteralTarget": true,
+      "Snippet": "n this.http.get(`${this.host}/${e}/reviews`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}create(e,o){return this.http.put(`${this.host}/${e}/reviews`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}patch(e){return this.http.patch(this.host+\"/reviews\",e).pipe((0,v.U)("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 107675,
+      "Kind": "http-client",
+      "Method": "PATCH",
+      "Target": "this.host+\"/reviews\"",
+      "IsLiteralTarget": false,
+      "Snippet": "rn this.http.put(`${this.host}/${e}/reviews`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}patch(e){return this.http.patch(this.host+\"/reviews\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}like(e){return this.http.post(this.host+\"/reviews\",{id:e}).pipe((0,v."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 107777,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/reviews\"",
+      "IsLiteralTarget": false,
+      "Snippet": "){return this.http.patch(this.host+\"/reviews\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}like(e){return this.http.post(this.host+\"/reviews\",{id:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 119207,
       "Kind": "url-string",
       "Method": null,
@@ -334,12 +921,42 @@
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 119254,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 119249,
+      "Kind": "http-client",
+      "Method": "GET",
       "Target": "${this.hostServer}/rest/products/search?q=${e}",
       "IsLiteralTarget": true,
-      "Snippet": "(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Products\"}search(e){return this.http.get(`${this.hostServer}/rest/products/search?q=${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>"
+      "Snippet": "uctor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Products\"}search(e){return this.http.get(`${this.hostServer}/rest/products/search?q=${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 119375,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "${this.hostServer}/rest/products/search?q=${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}?d=${encodeURI"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 119476,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}?d=${encodeURIComponent((new Date).toDateString())}",
+      "IsLiteralTarget": true,
+      "Snippet": "e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}get(e){return this.http.get(`${this.host}/${e}?d=${encodeURIComponent((new Date).toDateString())}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 119625,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "ncodeURIComponent((new Date).toDateString())}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
     },
     {
       "File": "main.js",
@@ -354,12 +971,42 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 120476,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "uctor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Quantitys\"}getAll(){return this.http.get(this.host+\"/\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 120568,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "s\"}getAll(){return this.http.get(this.host+\"/\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 160917,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/Complaints",
       "IsLiteralTarget": true,
       "Snippet": "Same:!0}:null}}let Se=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Complaints\"}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=funct"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 160959,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "uctor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Complaints\"}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
     },
     {
       "File": "main.js",
@@ -374,12 +1021,52 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 167353,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/status\"",
+      "IsLiteralTarget": false,
+      "Snippet": "this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/chatbot\"}getChatbotStatus(){return this.http.get(this.host+\"/status\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}getResponse(e,o){return this.http.post(this.host+\"/respond\",{action:e,query:"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 167454,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/respond\"",
+      "IsLiteralTarget": false,
+      "Snippet": "(){return this.http.get(this.host+\"/status\").pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}getResponse(e,o){return this.http.post(this.host+\"/respond\",{action:e,query:o}).pipe((0,v.U)(a=>a),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 174020,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/Recycles",
       "IsLiteralTarget": true,
       "Snippet": "x-small}']}),n})(),Ie=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Recycles\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return th"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174060,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "tructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Recycles\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)("
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174162,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
     },
     {
       "File": "main.js",
@@ -394,42 +1081,92 @@
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 190200,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 174598,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "dresss\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174695,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "yId(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174790,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}put(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 174888,
+      "Kind": "http-client",
+      "Method": "DELETE",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "(e,o){return this.http.put(`${this.host}/${e}`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 190194,
+      "Kind": "http-client",
+      "Method": "POST",
       "Target": "${O.N.hostServer}/rest/2fa/verify",
       "IsLiteralTarget": true,
-      "Snippet": "_ngcontent-%COMP%]{flex:1 1 auto}\"]}),n})(),Oe=(()=>{class n{constructor(e){this.http=e}verify(e){return this.http.post(`${O.N.hostServer}/rest/2fa/verify`,{tmpToken:localStorage.getItem(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))"
+      "Snippet": "space[_ngcontent-%COMP%]{flex:1 1 auto}\"]}),n})(),Oe=(()=>{class n{constructor(e){this.http=e}verify(e){return this.http.post(`${O.N.hostServer}/rest/2fa/verify`,{tmpToken:localStorage.getItem(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))"
     },
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 190386,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 190381,
+      "Kind": "http-client",
+      "Method": "GET",
       "Target": "${O.N.hostServer}/rest/2fa/status",
       "IsLiteralTarget": true,
-      "Snippet": "(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))}status(){return this.http.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{passw"
+      "Snippet": "tItem(\"totp_tmp_token\"),totpToken:e}).pipe((0,v.U)(o=>o.authentication),(0,_.K)(o=>{throw o}))}status(){return this.http.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{passw"
     },
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 190500,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 190494,
+      "Kind": "http-client",
+      "Method": "POST",
       "Target": "${O.N.hostServer}/rest/2fa/setup",
       "IsLiteralTarget": true,
-      "Snippet": "p.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post("
+      "Snippet": "is.http.get(`${O.N.hostServer}/rest/2fa/status`).pipe((0,v.U)(e=>e),(0,_.K)(e=>{throw e}))}setup(e,o,a){return this.http.post(`${O.N.hostServer}/rest/2fa/setup`,{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post("
     },
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 190654,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 190648,
+      "Kind": "http-client",
+      "Method": "POST",
       "Target": "${O.N.hostServer}/rest/2fa/disable",
       "IsLiteralTarget": true,
-      "Snippet": ",{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post(`${O.N.hostServer}/rest/2fa/disable`,{password:e}).pipe((0,v.U)(()=>{}),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))"
+      "Snippet": "setup`,{password:e,setupToken:a,initialToken:o}).pipe((0,v.U)(()=>{}),(0,_.K)(r=>{throw r}))}disable(e){return this.http.post(`${O.N.hostServer}/rest/2fa/disable`,{password:e}).pipe((0,v.U)(()=>{}),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 202919,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/image-captcha/\"",
+      "IsLiteralTarget": false,
+      "Snippet": ":5px}\"]}),n})(),Pe=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getCaptcha(){return this.http.get(this.hostServer+\"/rest/image-captcha/\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
     },
     {
       "File": "main.js",
@@ -454,6 +1191,26 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 203268,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/erasure-request\"",
+      "IsLiteralTarget": false,
+      "Snippet": "nstructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/user\"}erase(e){return this.http.post(this.host+\"/erasure-request\",e).pipe((0,_.K)(o=>{throw o}))}dataExport(e){return this.http.post(this.host+\"/data-export\",e).pipe((0,_.K)(o=>{throw o"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 203364,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/data-export\"",
+      "IsLiteralTarget": false,
+      "Snippet": "rase(e){return this.http.post(this.host+\"/erasure-request\",e).pipe((0,_.K)(o=>{throw o}))}dataExport(e){return this.http.post(this.host+\"/data-export\",e).pipe((0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 233105,
       "Kind": "url-string",
       "Method": null,
@@ -474,6 +1231,16 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 233668,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "iverys\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 233979,
       "Kind": "url-string",
       "Method": null,
@@ -484,12 +1251,62 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 234104,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "/Cards\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getById(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 234201,
+      "Kind": "http-client",
+      "Method": "POST",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "yId(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 234294,
+      "Kind": "http-client",
+      "Method": "DELETE",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "))}save(e){return this.http.post(this.host+\"/\",e).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}del(e){return this.http.delete(`${this.host}/${e}`).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 261170,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/order-history",
       "IsLiteralTarget": true,
       "Snippet": "ght:20%}\"]}),n})(),pe=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/order-history\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getAll(){return this.http.get(this"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 261302,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/orders\"",
+      "IsLiteralTarget": false,
+      "Snippet": "-history\"}get(){return this.http.get(this.host).pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}getAll(){return this.http.get(this.host+\"/orders\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}toggleDeliveryStatus(e,o){return this.http.put(`${this.host}/${e}/deliv"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 261417,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "${this.host}/${e}/delivery-status",
+      "IsLiteralTarget": true,
+      "Snippet": ".http.get(this.host+\"/orders\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}toggleDeliveryStatus(e,o){return this.http.put(`${this.host}/${e}/delivery-status`,o).pipe((0,v.U)(a=>a.data),(0,_.K)(a=>{throw a}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u02"
     },
     {
       "File": "main.js",
@@ -524,12 +1341,72 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 305729,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": ",a.append(\"caption\",e),this.http.post(this.host,a).pipe((0,v.U)(r=>r.data),(0,_.K)(r=>{throw r}))}get(){return this.http.get(this.host+\"/\").pipe((0,v.U)(e=>e.data),(0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 323210,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}/${e}",
+      "IsLiteralTarget": true,
+      "Snippet": "{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/snippets\"}get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o),(0,_.K)(o=>{throw o}))}challenges(){return this.http.get(`${this.host}`).pipe((0,v.U)(e=>e.challeng"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 323307,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.host}",
+      "IsLiteralTarget": true,
+      "Snippet": "get(e){return this.http.get(`${this.host}/${e}`).pipe((0,v.U)(o=>o),(0,_.K)(o=>{throw o}))}challenges(){return this.http.get(`${this.host}`).pipe((0,v.U)(e=>e.challenges),(0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 323660,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+`/${e}`",
+      "IsLiteralTarget": false,
+      "Snippet": "ructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/snippets/fixes\"}get(e){return this.http.get(this.host+`/${e}`).pipe((0,v.U)(o=>o),(0,_.K)(o=>{throw o}))}check(e,o){return this.http.post(this.host,{key:e,selectedFix:o}).pipe((0,v."
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 324072,
       "Kind": "url-string",
       "Method": null,
       "Target": "/api/Challenges",
       "IsLiteralTarget": true,
       "Snippet": "dIn:\"root\"}),n})(),st=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Challenges\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}repeatNotificatio"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324114,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "uctor(e){this.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/api/Challenges\"}find(e){return this.http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}repeatNotification(e){return this.http.get(this.hostServer+\""
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324230,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/repeat-notification\"",
+      "IsLiteralTarget": false,
+      "Snippet": "http.get(this.host+\"/\",{params:e}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}repeatNotification(e){return this.http.get(this.hostServer+\"/rest/repeat-notification\",{params:{challenge:e},responseType:\"text\"}).pipe((0,_.K)(o=>{throw o}))}continueCode(){return this.http.get(this.hostSe"
     },
     {
       "File": "main.js",
@@ -544,12 +1421,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 324382,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/continue-code\"",
+      "IsLiteralTarget": false,
+      "Snippet": "at-notification\",{params:{challenge:e},responseType:\"text\"}).pipe((0,_.K)(o=>{throw o}))}continueCode(){return this.http.get(this.hostServer+\"/rest/continue-code\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFindIt(){return this.http.get(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 324403,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/continue-code",
       "IsLiteralTarget": true,
       "Snippet": "ams:{challenge:e},responseType:\"text\"}).pipe((0,_.K)(o=>{throw o}))}continueCode(){return this.http.get(this.hostServer+\"/rest/continue-code\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFindIt(){return this.http.get(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324518,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/continue-code-findIt\"",
+      "IsLiteralTarget": false,
+      "Snippet": "rver+\"/rest/continue-code\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFindIt(){return this.http.get(this.hostServer+\"/rest/continue-code-findIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFixIt(){return this.http.get(this.hostServer+\"/rest"
     },
     {
       "File": "main.js",
@@ -564,12 +1461,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 324660,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/continue-code-fixIt\"",
+      "IsLiteralTarget": false,
+      "Snippet": "/rest/continue-code-findIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFixIt(){return this.http.get(this.hostServer+\"/rest/continue-code-fixIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}restoreProgress(e){return this.http.put(this.hostServer+\"/rest/"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 324681,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/continue-code-fixIt",
       "IsLiteralTarget": true,
       "Snippet": "indIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}continueCodeFixIt(){return this.http.get(this.hostServer+\"/rest/continue-code-fixIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}restoreProgress(e){return this.http.put(this.hostServer+\"/rest/"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 324800,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "this.hostServer+\"/rest/continue-code/apply/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "+\"/rest/continue-code-fixIt\").pipe((0,v.U)(e=>e.continueCode),(0,_.K)(e=>{throw e}))}restoreProgress(e){return this.http.put(this.hostServer+\"/rest/continue-code/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFindIt(e){return this.http.put(this.hostServer+\"/re"
     },
     {
       "File": "main.js",
@@ -584,12 +1501,32 @@
     {
       "File": "main.js",
       "Line": 1,
+      "Column": 324944,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "this.hostServer+\"/rest/continue-code-findIt/apply/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "est/continue-code/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFindIt(e){return this.http.put(this.hostServer+\"/rest/continue-code-findIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFixIt(e){return this.http.put(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
       "Column": 324965,
       "Kind": "url-string",
       "Method": null,
       "Target": "/rest/continue-code-findIt/apply/",
       "IsLiteralTarget": true,
       "Snippet": "ly/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFindIt(e){return this.http.put(this.hostServer+\"/rest/continue-code-findIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFixIt(e){return this.http.put(this.hostServer+\"/res"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 325094,
+      "Kind": "http-client",
+      "Method": "PUT",
+      "Target": "this.hostServer+\"/rest/continue-code-fixIt/apply/\"",
+      "IsLiteralTarget": false,
+      "Snippet": "ntinue-code-findIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}restoreProgressFixIt(e){return this.http.put(this.hostServer+\"/rest/continue-code-fixIt/apply/\"+e,{}).pipe((0,v.U)(o=>o.data),(0,_.K)(o=>{throw o}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\"
     },
     {
       "File": "main.js",
@@ -614,12 +1551,32 @@
     {
       "File": "main.js",
       "Line": 1,
-      "Column": 402171,
-      "Kind": "url-template",
-      "Method": null,
+      "Column": 401834,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.host+\"/application-version\"",
+      "IsLiteralTarget": false,
+      "Snippet": "s.http=e,this.hostServer=O.N.hostServer,this.host=this.hostServer+\"/rest/admin\"}getApplicationVersion(){return this.http.get(this.host+\"/application-version\").pipe((0,v.U)(e=>e.version),(0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 402166,
+      "Kind": "http-client",
+      "Method": "GET",
       "Target": "${this.hostServer}/rest/languages",
       "IsLiteralTarget": true,
-      "Snippet": "}),n})(),cu=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getLanguages(){return this.http.get(`${this.hostServer}/rest/languages`).pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+      "Snippet": "root\"}),n})(),cu=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getLanguages(){return this.http.get(`${this.hostServer}/rest/languages`).pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "main.js",
+      "Line": 1,
+      "Column": 426704,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "this.hostServer+\"/rest/country-mapping\"",
+      "IsLiteralTarget": false,
+      "Snippet": "}),n})(),Mu=(()=>{class n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getCountryMapping(){return this.http.get(this.hostServer+\"/rest/country-mapping\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
     },
     {
       "File": "main.js",
@@ -630,6 +1587,16 @@
       "Target": "/rest/country-mapping",
       "IsLiteralTarget": true,
       "Snippet": "ss n{constructor(e){this.http=e,this.hostServer=O.N.hostServer}getCountryMapping(){return this.http.get(this.hostServer+\"/rest/country-mapping\").pipe((0,_.K)(e=>{throw e}))}}return n.\\u0275fac=function(e){return new(e||n)(t.LFG(U.eN))},n.\\u0275prov=t.Yz7({token:n"
+    },
+    {
+      "File": "vendor.js",
+      "Line": 1,
+      "Column": 171224,
+      "Kind": "http-client",
+      "Method": "GET",
+      "Target": "${this.prefix}${s}${this.suffix}",
+      "IsLiteralTarget": true,
+      "Snippet": "i{constructor(s,u=\"/assets/i18n/\",c=\".json\"){this.http=s,this.prefix=u,this.suffix=c}getTranslation(s){return this.http.get(`${this.prefix}${s}${this.suffix}`)}}},3079:(At,ae,d)=>{\"use strict\";d.d(ae,{N:()=>c,V:()=>u});var i=d(4650),a=d(2516),s=d.n(a),u=function(){function p(E)"
     },
     {
       "File": "vendor.js",
