@@ -598,7 +598,9 @@
         "x-unwire-source": "assets/main.js:1:386",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Loaded by app-login, app-score-board, app-about and app-navbar, all without guard."
       }
     },
     "/rest/admin/application-version": {
@@ -626,7 +628,9 @@
         "x-unwire-source": "assets/main.js:1:401839",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-navbar and sidenav load it on every page."
       }
     },
     "/rest/web3/nftUnlocked": {
@@ -644,7 +648,9 @@
         "x-unwire-source": "assets/main.js:1:874",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-nft-unlock (route juicy-nft, no guard) loads it."
       }
     },
     "/rest/web3/nftMintListen": {
@@ -665,7 +671,13 @@
         "x-unwire-verified": false,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Name suggests a long-running listener; response shape not read by the UI."
+          "Name suggests a long-running listener; response shape not read by the UI.",
+          "auth unclear: no call site found in a routed component."
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ]
       }
     },
@@ -698,7 +710,9 @@
         "x-unwire-source": "assets/main.js:1:1221",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "app-nft-unlock (route juicy-nft, no guard) posts it."
       }
     },
     "/rest/web3/walletNFTVerify": {
@@ -730,7 +744,15 @@
         "x-unwire-source": "assets/main.js:1:1343",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-open": [
+          "auth unclear: no call site found in a routed component."
+        ]
       }
     },
     "/rest/web3/walletExploitAddress": {
@@ -762,7 +784,15 @@
         "x-unwire-source": "assets/main.js:1:1476",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-open": [
+          "auth unclear: no call site found in a routed component."
+        ]
       }
     },
     "/api/Challenges/": {
@@ -804,7 +834,9 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object passed as query params ({params:e}); only key=nftMintChallenge is literal (main.js:1:1103)."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-score-board and the notifications load it without a login."
       }
     },
     "/rest/repeat-notification": {
@@ -835,7 +867,13 @@
         "x-unwire-verified": false,
         "x-unwire-impact": "read",
         "x-unwire-open": [
-          "Response is text (responseType: text)."
+          "Response is text (responseType: text).",
+          "auth unclear: no call site found in a component, only defined in the challenge service."
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ]
       }
     },
@@ -864,7 +902,9 @@
         "x-unwire-source": "assets/main.js:1:324403",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "Score board and challenge notifications, no login needed."
       }
     },
     "/rest/continue-code-findIt": {
@@ -892,7 +932,9 @@
         "x-unwire-source": "assets/main.js:1:324539",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/rest/continue-code-fixIt": {
@@ -920,7 +962,9 @@
         "x-unwire-source": "assets/main.js:1:324681",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/rest/continue-code/apply/{continueCode}": {
@@ -958,7 +1002,9 @@
         "x-unwire-source": "assets/main.js:1:324822",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Restores score board progress, called from notifications without a login."
       }
     },
     "/rest/continue-code-findIt/apply/{continueCode}": {
@@ -996,7 +1042,9 @@
         "x-unwire-source": "assets/main.js:1:324966",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Restores score board progress, called from notifications without a login."
       }
     },
     "/rest/continue-code-fixIt/apply/{continueCode}": {
@@ -1034,7 +1082,9 @@
         "x-unwire-source": "assets/main.js:1:325116",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "Restores score board progress, called from notifications without a login."
       }
     },
     "/snippets": {
@@ -1062,7 +1112,9 @@
         "x-unwire-source": "assets/main.js:1:323149",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-score-board (no guard) and app-login load it."
       }
     },
     "/snippets/{key}": {
@@ -1090,7 +1142,9 @@
         "x-unwire-source": "assets/main.js:1:323149",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/snippets/fixes/{key}": {
@@ -1118,7 +1172,9 @@
         "x-unwire-source": "assets/main.js:1:323593",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/snippets/fixes": {
@@ -1157,7 +1213,9 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Type of selectedFix assumed (index of the chosen fix)."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/snippets/verdict": {
@@ -1196,7 +1254,9 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "selectedLines assumed to be an array of line numbers."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "code-snippet dialog of the score board, no login needed."
       }
     },
     "/rest/user/authentication-details/": {
@@ -1228,7 +1288,13 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object as query params, fields unknown. Used by the admin page."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role admin: app-administration, route guard checks role admin in the token."
       }
     },
     "/api/Users/{id}": {
@@ -1266,7 +1332,13 @@
         "x-unwire-source": "assets/main.js:1:44909",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role admin: app-administration, route guard checks role admin in the token."
       }
     },
     "/api/Users/": {
@@ -1318,7 +1390,9 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body from the OAuth path (email, password, passwordRepeat); the register form may send more fields (security question), not resolved."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-register (no guard) calls it, then navigates to the login."
       }
     },
     "/rest/user/login": {
@@ -1371,7 +1445,9 @@
         "x-unwire-open": [
           "authentication.token (JWT) and authentication.bid (basket id) are read by the UI.",
           "With 2FA the error has status totp_token_required and data.tmpToken, continue with POST /rest/2fa/verify."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-login and app-oauth call it before a token exists, the token is stored from its answer."
       }
     },
     "/rest/user/change-password": {
@@ -1429,7 +1505,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Changes the password through a GET with the passwords in the query string."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-change-password changes the password of the signed-in user."
       }
     },
     "/rest/user/reset-password": {
@@ -1480,7 +1562,9 @@
         "x-unwire-source": "assets/main.js:1:45733",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "app-forgot-password (no guard) calls it."
       }
     },
     "/rest/user/whoami": {
@@ -1508,7 +1592,9 @@
         "x-unwire-source": "assets/main.js:1:45858",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-navbar and sidenav call it on every page, also logged out; it names the user only when a token is sent."
       }
     },
     "/rest/saveLoginIp": {
@@ -1530,7 +1616,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "GET that stores the login IP (name says save), treated as write."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-navbar and sidenav call it after the login, when a token is stored."
       }
     },
     "/rest/deluxe-membership": {
@@ -1558,7 +1650,13 @@
         "x-unwire-source": "assets/main.js:1:46204",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-deluxe-user (login guard) and app-payment."
       },
       "post": {
         "tags": [
@@ -1605,7 +1703,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Response data.token replaces the session token."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment, upgrades the signed-in user."
       }
     },
     "/api/SecurityAnswers/": {
@@ -1653,7 +1757,9 @@
         "x-unwire-source": "assets/main.js:1:86598",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "app-register calls it right after registerUser, before any login."
       }
     },
     "/api/SecurityQuestions/": {
@@ -1685,7 +1791,9 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object as query params, fields unknown."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-register and app-forgot-password (no guard) load it."
       }
     },
     "/rest/user/security-question": {
@@ -1723,7 +1831,9 @@
         "x-unwire-source": "assets/main.js:1:87154",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-forgot-password (no guard) calls it with the email."
       }
     },
     "/rest/user/erasure-request": {
@@ -1745,7 +1855,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body passed through from the caller, fields not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Data erasure of the signed-in user."
       }
     },
     "/rest/user/data-export": {
@@ -1767,7 +1883,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body passed through from the caller (likely captcha answer and format), not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-data-export exports the data of the signed-in user."
       }
     },
     "/rest/2fa/verify": {
@@ -1812,7 +1934,9 @@
         "x-unwire-source": "assets/main.js:1:190218",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [],
+        "x-unwire-auth": "app-two-factor-auth-enter (route 2fa/enter, no guard) calls it during the login with the tmpToken in the body."
       }
     },
     "/rest/2fa/status": {
@@ -1830,7 +1954,13 @@
         "x-unwire-source": "assets/main.js:1:190404",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-two-factor-auth manages 2FA of the signed-in user."
       }
     },
     "/rest/2fa/setup": {
@@ -1868,7 +1998,13 @@
         "x-unwire-source": "assets/main.js:1:190518",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-two-factor-auth manages 2FA of the signed-in user."
       }
     },
     "/rest/2fa/disable": {
@@ -1900,7 +2036,13 @@
         "x-unwire-source": "assets/main.js:1:190672",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-two-factor-auth manages 2FA of the signed-in user."
       }
     },
     "/rest/basket/{bid}": {
@@ -1942,7 +2084,13 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "bid comes from sessionStorage.bid set at login."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket views read the bid from sessionStorage, set at the login."
       }
     },
     "/api/BasketItems/{id}": {
@@ -1980,7 +2128,13 @@
         "x-unwire-source": "assets/main.js:1:48681",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket views, bid from the login."
       },
       "put": {
         "tags": [
@@ -2030,7 +2184,13 @@
         "x-unwire-source": "assets/main.js:1:48681",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket views, bid from the login."
       },
       "delete": {
         "tags": [
@@ -2066,7 +2226,13 @@
         "x-unwire-source": "assets/main.js:1:48681",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Basket views, bid from the login."
       }
     },
     "/api/BasketItems/": {
@@ -2114,7 +2280,13 @@
         "x-unwire-source": "assets/main.js:1:126981",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-search-result addToBasket uses the bid from the login."
       }
     },
     "/rest/basket/{bid}/checkout": {
@@ -2174,7 +2346,13 @@
         "x-unwire-open": [
           "couponData is base64 of sessionStorage.couponDetails.",
           "orderDetails fields not resolved (likely paymentId, addressId, deliveryMethodId from sessionStorage)."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-order-summary, bid from sessionStorage set at the login."
       }
     },
     "/rest/basket/{bid}/coupon/{coupon}": {
@@ -2224,7 +2402,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Empty JSON body {}."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment, bid from sessionStorage set at the login."
       }
     },
     "/rest/track-order/{id}": {
@@ -2256,7 +2440,9 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "id is URL-encoded by the UI."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-track-result (no guard) loads it with the order id from the URL."
       }
     },
     "/rest/order-history": {
@@ -2284,7 +2470,13 @@
         "x-unwire-source": "assets/main.js:1:261144",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-order-history, orders of the signed-in user."
       }
     },
     "/rest/order-history/orders": {
@@ -2312,7 +2504,13 @@
         "x-unwire-source": "assets/main.js:1:261307",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
       }
     },
     "/rest/order-history/{id}/delivery-status": {
@@ -2354,7 +2552,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body passed through from changeDeliveryStatus, fields not resolved (likely delivered flag)."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
       }
     },
     "/rest/products/search": {
@@ -2392,7 +2596,9 @@
         "x-unwire-source": "assets/main.js:1:119273",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-search-result, the start page, loads it without a login."
       }
     },
     "/api/Products/": {
@@ -2424,7 +2630,13 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object as query params, fields unknown."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
       }
     },
     "/api/Products/{id}": {
@@ -2474,7 +2686,13 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "d is the current date string (cache buster)."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Called after addToBasket (logged in) and in app-order-history."
       },
       "put": {
         "tags": [
@@ -2524,7 +2742,13 @@
         "x-unwire-source": "assets/main.js:1:266182",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
       }
     },
     "/rest/products/{id}/reviews": {
@@ -2562,7 +2786,9 @@
         "x-unwire-source": "assets/main.js:1:107392",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-product-details shows reviews to everyone; only writing is hidden unless isLoggedIn()."
       },
       "put": {
         "tags": [
@@ -2602,7 +2828,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Review body built in the dialog, fields not resolved (likely message, author)."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-product-details shows the review form only when isLoggedIn()."
       }
     },
     "/rest/products/reviews": {
@@ -2647,7 +2879,13 @@
         "x-unwire-source": "assets/main.js:1:108472",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-product-review-edit, behind isLoggedIn()."
       },
       "post": {
         "tags": [
@@ -2687,7 +2925,13 @@
         "x-unwire-source": "assets/main.js:1:107768",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Like button of app-product-details, behind isLoggedIn()."
       }
     },
     "/api/Quantitys/": {
@@ -2715,7 +2959,9 @@
         "x-unwire-source": "assets/main.js:1:120408",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-search-result (start page) loads the stock for every visitor."
       }
     },
     "/api/Quantitys/{id}": {
@@ -2767,7 +3013,13 @@
         "x-unwire-source": "assets/main.js:1:265848",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role accounting: app-accounting, route guard checks role accounting in the token."
       }
     },
     "/api/Feedbacks/": {
@@ -2799,7 +3051,9 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object as query params, fields unknown."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-about (no guard) shows the feedback carousel."
       },
       "post": {
         "tags": [
@@ -2843,7 +3097,9 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is the form object this.feedback; only rating is read back. Other fields (comment, captcha, captchaId, UserId) not resolved."
-        ]
+        ],
+        "security": [],
+        "x-unwire-auth": "app-contact (no guard) posts it, the author falls back to anonymous without whoAmI."
       }
     },
     "/api/Feedbacks/{id}": {
@@ -2881,7 +3137,13 @@
         "x-unwire-source": "assets/main.js:1:69652",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Role admin: app-administration, route guard checks role admin in the token."
       }
     },
     "/rest/captcha/": {
@@ -2899,7 +3161,9 @@
         "x-unwire-source": "assets/main.js:1:70202",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-contact (no guard) loads the captcha."
       }
     },
     "/rest/image-captcha/": {
@@ -2917,7 +3181,15 @@
         "x-unwire-source": "assets/main.js:1:202941",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-open": [
+          "auth unclear: app-data-export loads it on open, the route has no guard but the export needs a user."
+        ]
       }
     },
     "/api/Complaints/": {
@@ -2963,7 +3235,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is this.complaint; only UserId set in code, message field name not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-complaint reads the user by whoAmI first."
       }
     },
     "/file-upload": {
@@ -3000,7 +3278,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Uploaded by ng2-file-upload with Bearer token; PDF, XML or ZIP, max 100 KB. Form field name assumed (library default \"file\")."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-complaint sends authToken Bearer from localStorage with the upload."
       }
     },
     "/rest/chatbot/status": {
@@ -3018,7 +3302,9 @@
         "x-unwire-source": "assets/main.js:1:167358",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-chatbot (no guard) loads it when the page opens."
       }
     },
     "/rest/chatbot/respond": {
@@ -3056,7 +3342,13 @@
         "x-unwire-verified": false,
         "x-unwire-impact": "write",
         "x-unwire-open": [
-          "Response may carry a new token (cookieService.put token in the chatbot component)."
+          "Response may carry a new token (cookieService.put token in the chatbot component).",
+          "auth unclear: app-chatbot has no guard and can store a token from the answer, a logged-out chat may work."
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ]
       }
     },
@@ -3089,7 +3381,13 @@
         "x-unwire-impact": "read",
         "x-unwire-open": [
           "Generic filter object as query params, fields unknown."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-recycle reads the user by whoAmI first."
       },
       "post": {
         "tags": [
@@ -3136,7 +3434,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is the form object this.recycle; fields inferred from the response (isPickup, pickupDate), others unknown."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-recycle sets UserId from whoAmI."
       }
     },
     "/api/Addresss": {
@@ -3164,7 +3468,13 @@
         "x-unwire-source": "assets/main.js:1:174444",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Address routes have the login guard (canActivate: token present)."
       }
     },
     "/api/Addresss/{id}": {
@@ -3202,7 +3512,13 @@
         "x-unwire-source": "assets/main.js:1:174444",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Address routes have the login guard."
       },
       "put": {
         "tags": [
@@ -3242,7 +3558,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is the address form, fields not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Address routes have the login guard."
       },
       "delete": {
         "tags": [
@@ -3278,7 +3600,13 @@
         "x-unwire-source": "assets/main.js:1:174444",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Address routes have the login guard."
       }
     },
     "/api/Addresss/": {
@@ -3310,7 +3638,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is the address form; only city is read back, fields not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Address routes have the login guard."
       }
     },
     "/rest/wallet/balance": {
@@ -3338,7 +3672,13 @@
         "x-unwire-source": "assets/main.js:1:233079",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-wallet and app-payment, balance of the signed-in user."
       },
       "put": {
         "tags": [
@@ -3381,7 +3721,13 @@
         "x-unwire-source": "assets/main.js:1:253507",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment, charges the wallet of the signed-in user."
       }
     },
     "/api/Deliverys": {
@@ -3409,7 +3755,13 @@
         "x-unwire-source": "assets/main.js:1:233513",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Checkout flow (delivery method), bid from the login."
       }
     },
     "/api/Deliverys/{id}": {
@@ -3447,7 +3799,13 @@
         "x-unwire-source": "assets/main.js:1:233513",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Checkout flow (order summary), bid from the login."
       }
     },
     "/api/Cards": {
@@ -3475,7 +3833,13 @@
         "x-unwire-source": "assets/main.js:1:233953",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment-method and checkout, logged in only."
       }
     },
     "/api/Cards/{id}": {
@@ -3513,7 +3877,13 @@
         "x-unwire-source": "assets/main.js:1:233953",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "Checkout flow, logged in only."
       },
       "delete": {
         "tags": [
@@ -3549,7 +3919,13 @@
         "x-unwire-source": "assets/main.js:1:233953",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment-method, logged in only."
       }
     },
     "/api/Cards/": {
@@ -3595,7 +3971,13 @@
         "x-unwire-impact": "write",
         "x-unwire-open": [
           "Body is the card form; only cardNum is read back, other fields (name, expiry) not resolved."
-        ]
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-payment-method, logged in only."
       }
     },
     "/rest/memories": {
@@ -3641,7 +4023,13 @@
         "x-unwire-source": "assets/main.js:1:305588",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "write"
+        "x-unwire-impact": "write",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-auth": "app-photo-wall shows the upload form only when isLoggedIn()."
       }
     },
     "/rest/memories/": {
@@ -3669,7 +4057,9 @@
         "x-unwire-source": "assets/main.js:1:305502",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-photo-wall shows the photos to everyone; posting is behind isLoggedIn()."
       }
     },
     "/rest/languages": {
@@ -3687,7 +4077,9 @@
         "x-unwire-source": "assets/main.js:1:402190",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [],
+        "x-unwire-auth": "app-navbar loads it on every page."
       }
     },
     "/rest/country-mapping": {
@@ -3705,7 +4097,15 @@
         "x-unwire-source": "assets/main.js:1:426726",
         "x-unwire-confidence": "high",
         "x-unwire-verified": false,
-        "x-unwire-impact": "read"
+        "x-unwire-impact": "read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-unwire-open": [
+          "auth unclear: only app-challenge-solved-notification calls it, which also checks isLoggedIn()."
+        ]
       }
     }
   },
@@ -3720,7 +4120,8 @@
     "Skipped scripts: cookieconsent 3.1.0 and jQuery 2.2.4 from cdnjs.cloudflare.com (other origin); /zone.js is an SPA fallback.",
     "Dropped candidates: 2 XHR calls in vendor.js (library internals, URL variable g).",
     "Generic list endpoints (/api/Challenges/, /api/Products/, /api/Feedbacks/, /api/Recycles/, /api/SecurityQuestions/, /rest/user/authentication-details/) take a filter object as query params; the allowed fields are unknown.",
-    "Response schemas are only the top-level field the UI reads (data, user, authentication, ...); full models not derived."
+    "Response schemas are only the top-level field the UI reads (data, user, authentication, ...); full models not derived.",
+    "Auth per operation: from the UI context in main.js (route guards: login guard checks a token, admin and accounting guards check the role in the JWT; isLoggedIn() checks in views; bid from sessionStorage set at login). The interceptor adds the token to every request when one is stored, so it tells nothing per operation. Roles (admin, accounting) are named per operation, OpenAPI has no field for them."
   ]
 }</script>
     <script>
@@ -3985,7 +4386,9 @@
                 el('h3', {}, 'Source'),
                 el('dl', { className: 'meta' },
                     el('dt', {}, 'operationId'), el('dd', {}, el('code', {}, operation.operationId ?? '-')),
-                    el('dt', {}, 'Auth'), el('dd', {}, entry.auth.label, entry.auth.source === 'default' ? el('span', { className: 'hint' }, ' (spec default, not set on this operation)') : null),
+                    el('dt', {}, 'Auth'), el('dd', {}, entry.auth.label,
+                        entry.auth.source === 'default' ? el('span', { className: 'hint' }, ' (spec default, not set on this operation)') : null,
+                        operation['x-unwire-auth'] ? el('div', { className: 'hint' }, operation['x-unwire-auth']) : null),
                     el('dt', {}, 'Found in'), el('dd', {}, el('code', {}, operation['x-unwire-source'] ?? '-')),
                     el('dt', {}, 'Verified'), el('dd', {}, verified === true ? 'yes, executed against the target' : 'no, derived statically'),
                     el('dt', {}, 'Link'), el('dd', {}, el('a', { href: `#${entry.id}` }, `#${entry.id}`)),
@@ -4208,7 +4611,8 @@
         // 'none' first, then the schemes, 'not stated' last.
         const authLabels  = [...new Set(operations.map(entry => entry.auth.label))]
             .sort((a, b) => (a === 'none' ? -1 : b === 'none' ? 1 : a === 'not stated' ? 1 : b === 'not stated' ? -1 : a.localeCompare(b)))
-        const defaultCount = countBy(entry => entry.auth.source === 'default')
+        // Only derived operations: a published spec's own default is what the target documents.
+        const defaultCount = countBy(entry => entry.auth.source === 'default' && !entry.isDocumented)
         // Root open points about auth, by their title ('Auth: ...', 'Login: ...').
         const authPoints  = rootOpen.filter(point => /^(auth|login|session|token|csrf|cookie)/i.test(splitPoint(point)[0] ?? ''))
 
@@ -4233,7 +4637,8 @@
                     const kind    = label === 'none' ? 'public' : label === 'not stated' ? 'unknown' : ''
                     return el('details', { className: `auth-need ${kind}`, open: entries.length <= 15 },
                         el('summary', {}, label === 'none' ? 'No auth' : label === 'not stated' ? 'Not stated' : label, el('span', { className: 'n' }, count(entries.length, 'operation'))),
-                        el('div', { className: 'op-list' }, entries.map(entry => el('a', { href: `#${entry.id}`, title: `${entry.method.toUpperCase()} ${entry.path}` },
+                        // The tooltip says why: x-unwire-auth, the evidence from the code.
+                        el('div', { className: 'op-list' }, entries.map(entry => el('a', { href: `#${entry.id}`, title: [`${entry.method.toUpperCase()} ${entry.path}`, entry.operation['x-unwire-auth']].filter(Boolean).join('\n') },
                             el('span', { className: `method ${entry.method}` }, entry.method.toUpperCase()),
                             el('span', { className: 'path' }, entry.path),
                             entry.auth.source === 'default' ? el('span', { className: 'default' }, 'default') : null))),

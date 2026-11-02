@@ -612,7 +612,9 @@
                 el('h3', {}, 'Source'),
                 el('dl', { className: 'meta' },
                     el('dt', {}, 'operationId'), el('dd', {}, el('code', {}, operation.operationId ?? '-')),
-                    el('dt', {}, 'Auth'), el('dd', {}, entry.auth.label, entry.auth.source === 'default' ? el('span', { className: 'hint' }, ' (spec default, not set on this operation)') : null),
+                    el('dt', {}, 'Auth'), el('dd', {}, entry.auth.label,
+                        entry.auth.source === 'default' ? el('span', { className: 'hint' }, ' (spec default, not set on this operation)') : null,
+                        operation['x-unwire-auth'] ? el('div', { className: 'hint' }, operation['x-unwire-auth']) : null),
                     el('dt', {}, 'Found in'), el('dd', {}, el('code', {}, operation['x-unwire-source'] ?? '-')),
                     el('dt', {}, 'Verified'), el('dd', {}, verified === true ? 'yes, executed against the target' : 'no, derived statically'),
                     el('dt', {}, 'Link'), el('dd', {}, el('a', { href: `#${entry.id}` }, `#${entry.id}`)),
@@ -835,7 +837,8 @@
         // 'none' first, then the schemes, 'not stated' last.
         const authLabels  = [...new Set(operations.map(entry => entry.auth.label))]
             .sort((a, b) => (a === 'none' ? -1 : b === 'none' ? 1 : a === 'not stated' ? 1 : b === 'not stated' ? -1 : a.localeCompare(b)))
-        const defaultCount = countBy(entry => entry.auth.source === 'default')
+        // Only derived operations: a published spec's own default is what the target documents.
+        const defaultCount = countBy(entry => entry.auth.source === 'default' && !entry.isDocumented)
         // Root open points about auth, by their title ('Auth: ...', 'Login: ...').
         const authPoints  = rootOpen.filter(point => /^(auth|login|session|token|csrf|cookie)/i.test(splitPoint(point)[0] ?? ''))
 
@@ -860,7 +863,8 @@
                     const kind    = label === 'none' ? 'public' : label === 'not stated' ? 'unknown' : ''
                     return el('details', { className: `auth-need ${kind}`, open: entries.length <= 15 },
                         el('summary', {}, label === 'none' ? 'No auth' : label === 'not stated' ? 'Not stated' : label, el('span', { className: 'n' }, count(entries.length, 'operation'))),
-                        el('div', { className: 'op-list' }, entries.map(entry => el('a', { href: `#${entry.id}`, title: `${entry.method.toUpperCase()} ${entry.path}` },
+                        // The tooltip says why: x-unwire-auth, the evidence from the code.
+                        el('div', { className: 'op-list' }, entries.map(entry => el('a', { href: `#${entry.id}`, title: [`${entry.method.toUpperCase()} ${entry.path}`, entry.operation['x-unwire-auth']].filter(Boolean).join('\n') },
                             el('span', { className: `method ${entry.method}` }, entry.method.toUpperCase()),
                             el('span', { className: 'path' }, entry.path),
                             entry.auth.source === 'default' ? el('span', { className: 'default' }, 'default') : null))),

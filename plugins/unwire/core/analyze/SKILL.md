@@ -125,6 +125,9 @@ somewhere in there.
 
    And `security` on every derived operation, even when a root default exists:
    `[{ "bearerAuth": [] }]` or `[]` for no auth. The page lists who needs what from it.
+   `x-unwire-auth` holds the evidence in one sentence ("app-register (no guard) calls it
+   before any login.", "Role admin: route guard checks role admin in the token."); a role
+   goes there too, OpenAPI has no field for it.
 
    **Auth per operation**, from the UI context, not from the request helper alone:
    - `[]` (public): calls the UI makes logged out. The login and register calls, password

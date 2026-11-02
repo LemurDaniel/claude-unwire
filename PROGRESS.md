@@ -55,10 +55,11 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Open
 
-- **Auth per operation is new and untested in a run** (2026-11-02). `unwire:analyze` now sets
-  `security` per derived operation (`[]` for public), `Test-UnwireSpec` warns otherwise. The
-  Juice Shop example predates it: all 88 derived operations take the root default, so the
-  Authentication view lists the login under bearerAuth. A new Juice Shop run fixes it.
+- **Auth per operation: one run, not yet from scratch** (2026-11-02). Juice Shop re-run:
+  main.js byte-identical, so the 88 derived operations were taken over from the previous run
+  and only `security` + `x-unwire-auth` were derived fresh (route guards, isLoggedIn(), bid
+  from the login): 34 public, 47 bearer, 7 unclear with an open point, 0 spec findings.
+  A full run on a new target (Grafana, Gitea) still has to show the rule works end to end.
 - **`unwire:code` is a stub.** Open: which language(s), what shape; the old PowerShell
   module design (SKILL.md, templates) is in the history of `core/module/`.
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
