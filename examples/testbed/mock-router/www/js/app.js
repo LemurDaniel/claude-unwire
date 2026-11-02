@@ -62,7 +62,7 @@ function loadPage(name) {
   xhr.send();
 }
 
-// Views are modules imported from a path built at runtime
+// Views are modules imported from a path built at runtime, with the query of the page (sid)
 function loadView(name) {
-  return import('./views/' + name + '.js');
+  return import('./views/' + name + '.js' + location.search);
 }

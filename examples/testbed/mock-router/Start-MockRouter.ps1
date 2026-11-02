@@ -295,6 +295,7 @@ try {
             $isPublic   = Test-MockPublicPath -Variant $variant -Path $path
 
             <#
+                > Favicon                                       -> the icon, public in every variant
                 > Script without a same-origin Referer (none)   -> 403, like some devices
                 > Login call                                    -> session for the right test user
                 > Neither signed in nor public                  -> what the login method answers
@@ -302,6 +303,14 @@ try {
                 > API                                           -> fixed JSON
                 > Anything else                                 -> file of www/
             #>
+            # Favicon: browsers ask for it on every origin, before and after a login
+            if ($path -IN '/favicon.ico', '/favicon.svg') {
+                Write-Host "$logLine -> icon"
+                $icon = Get-Content -Path (Join-Path -Path $WWW_ROOT -ChildPath 'favicon.svg') -Raw -Encoding utf8
+                Send-MockResponse -Response $response -Status 200 -Body $icon -ContentType 'image/svg+xml'
+                continue
+            }
+
             # Script without a same-origin Referer (none)
             $referer = $request.Headers['Referer'] ?? ''
             if ($variant.auth -EQ 'none' -AND $path.StartsWith('/js/') -AND -NOT $referer.StartsWith("http://$($request.Url.Authority)/")) {
