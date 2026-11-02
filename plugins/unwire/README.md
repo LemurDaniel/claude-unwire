@@ -12,7 +12,6 @@
 | `skills/discover/` | Step 1: published docs (`Find-UnwireSpec`), Swagger 2.0 to OpenAPI 3 (`ConvertFrom-UnwireSwagger`). |
 | `skills/analyze/` | Step 2: static assets (`Save-UnwireAsset`), endpoint candidates (`Get-UnwireJsCandidate`), every candidate accounted for in the spec (`Test-UnwireCoverage`), optional live GET of the safe operations (`Test-UnwireGet`). |
 | `skills/document/` | Step 3: openapi.json to API.html (`ConvertTo-UnwireHtml`). |
-| `skills/code/` | Step 4: a PowerShell module of the picked operations, written by the agent after `references/ReferenceHard/`, checked by `Test-UnwireModule`. |
 | `shared/` | Used by several skills: `Test-UnwireTarget` (home network or public), `Test-UnwireSpec`, `ConvertTo-UnwireText`; `session/` (`Session.ps1` loads the login of a pasted cURL or cookie, `Read-UnwireSession`); `data/request-denylist.json` (never requested: logout, reboot, delete, ...); `pwsh-check.md` with `data/pwsh-install.json` (PowerShell 7 check, asks before an install). |
 
 Every skill folder holds its `SKILL.md`, its `scripts/`, its `data/` or `templates/` and its

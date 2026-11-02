@@ -6,8 +6,8 @@ sessions: read it first, rewrite it last. `README.md` holds the pitch and the st
 
 ## What this repo is
 A Claude Code **marketplace** with one plugin, **Unwire**: it reverse engineers the
-undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`, and on
-request into a PowerShell module of picked operations (`unwire:code`). Skills live in `plugins/unwire/skills/<skill>/`
+undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`; no client
+code (`unwire:code` removed 2026-11-02, user decision). Skills live in `plugins/unwire/skills/<skill>/`
 with their own scripts, data or templates and Pester tests; `plugins/unwire/shared/` holds what several skills use.
 The same plugin installs in Copilot CLI, Codex and Gemini CLI: three plugin manifests
 (`.claude-plugin/plugin.json`, `plugin.json`, `gemini-extension.json`) and two marketplaces
@@ -41,10 +41,6 @@ Every change must keep this true, it is the reason the plugin may run against re
   The one link: "Open in browser" for a GET that changes nothing, an http(s) link the user
   clicks, the browser adds its own cookie or Basic dialog; no Send button, CORS blocks it
   from a local page anyway (user decision 2026-11-02).
-- The module of `unwire:code` is for the user's terminal, the agent never runs it (no
-  `Connect-<Name>`, no function call); `Test-UnwireModule.ps1` imports it in a child process
-  and calls nothing. Session in memory only, writes behind `ShouldProcess` with
-  `ConfirmImpact High`, unsure operations warn (user decisions 2026-11-02).
 - Every request to the target goes through the scripts (denylist, manifest), the skills
   forbid own `Invoke-WebRequest`/`curl` calls. A gap in a script is fixed in the script.
 - Live GET, the one exception (user decision 2026-11-02): `Test-UnwireGet.ps1`, last step of

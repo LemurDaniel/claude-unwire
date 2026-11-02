@@ -1,8 +1,0 @@
-{
-  "tokenAuth": {
-    "type": "apiKey",
-    "in": "header",
-    "name": "X-Auth-Token",
-    "description": "Token from POST /api/v1/auth/session, sent on every API call."
-  }
-}

@@ -8,7 +8,7 @@ things got here; this file holds what holds now, and the one next thing at the e
 
 A Claude Code plugin that turns the undocumented HTTP API of a web UI (router, NAS, smart
 home, web app) into an OpenAPI spec and a clickable HTML documentation, without ever
-changing anything on the target. On request a PowerShell module of picked operations (`unwire:code`).
+changing anything on the target.
 
 ## Decisions, and why
 
@@ -37,15 +37,9 @@ changing anything on the target. On request a PowerShell module of picked operat
 - **The spec is the contract** (2026-11-02). `openapi.json` with `x-unwire-source`,
   `-confidence`, `-verified`, `-impact`, `-open`, root `x-unwire-target` (the URL of the run,
   default base URL of API.html, filled in by the live GET); `Test-UnwireSpec` checks it.
-- **Step 4 `unwire:code` is a PowerShell module the agent writes** (2026-11-02, user
-  decisions). Shape of the user's own modules: `.psd1`, `.psm1` with one dot-source per file,
-  `meta.json`, `functions/<group>/` with reads under `_data.sources/`, one wrapper
-  `Invoke-<Name>Rest` that alone sends (no redirects, logs only method and path template).
-  Agent writes the code after `skills/code/references/ReferenceHard/` (from
-  `reference.hard.openapi.json`), not a generator script; `Test-UnwireModule` checks it
-  against the spec. Session in memory only (`Connect-<Name>`, masked prompt); user picks
-  operations, writes included behind `ShouldProcess`/`ConfirmImpact High`; unsure
-  operations in, `.NOTES` plus `Write-Warning` for `low`/`medium`. The agent never runs it.
+- **No client code, `unwire:code` removed** (2026-11-02, user decision). The plugin ends
+  with `API.html`; the PowerShell module step (reference module, `Test-UnwireModule`) is
+  gone, see git history (`eac80f3`, `d7f6750`) if it comes back.
 - **Sessions only from a paste, in a window** (2026-11-02). `shared/session/`: a pasted cURL
   gives cookie, `Authorization` and auth headers, path token or URL parameter; the masked
   prompt asks again (up to 3 pastes) with the reason and a Fetch/XHR or POST hint, and the
@@ -90,13 +84,10 @@ changing anything on the target. On request a PowerShell module of picked operat
 
 ## State
 
-- v0.5.0 on `master`, not pushed.
-  Skills: unwire (entry), discover, analyze, document, code. 9 scripts plus
-  `shared/session/` (9 files), 294 Pester tests (plus 5 in `docs/screenshots`),
+- v0.6.0 on `master`, not pushed.
+  Skills: unwire (entry), discover, analyze, document. 8 scripts plus
+  `shared/session/` (9 files), 258 Pester tests (plus 5 in `docs/screenshots`),
   ScriptAnalyzer clean.
-- `unwire:code` modules carry a `GETTING_STARTED.md` (import, connect, read, change, function
-  table), `Test-UnwireModule` requires it with the import and `Connect-<Name>`; `-OperationId`
-  takes a comma list in one string (`pwsh -File` passed `a,b` as one pick).
 - `Save-UnwireAsset`: webpack runtimes with one `if` per chunk and the automatic publicPath,
   `-Page`/`-Script` for paths built at runtime, `HttpAuth` for a 401 on the start page,
   session mode keeps inline scripts and `onclick`/`javascript:` code, guessed paths never
@@ -117,9 +108,6 @@ changing anything on the target. On request a PowerShell module of picked operat
 ## Open
 
 
-- **`unwire:code` module not yet run by hand.** First real run 2026-11-02 on the mock :3016
-  (Bearer): `unwire/mockbearer/module/MockBearer`, all 10 operations, check and analyzer
-  clean. Open: the user runs it against the testbed and reports.
 - **D · Eval loop with the testbed** (tips 13 to 16): a checkable goal per target, a check
   separate from the run, a cap on runs and cost, results remembered between runs.
 - Socket.IO apps are a known limit, not handled (Uptime Kuma, no longer in the testbed).

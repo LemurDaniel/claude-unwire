@@ -1,5 +1,5 @@
 {
   "name": "unwire",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Reverse engineers undocumented HTTP APIs of web UIs into an OpenAPI spec and a clickable HTML documentation. Read-only: finds published docs and analyzes static frontend code, never sends requests that change the target. Prototype, only for home systems you own."
 }
