@@ -53,6 +53,12 @@ changing anything on the target. Client code for picked operations is planned (`
   :3014 and Juice Shop). `high` only with method, path and body literal at the call; path
   parameters named after the code's variable; the agent applies the live GET's `security`
   hints (2xx without session → `[]`).
+- **Every candidate is accounted for** (2026-11-02, after `GET /api/Products/` got lost in
+  the third Juice Shop run). `Get-UnwireJsCandidate` also finds client calls on a base URL
+  (`this.http.get(this.host + '/')`, 160 instead of 89 Juice Shop candidates); step 6 runs
+  `Test-UnwireCoverage`: each candidate needs its position in an `x-unwire-source`, a matching
+  path or its position in an open point, else the agent adds the operation or says why not.
+  A call that nothing calls is `medium` (no caller found), not `low`.
 - **PowerShell 7 only, deterministic scripts plus Claude for the meaning** (2026-11-01).
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`.
 - **The login question is asked, never decided; Referer like a browser** (2026-11-02).
@@ -107,7 +113,6 @@ changing anything on the target. Client code for picked operations is planned (`
 
 ## Next
 
-Embedded Swagger UI spec in `Find-UnwireSpec`, then repeat both runs in fresh sessions
-(`/unwire http://127.0.0.1:3014 -Name MockSid`, `/unwire http://localhost:3000 -Name JuiceShop`)
-and compare with `examples/`: the first runs found all 10 mock operations and 88 of 89 Juice
-Shop operations, but the references still shared the mock's paths then.
+Embedded Swagger UI spec in `Find-UnwireSpec` (Juice Shop B2B: `swagger-ui-init.js` in the first
+run, `swagger-initializer.js` in the second), then a fresh Juice Shop run: it should reach 89
+operations with `Test-UnwireCoverage` empty, and replace `examples/juiceshop/`.

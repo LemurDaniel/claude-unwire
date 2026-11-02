@@ -22,6 +22,11 @@
       "pattern": "\\.(?<method>get|post|put|patch|delete)\\s*\\(\\s*(?<target>['\"`]/[^'\"`\\r\\n]{0,300}['\"`])"
     },
     {
+      "kind": "http-client",
+      "description": "A client call on a base URL: this.http.get(this.host + '/'), http.put(`${this.host}/${id}`). Map.get(key) has no '+' and no template, it stays out.",
+      "pattern": "\\.(?<method>get|post|put|patch|delete)\\s*\\(\\s*(?<target>`\\$\\{[\\w.$]+\\}[^`]{0,300}`|[\\w$]+(?:\\.[\\w$]+)*\\s*\\+\\s*(?:'[^'\\r\\n]{0,300}'|\"[^\"\\r\\n]{0,300}\"|`[^`]{0,300}`))"
+    },
+    {
       "kind": "url-template",
       "pattern": "(?<target>`\\$\\{[\\w.$]+\\}/[A-Za-z_-][^`\\s]{0,300}`)"
     },

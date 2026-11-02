@@ -15,6 +15,7 @@ param ()
 #   fetch_options       Takes the method from the fetch options.
 #   fetch_own_options   Takes the method only from its own call, not the next.
 #   fetch_paren_string  Ignores a parenthesis inside a string of the options.
+#   client_on_base      Finds client calls on a base URL with their method, not Map.get.
 #   axios_no_dupe       Finds axios.post once, not again as http-client.
 #   xhr_open            Finds XMLHttpRequest.open with method and path.
 #   jquery_getjson      Maps $.getJSON to GET.
@@ -83,6 +84,19 @@ Describe 'Get-UnwireJsCandidate' {
         $hits = @(& $SCRIPT_PATH -Path $folder)
 
         $hits[0].Method | Should -Be 'PUT'
+    }
+
+    It 'client_on_base: finds client calls on a base URL with their method, not Map.get' {
+        $content = 'class S{constructor(h){this.http=h,this.host=o+"/api/Products"}find(e){return this.http.get(this.host+"/",{params:e})}get(e){return this.http.get(`${this.host}/${e}`)}put(e,b){return this.http.put(`${this.host}/${e}`,b)}} cache.get(key);'
+        $folder  = Set-TestAsset -Name 'main.js' -Content $content
+
+        $hits = @(& $SCRIPT_PATH -Path $folder | Where-Object -Property Kind -EQ -Value 'http-client')
+
+        $hits.Count                     | Should -Be 3
+        $hits.Method                    | Should -Be @('GET', 'GET', 'PUT')
+        $hits[0].Target                 | Should -Be 'this.host+"/"'
+        $hits[0].IsLiteralTarget        | Should -BeFalse
+        $hits[1].Target                 | Should -Be '${this.host}/${e}'
     }
 
     It 'axios_no_dupe: finds axios.post once, not again as http-client' {

@@ -182,7 +182,8 @@ is skipped too. Add
 - **Keep**: calls through a request helper (`GET(`, `POST(`, a minified `X(` that
   returns a response) and form actions.
 - **Drop**: noise (`/api/` in a help text) and navigation (`window.location.assign(...)`,
-  `href`, `window.open`, RSS links). Count what was dropped in the root `x-unwire-open`.
+  `href`, `window.open`, RSS links). Name what was dropped, with its positions, in the
+  root `x-unwire-open` (step 6 checks it).
 - **`IsLiteralTarget: false`**: follow the variable in the code to its value. Not
   resolvable: an open point.
 - **Method**: from the helper's name (`POST(...)`) or the call's options. A generic
@@ -230,8 +231,9 @@ The first line that fits:
 - `low`: a part of the path or the method is guessed (values of a runtime variable
   from strings nearby, a generic click handler as POST).
 - `medium`: the path is assembled from parts (`'/api/devices/' + mac + '/block'`), the
-  URL comes from a helper (`api.url(path)`, a raw XHR wrapper), or the body is an
-  object passed through whose keys are not in the code.
+  URL comes from a helper (`api.url(path)`, a raw XHR wrapper), the body is an
+  object passed through whose keys are not in the code, or the call stands in the code
+  but nothing calls it (say "no caller found"; that is no guess, so not `low`).
 - `high`: method, path and every body field stand literally at the call
   (`fetch('/api/status')`, `post('/api/wifi', { ssid, channel })`); a call without a body
   counts as complete.
@@ -285,6 +287,20 @@ Returns one finding per problem (`Severity`, `Location`, `Rule`, `Message`), not
 valid. Fix every `Error` before unwire:document. A `Warning` may stay, but low-confidence
 operations without `x-unwire-open` should get their open points, and a `security`
 warning means derived operations still lack their own `security`.
+
+Then check that no candidate got lost on the way to the spec:
+```powershell
+pwsh -NoProfile -File "${CLAUDE_PLUGIN_ROOT}/skills/analyze/scripts/Test-UnwireCoverage.ps1" `
+    -Path './unwire/<name>/openapi.json' -CandidateFile './unwire/<name>/candidates.json'
+```
+A candidate counts when an operation names its position in `x-unwire-source`, its path
+matches a spec path, an open point names its position, or it points to another origin.
+Work through every entry of `Missing` until the list is empty:
+- an API call: add the operation, `x-unwire-source` with the candidate's `File:Line:Column`
+  (several calls of one service: each gets its own operation),
+- left out on purpose (helper internals, library code, navigation): one root
+  `x-unwire-open` point with the reason and the positions, a list
+  (`assets/app.js:13, 18, 50`) or a range for a cluster (`assets/98.js:1:189000-293000`).
 
 ### Step 7: Live GET
 Optional, last step, only for a URL target, never for a local folder: sends the safe
