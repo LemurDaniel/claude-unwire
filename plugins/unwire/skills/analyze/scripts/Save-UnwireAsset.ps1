@@ -303,6 +303,7 @@ $SESSION_DENYLIST  = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPat
 # ===========================================================================
 #
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
+#   Assert-UnwireSitePath          Fails on a site path the shell rewrote to a Windows path.
 #   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
 #   Get-UnwireInlineScript         Inline script code of a page, string values redacted.
 #   Get-UnwireCleanUri             URI with the session token and parameter removed.
@@ -320,6 +321,20 @@ function Test-UnwireSameOrigin {
     )
 
     return 0 -EQ [System.Uri]::Compare($Left, $Right, [System.UriComponents]::SchemeAndServer, [System.UriFormat]::SafeUnescaped, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+# A site path never starts with a drive letter: Git Bash rewrote it, say how to call it.
+function Assert-UnwireSitePath {
+    param (
+        [System.String] $Name,
+        [System.String] $Value
+    )
+
+    # Git Bash (MSYS) turns '/pages/a.htm' into 'C:/Program Files/Git/pages/a.htm' before pwsh starts
+    if ($Value -NOTMATCH '^[A-Za-z]:[\\/]') {
+        return
+    }
+    throw [System.ArgumentException]::new("$Name must be a site path like '/main/status.htm', got the Windows path '$Value': Git Bash rewrote a leading '/'. Run the call with MSYS_NO_PATHCONV=1 in front, or from PowerShell.")
 }
 
 function Get-UnwireSessionBlock {
@@ -640,6 +655,7 @@ if (-NOT [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $StartU
 # pwsh -File hands a list over as one string: '/a.htm,/b.htm' => '/a.htm', '/b.htm'
 $PagePaths  = $Page -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -NE '' }
 $ExtraPages = foreach ($pagePath in $PagePaths) {
+    Assert-UnwireSitePath -Name 'Page' -Value $pagePath
     $pageUri = [System.Uri]::new($StartUri, $pagePath)
     if (-NOT (Test-UnwireSameOrigin -Left $pageUri -Right $StartUri) -OR $pageUri.AbsolutePath -NOTMATCH $SESSION_PAGE) {
         throw [System.ArgumentException]::new("Page must be a same-origin *.htm or *.html path, e.g. '/main/status.htm', got '$pagePath'.")
@@ -650,6 +666,7 @@ $ExtraPages = foreach ($pagePath in $PagePaths) {
 # Extra scripts: same check, '/a.js,/b.mjs' => '/a.js', '/b.mjs'
 $ScriptPaths  = $Script -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -NE '' }
 $ExtraScripts = foreach ($scriptPath in $ScriptPaths) {
+    Assert-UnwireSitePath -Name 'Script' -Value $scriptPath
     $scriptUri = [System.Uri]::new($StartUri, $scriptPath)
     if (-NOT (Test-UnwireSameOrigin -Left $scriptUri -Right $StartUri) -OR $scriptUri.AbsolutePath -NOTMATCH $EXTRA_SCRIPT) {
         throw [System.ArgumentException]::new("Script must be a same-origin *.js or *.mjs path, e.g. '/js/views/status.js', got '$scriptPath'.")

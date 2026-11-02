@@ -51,6 +51,11 @@ Modules the UI imports from a path built at runtime (a view loader joining a rou
 `.js`) are not found by the crawl: derive their paths from the code and load them with
 `-Script '/js/views/a.js,/js/views/b.js'` (same-origin `*.js`/`*.mjs` only).
 
+Git Bash on Windows rewrites an argument with a leading `/` into a Windows path
+(`C:/Program Files/Git/js/...`) before the script starts: there, put `MSYS_NO_PATHCONV=1`
+in front of every call with `-Page` or `-Script`. The script names the rewrite when it
+sees one.
+
 #### Code behind a login
 Most single-page apps serve their scripts without a login, only the data is protected:
 try without a session first. The script already sends the page as `Referer` like a
@@ -147,7 +152,8 @@ paths from the code: the folder from the loader, the names from string literals 
 the inline scripts of a menu page.
 
 Then run `Save-UnwireAsset.ps1` again with `-Page '/folder/a.htm,/folder/b.htm'` (one
-comma list, it also passes through `-ArgumentList`). Only paths that the code names,
+comma list, it also passes through `-ArgumentList`; from Git Bash with
+`MSYS_NO_PATHCONV=1`, see above). Only paths that the code names,
 never guessed ones; the script rejects anything but same-origin `*.htm`/`*.html` and
 skips the denylist.
 

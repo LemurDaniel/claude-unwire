@@ -98,6 +98,9 @@ Throwaway targets to run Unwire against, even with write calls: `examples/testbe
 - A skill rule "write these steps out in the chat" was ignored twice, the steps were only
   announced. User-facing guides live hard-coded in `data/` and the script shows them
   (see `data/login-guide.json`, `-PromptSession`).
+- Git Bash on Windows (2026-11-02): MSYS rewrote `-Page '/pages/x.htm'` to
+  `C:/Program Files/Git/pages/x.htm`, the script rejected it without saying why. Now
+  `Save-UnwireAsset.ps1` names the rewrite and `analyze/SKILL.md` says `MSYS_NO_PATHCONV=1`.
 - Pester expands `<name>` in `It` titles: no `<base href>` or `</script>` in test names.
 - PowerShell unrolls single-element arrays: `@(@('a', 'b'))` is `@('a', 'b')`, use `,@(...)`.
 - An escape like backslash-u-003c written through a tool can arrive as `<`: build such

@@ -44,6 +44,7 @@ param ()
 #   inline_imports         Follows the imports of inline module scripts.
 #   extra_scripts          Loads the scripts of -Script and follows their imports.
 #   extra_script_rules     Rejects a script that is no same-origin *.js before any request.
+#   shell_rewritten_path   Names the Git Bash rewrite of a -Page or -Script path, before any request.
 #   login_form             Reports a start page with a password field or login script as LoginForm.
 #   login_guide_options    Every language offers login, without login and cancel.
 #   no_cookie_by_default   Sends no Cookie header without UseSession.
@@ -475,6 +476,16 @@ Describe 'Save-UnwireAsset' {
         @{ Case = 'other origin'; Script = 'http://cdn.test/a.js' }
     ) {
         { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -Script $Script } | Should -Throw -ExceptionType ([System.ArgumentException]) -ExpectedMessage 'Script must be a same-origin *.js or *.mjs path*'
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+    }
+
+    It 'shell_rewritten_path: names the Git Bash rewrite of a path before any request, <Case>' -ForEach @(
+        @{ Case = 'page';   Parameter = 'Page';   Value = 'C:/Program Files/Git/pages/status.htm' }
+        @{ Case = 'script'; Parameter = 'Script'; Value = '/js/a.js, C:/Program Files/Git/js/views/b.js' }
+    ) {
+        $Arguments = @{ $Parameter = $Value }
+
+        { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @Arguments } | Should -Throw -ExceptionType ([System.ArgumentException]) -ExpectedMessage "$Parameter must be a site path*MSYS_NO_PATHCONV=1*"
         Should -Invoke Invoke-WebRequest -Times 0 -Exactly
     }
 
