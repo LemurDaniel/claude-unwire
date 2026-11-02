@@ -26,29 +26,29 @@ on the page, per operation and as one list.
 Example output: [examples/grafana/API.html](examples/grafana/API.html), rendered from
 [examples/grafana/openapi.json](examples/grafana/openapi.json).
 
+## Install
+```
+/plugin marketplace add LemurDaniel/claude-unwire
+/plugin install unwire@claude-unwire
+```
+
 ## Layout
+A marketplace repository with one plugin, laid out like Infrastructure-as-Skills-Azure.
+
 | Path | Content |
 | --- | --- |
-| `.claude-plugin/plugin.json` | Plugin manifest. |
-| `commands/unwire.md` | `/unwire`, runs the chain. |
-| `skills/unwire-discover/` | Step 1: published documentation. |
-| `skills/unwire-analyze/` | Step 2: static code analysis, open points. |
-| `skills/unwire-document/` | Step 3: openapi.json → API.html. |
-| `skills/unwire-module/` | Step 4: picked operations → PowerShell module. |
-| `scripts/` | Deterministic PowerShell helpers, see [scripts/README.md](scripts/README.md). |
-| `templates/docs/` | Template of the HTML documentation. |
-| `templates/module/` | Template of the generated module, see [templates/module/README.md](templates/module/README.md). |
-| `examples/` | Example spec and its rendered page. |
-| `tests/` | Pester tests of `scripts/`. |
+| `.claude-plugin/marketplace.json` | Marketplace manifest, points to `plugins/unwire`. |
+| `plugins/unwire/` | The plugin: skills in `core/`, each with its scripts and tests, see [plugins/unwire/README.md](plugins/unwire/README.md). |
+| `examples/` | Example spec and its rendered page, plus a local testbed to run Unwire against, see [examples/testbed/README.md](examples/testbed/README.md). |
 
 ## Status
-v0.1.0: all scripts work and are tested. Not yet run end to end as `/unwire`, the module
-generation of `unwire-module` is untested.
+v0.2.0: all scripts work and are tested, one full run against Gitea (518 operations).
+The module generation of `unwire-module` has not run yet.
 
 ## Development
 ```powershell
-'./scripts', './templates', './tests' | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Recurse -Severity Warning, Error }
-Invoke-Pester -Path ./tests
-./scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
-claude --plugin-dir .      # load the plugin locally
+Invoke-ScriptAnalyzer -Path ./plugins/unwire -Recurse -Severity Warning, Error
+Invoke-Pester -Path ./plugins/unwire
+./plugins/unwire/core/unwire-document/scripts/ConvertTo-UnwireHtml.ps1 -Path ./examples/grafana/openapi.json   # re-render the example
+claude --plugin-dir ./plugins/unwire      # load the plugin locally
 ```

@@ -1,2 +1,6 @@
-# Unwire output of real targets: downloaded assets, specs and docs of your own devices
-unwire/
+# Unwire output of real targets: downloaded assets, specs and docs of your own devices.
+# Anchored to the root, 'unwire/' alone would also hide plugins/unwire/.
+/unwire/
+
+# Local settings of the testbed, .env.example holds the test values
+examples/testbed/.env

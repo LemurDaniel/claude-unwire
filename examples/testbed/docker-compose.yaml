@@ -1,0 +1,109 @@
+# ---------------------------------------------------------------------------
+# Unwire testbed
+#   Local targets Unwire may hit without any risk: throwaway containers on
+#   127.0.0.1 only, no volumes, 'docker compose down' resets everything.
+#
+#   Copy-Item .env.example .env
+#   docker compose up -d
+#   docker compose --profile extra up -d      # also Uptime Kuma
+#   docker compose down                       # back to a fresh state
+# ---------------------------------------------------------------------------
+
+#
+#   Chapters:
+#     SHOPS AND DASHBOARDS   OWASP Juice Shop and Grafana.
+#     CODE HOSTING           Gitea with official API and internal web routes.
+#     OPTIONAL TARGETS       Uptime Kuma (Socket.IO), profile 'extra'.
+#
+
+services:
+
+  # ===========================================================================
+  # ========================   SHOPS AND DASHBOARDS   =========================
+  # ===========================================================================
+  #
+  #   Juice Shop Service   Insecure shop made to be attacked, Angular SPA.
+  #   Grafana Service      Webpack app with lazy chunks behind a login.
+  #
+
+  # ---------------------------------------------------------------------------
+  # Juice Shop Service
+  #   OWASP's intentionally insecure shop: REST API, login, admin area.
+  # ---------------------------------------------------------------------------
+  unwire-juiceshop:
+    container_name: unwire-juiceshop
+    restart: "no"   # a testbed should not come back after a reboot
+    image: bkimminich/juice-shop:v17.1.1
+
+    ports:
+      - "127.0.0.1:3000:3000"   # Juice Shop UI and API, this machine only
+
+  # ---------------------------------------------------------------------------
+  # Grafana Service
+  #   Webpack runtime with a chunk map, admin login from .env.
+  # ---------------------------------------------------------------------------
+  unwire-grafana:
+    container_name: unwire-grafana
+    restart: "no"   # a testbed should not come back after a reboot
+    image: grafana/grafana-oss:11.4.0
+
+    ports:
+      - "127.0.0.1:3001:3000"   # Grafana UI and API, this machine only
+
+    environment:
+      # Test admin from .env, startup aborts with the message when it is missing
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?Set GRAFANA_ADMIN_USER in .env, see .env.example}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env, see .env.example}
+
+      # No phone home from a throwaway instance
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+
+  # ===========================================================================
+  # ============================   CODE HOSTING   =============================
+  # ===========================================================================
+  #
+  #   Gitea Service   Published swagger.v1.json plus internal web routes.
+  #
+
+  # ---------------------------------------------------------------------------
+  # Gitea Service
+  #   Installed on start with SQLite, the admin is created once (see README).
+  # ---------------------------------------------------------------------------
+  unwire-gitea:
+    container_name: unwire-gitea
+    restart: "no"   # a testbed should not come back after a reboot
+    image: gitea/gitea:1.22.6
+
+    ports:
+      - "127.0.0.1:3003:3000"   # Gitea UI and API, this machine only
+
+    environment:
+      # Skip the install page, SQLite inside the container
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__server__ROOT_URL: http://127.0.0.1:3003/
+
+      # Swagger UI and swagger.v1.json for unwire-discover
+      GITEA__api__ENABLE_SWAGGER: "true"
+
+  # ===========================================================================
+  # ==========================   OPTIONAL TARGETS   ===========================
+  # ===========================================================================
+  #
+  #   Uptime Kuma Service   Vite app that talks Socket.IO instead of REST.
+  #
+
+  # ---------------------------------------------------------------------------
+  # Uptime Kuma Service
+  #   Shows where Unwire ends: most calls go over a WebSocket, not HTTP.
+  # ---------------------------------------------------------------------------
+  unwire-kuma:
+    container_name: unwire-kuma
+    restart: "no"   # a testbed should not come back after a reboot
+    image: louislam/uptime-kuma:1.23.16
+    profiles:
+      - extra
+
+    ports:
+      - "127.0.0.1:3002:3001"   # Uptime Kuma UI, this machine only

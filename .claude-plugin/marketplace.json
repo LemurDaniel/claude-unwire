@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-unwire",
+  "description": "Unwire: reverse engineer the undocumented API of a web UI (router, NAS, smart home, web app) into an OpenAPI spec and a clickable HTML documentation. Read-only by design.",
+  "owner": {
+    "name": "LemurDaniel"
+  },
+  "plugins": [
+    {
+      "name": "unwire",
+      "description": "Finds published API docs, analyzes the static frontend code of a web UI (HTML, JS bundles, webpack chunks, source maps) and writes an OpenAPI spec plus a clickable HTML documentation. Never calls an endpoint, a PowerShell module follows on request.",
+      "author": {
+        "name": "LemurDaniel"
+      },
+      "category": "development",
+      "source": "./plugins/unwire",
+      "homepage": "https://github.com/LemurDaniel/claude-unwire"
+    }
+  ]
+}
