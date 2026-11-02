@@ -34,7 +34,10 @@ param ()
 #   webpack_chunk_prefix   Builds CRA-style chunk names relative to the runtime's folder.
 #   referer                Sends the loading page as Referer, the start page without one.
 #   access_denied          Counts scripts that answer 401 or 403 and warns about a login.
-#   login_form             Reports a start page with a password field as LoginForm.
+#   inline_imports         Follows the imports of inline module scripts.
+#   extra_scripts          Loads the scripts of -Script and follows their imports.
+#   extra_script_rules     Rejects a script that is no same-origin *.js before any request.
+#   login_form             Reports a start page with a password field or login script as LoginForm.
 #   login_guide_options    Every language offers login, without login and cancel.
 #   no_cookie_by_default   Sends no Cookie header without UseSession.
 #   session_missing        Fails early when the session variable is empty.
@@ -48,6 +51,17 @@ param ()
 #   session_no_redirect    Never follows a redirect and warns about an expired session.
 #   session_secret         Never writes the cookie value into the manifest or the output.
 #   session_page_unsaved   Reads the signed-in start page for scripts, never saves it.
+#   session_still_login    Warns when the start page is still a login page in session mode.
+#   session_inline_object  Redacts object values of inline scripts, keeps plain paths.
+#   session_value_scrub    Scrubs the session value from every saved file, wherever it is.
+#   session_parameter      Sends the session as URL parameter, never as cookie, never in a record.
+#   session_parameter_only Rejects SessionParameter without session mode before any request.
+#   prompt_curl_header     Sends the Authorization or auth header of a cURL, drops the others.
+#   prompt_curl_digest     Rejects HTTP Digest before any request.
+#   prompt_curl_path_token Sends a path token only on the wire, as segment or appended.
+#   prompt_curl_no_session Fails early on a cURL without any session.
+#   prompt_curl_parameter  Takes the session parameter out of the URL or data of a pasted cURL.
+#   prompt_curl_no_param   Fails early on a cURL without the parameter, shows only its shape.
 #   prompt_session         Asks for the cookie masked and sends it, no variable needed.
 #   prompt_header_line     Accepts a pasted 'Cookie: name=value' header line.
 #   prompt_curl            Takes the cookie out of a pasted 'Copy as cURL' command.
@@ -331,9 +345,47 @@ Describe 'Save-UnwireAsset' {
         $warnings             | Should -BeLike '*2 scripts or maps answered 401/403*session mode*'
     }
 
-    It 'login_form: reports a start page with a password field as LoginForm, <Case>' -ForEach @(
-        @{ Case = 'login page'; Page = '<form><input id="pw" type="password"></form><script src="/a.js"></script>'; Expected = $true }
-        @{ Case = 'other page'; Page = '<form><input type="text"></form><script src="/a.js"></script>';               Expected = $false }
+    It 'inline_imports: follows the imports of inline module scripts' {
+        $Site['http://router.test/']              = New-TestResponse -Content '<script type="module">import { setConfig } from "/js/config.js"; import login from "./js/start.js"; import("/js/lazy.mjs");</script>'
+        $Site['http://router.test/js/config.js']  = New-TestResponse -Content 'c()'
+        $Site['http://router.test/js/start.js']   = New-TestResponse -Content 's()'
+        $Site['http://router.test/js/lazy.mjs']   = New-TestResponse -Content 'l()'
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
+
+        $summary.Saved                                               | Should -Be 4
+        Join-Path -Path $OutputDirectory -ChildPath 'js/config.js'   | Should -Exist
+        Join-Path -Path $OutputDirectory -ChildPath 'js/start.js'    | Should -Exist
+        Join-Path -Path $OutputDirectory -ChildPath 'js/lazy.mjs'    | Should -Exist
+    }
+
+    It 'extra_scripts: loads the scripts of -Script and follows their imports' {
+        $Site['http://router.test/']                   = New-TestResponse -Content '<html></html>'
+        $Site['http://router.test/js/views/status.js'] = New-TestResponse -Content 'import x from "./parts/table.js"'
+        $Site['http://router.test/js/views/parts/table.js'] = New-TestResponse -Content 't()'
+        $Site['http://router.test/js/views/wlan.mjs']  = New-TestResponse -Content 'w()'
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe -Script '/js/views/status.js, js/views/wlan.mjs'
+
+        $summary.Saved                                                         | Should -Be 4
+        Join-Path -Path $OutputDirectory -ChildPath 'js/views/parts/table.js'  | Should -Exist
+        Join-Path -Path $OutputDirectory -ChildPath 'js/views/wlan.mjs'        | Should -Exist
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/js/views/status.js' -AND $Headers.Referer -EQ 'http://router.test/' }
+    }
+
+    It 'extra_script_rules: rejects a script that is no same-origin *.js before any request, <Case>' -ForEach @(
+        @{ Case = 'endpoint';     Script = '/data.lua' }
+        @{ Case = 'other origin'; Script = 'http://cdn.test/a.js' }
+    ) {
+        { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -Script $Script } | Should -Throw -ExceptionType ([System.ArgumentException]) -ExpectedMessage 'Script must be a same-origin *.js or *.mjs path*'
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+    }
+
+    It 'login_form: reports a start page with a password field or login script as LoginForm, <Case>' -ForEach @(
+        @{ Case = 'password field'; Page = '<form><input id="pw" type="password"></form><script src="/a.js"></script>'; Expected = $true }
+        @{ Case = 'login script';   Page = '<script src="/js/box-login.js"></script><script src="/a.js"></script>';      Expected = $true }
+        @{ Case = 'login import';   Page = '<script type="module">import login from "/js/login.js";</script>';            Expected = $true }
+        @{ Case = 'other page';     Page = '<form><input type="text"></form><script src="/js/catalog.js"></script>';      Expected = $false }
     ) {
         $Site['http://router.test/']     = New-TestResponse -Content $Page
         $Site['http://router.test/a.js'] = New-TestResponse -Content 'a()'
@@ -491,6 +543,63 @@ Describe 'Save-UnwireAsset' {
             Join-Path -Path $OutputDirectory -ChildPath 'index.html' | Should -Not -Exist
             Join-Path -Path $OutputDirectory -ChildPath 'app.js'     | Should -Exist
         }
+
+        It 'session_still_login: warns when the start page is still a login page in session mode' {
+            $Site['http://router.test/'] = New-TestResponse -Content '<script src="/js/login.js"></script>'
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -WarningVariable warnings -WarningAction SilentlyContinue
+
+            $summary.LoginForm | Should -BeTrue
+            $warnings          | Should -BeLike '*still is a login form in session mode*-SessionParameter*'
+        }
+
+        It 'session_inline_object: redacts object values of inline scripts, keeps plain paths' {
+            $Site['http://router.test/'] = New-TestResponse -Content '<script type="module">const data = {"sid":"TOP-SECRET-SID","user":"TOP-SECRET-USER","firstTenMin":false}; ajax({url: "/data.lua", page: ''TOP-SECRET-PAGE''}); login.init(data);</script>'
+
+            $null   = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
+            $inline = Get-Content -Path (Join-Path $OutputDirectory 'index.html.inline.js') -Raw
+
+            $inline | Should -Not -Match 'TOP-SECRET'
+            $inline | Should -BeLike '*{"sid":"<redacted>","user":"<redacted>","firstTenMin":false}*'
+            $inline | Should -BeLike '*url: "/data.lua", page: "<redacted>"*'
+        }
+
+        It 'session_value_scrub: scrubs the session value from every saved file, wherever it is' {
+            $Site['http://router.test/']       = New-TestResponse -Content '<script src="/app.js"></script><script>init(["TOP-SECRET-VALUE"]);</script>'
+            $Site['http://router.test/app.js'] = New-TestResponse -Content 'call("/x?sid=TOP-SECRET-VALUE")'
+
+            $null  = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig
+            $saved = Get-ChildItem -Path $OutputDirectory -Recurse -File | Get-Content -Raw | Out-String
+
+            $saved                                                              | Should -Not -Match 'TOP-SECRET-VALUE'
+            Get-Content -Path (Join-Path $OutputDirectory 'app.js') -Raw       | Should -Be 'call("/x?sid=<redacted>")'
+            Get-Content -Path (Join-Path $OutputDirectory 'index.html.inline.js') -Raw | Should -Be 'init(["<redacted>"]);'
+        }
+
+        It 'session_parameter: sends the session as URL parameter, never as cookie, never in a record' {
+            $env:UNWIRE_TEST_COOKIE = 'TOP-SECRET-VALUE'
+            $Site['http://router.test/?sid=TOP-SECRET-VALUE']          = New-TestResponse -Content '<script src="/js/app.js?v=2"></script><iframe src="/main.htm"></iframe>'
+            $Site['http://router.test/js/app.js?v=2&sid=TOP-SECRET-VALUE'] = New-TestResponse -Content 'a()'
+            $Site['http://router.test/main.htm?sid=TOP-SECRET-VALUE']  = New-TestResponse -Content '<script>var user = "TOP-SECRET-USER";</script>'
+
+            $output   = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @SessionConfig -SessionParameter 'sid' -Verbose 4>&1 3>&1 | Out-String
+            $saved    = Get-ChildItem -Path $OutputDirectory -Recurse -File | Get-Content -Raw | Out-String
+            $manifest = Get-Content -Path (Join-Path $OutputDirectory 'unwire-assets.json') -Raw | ConvertFrom-Json
+
+            Join-Path -Path $OutputDirectory -ChildPath 'js/app.js'           | Should -Exist
+            Join-Path -Path $OutputDirectory -ChildPath 'main.htm.inline.js'  | Should -Exist
+            $manifest.assets.Uri                                              | Should -Contain 'http://router.test/js/app.js?v=2'
+            $manifest.sessionParameter                                        | Should -Be 'sid'
+            $output                                                           | Should -Not -Match 'TOP-SECRET'
+            $saved                                                            | Should -Not -Match 'TOP-SECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $null -NE $Headers.Cookie -OR "$($Headers.Referer)" -MATCH 'TOP-SECRET' }
+            Should -Invoke Invoke-WebRequest -Times 3 -Exactly -ParameterFilter { $Uri.Query -LIKE '*sid=TOP-SECRET-VALUE' -AND $Method -EQ 'Get' }
+        }
+
+        It 'session_parameter_only: rejects SessionParameter without session mode before any request' {
+            { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SessionParameter 'sid' } | Should -Throw -ExceptionType ([System.ArgumentException]) -ExpectedMessage "SessionParameter 'sid' must be used with PromptSession or UseSession."
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
     }
 
     Context 'prompt session' {
@@ -582,9 +691,107 @@ Describe 'Save-UnwireAsset' {
             Should -Invoke Invoke-WebRequest -Times 0 -Exactly
         }
 
+        It 'prompt_curl_header: sends the <Header> header of a cURL, drops the others' -ForEach @(
+            @{ Header = 'Authorization'; Value = 'Basic UFJPTVBULVNFQ1JFVA==' }
+            @{ Header = 'Authorization'; Value = 'Bearer PROMPT-SECRET' }
+            @{ Header = 'X-Auth-Token';  Value = 'PROMPT-SECRET' }
+        ) {
+            $pasted = "curl 'http://router.test/' -H 'accept: text/html' -H '$($Header): $Value' -H 'user-agent: test'"
+            Mock Read-Host { ConvertTo-SecureString -String $pasted -AsPlainText -Force }
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig
+
+            $summary.Saved | Should -Be 1
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Headers[$Header] -EQ $Value -AND -NOT $Headers.ContainsKey('accept') -AND -NOT $Headers.ContainsKey('Cookie') }
+            $manifest = Get-Content -Path $summary.Manifest -Raw
+            $manifest | Should -Not -Match 'PROMPT-SECRET|UFJPTVBULVNFQ1JFVA'
+            ($manifest | ConvertFrom-Json).sessionKinds | Should -Be "header:$Header"
+        }
+
+        It 'prompt_curl_digest: rejects HTTP Digest before any request' {
+            Mock Read-Host { ConvertTo-SecureString -String "curl 'http://router.test/' -H 'Authorization: Digest username=`"admin`", response=`"PROMPT-SECRET`"'" -AsPlainText -Force }
+
+            $thrown = { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig } | Should -Throw -ExceptionType ([System.ArgumentException]) -PassThru
+
+            $thrown.Exception.Message | Should -BeLike 'The session must not be HTTP Digest*Save page as*'
+            $thrown.Exception.Message | Should -Not -Match 'PROMPT-SECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It 'prompt_curl_path_token: sends a path token only on the wire, as <Case>' -ForEach @(
+            @{
+                Case     = 'segment'
+                Start    = 'http://router.test/cgi-bin/ui/'
+                Pasted   = "curl 'http://router.test/cgi-bin/ui/;stok=PROMPTSECRET1/admin/status' -H 'accept: */*'"
+                Page     = '<script src="/static/app.js"></script><iframe src="/cgi-bin/ui/;stok=PROMPTSECRET1/admin/menu.htm"></iframe>'
+                Wire     = @('http://router.test/cgi-bin/ui/;stok=PROMPTSECRET1/', 'http://router.test/static/app.js', 'http://router.test/cgi-bin/ui/;stok=PROMPTSECRET1/admin/menu.htm')
+                Recorded = 'http://router.test/cgi-bin/ui/admin/menu.htm'
+            }
+            @{
+                Case     = 'appended'
+                Start    = 'http://router.test/app/home.jsp'
+                Pasted   = "curl 'http://router.test/app/home.jsp;jsessionid=PROMPTSECRET2'"
+                Page     = '<script src="/app/main.js"></script>'
+                Wire     = @('http://router.test/app/home.jsp;jsessionid=PROMPTSECRET2', 'http://router.test/app/main.js;jsessionid=PROMPTSECRET2')
+                Recorded = 'http://router.test/app/main.js'
+            }
+        ) {
+            $Site[$Wire[0]] = New-TestResponse -Content $Page
+            foreach ($wireUri in $Wire | Select-Object -Skip 1) { $Site[$wireUri] = New-TestResponse -Content '<script>x()</script>' }
+            Mock Read-Host { ConvertTo-SecureString -String $Pasted -AsPlainText -Force }
+
+            $output   = & $SCRIPT_PATH -Uri $Start -OutputDirectory $OutputDirectory @PromptConfig -Verbose 4>&1 3>&1 | Out-String
+            $manifest = Get-Content -Path (Join-Path $OutputDirectory 'unwire-assets.json') -Raw
+
+            foreach ($wireUri in $Wire) {
+                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsoluteUri -EQ $wireUri }
+            }
+            ($manifest | ConvertFrom-Json).assets.Uri | Should -Contain $Recorded
+            $manifest                                 | Should -Not -Match 'PROMPTSECRET'
+            $output                                   | Should -Not -Match 'PROMPTSECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { "$($Headers.Referer)" -MATCH 'PROMPTSECRET' }
+        }
+
+        It 'prompt_curl_no_session: fails early on a cURL without any session' {
+            Mock Read-Host { ConvertTo-SecureString -String "curl 'http://router.test/' -H 'accept: text/html' -H 'user-agent: PROMPT-SECRET'" -AsPlainText -Force }
+
+            $thrown = { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig } | Should -Throw -ExceptionType ([System.ArgumentException]) -PassThru
+
+            $thrown.Exception.Message | Should -BeLike "The cURL must carry a session*first POST of type 'document'*Got: *starts with 'curl'."
+            $thrown.Exception.Message | Should -Not -Match 'PROMPT-SECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
+        It 'prompt_curl_parameter: takes the session parameter out of the <Case> of a pasted cURL' -ForEach @(
+            @{ Case = 'data';     Lines = @("curl 'https://router.test/' \", "  -H 'accept: text/html' \", "  --data-raw 'reload=true&sid=PROMPT-SECRET&forward='") }
+            @{ Case = 'URL';      Lines = @('curl ^"https://router.test/data.lua?lang=de^&sid=PROMPT-SECRET^" ^', '  -H ^"accept: */*^"') }
+            @{ Case = 'pair';     Lines = @('sid=PROMPT-SECRET') }
+            @{ Case = 'bare';     Lines = @('PROMPT-SECRET') }
+        ) {
+            $Site['http://router.test/?sid=PROMPT-SECRET']       = New-TestResponse -Content '<script src="/app.js"></script>'
+            $Site['http://router.test/app.js?sid=PROMPT-SECRET'] = New-TestResponse -Content 'a()'
+            $pasted = [System.Collections.Generic.Queue[System.String]]::new([System.String[]] $Lines)
+            Mock Read-Host { ConvertTo-SecureString -String $pasted.Dequeue() -AsPlainText -Force }
+
+            $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig -SessionParameter 'sid'
+
+            $summary.Saved | Should -Be 1
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter { $Uri.Query -EQ '?sid=PROMPT-SECRET' }
+        }
+
+        It 'prompt_curl_no_param: fails early on a cURL without the parameter, shows only its shape' {
+            Mock Read-Host { ConvertTo-SecureString -String "curl 'https://router.test/' --data-raw 'user=PROMPT-SECRET'" -AsPlainText -Force }
+
+            $thrown = { & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory @PromptConfig -SessionParameter 'sid' } | Should -Throw -ExceptionType ([System.ArgumentException]) -PassThru
+
+            $thrown.Exception.Message | Should -BeLike "The session must be a 'Copy as cURL' with 'sid=' *Got: *starts with 'curl'."
+            $thrown.Exception.Message | Should -Not -Match 'PROMPT-SECRET'
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+
         It 'prompt_guide: shows the login guide with the URL before the prompt, in <Language>' -ForEach @(
-            @{ Language = 'de'; Title = 'Unwire: Login f?r http://router.test/'; Step = '1. *leeren Browser-Tab*F12*'; Blocked = '*Entwicklertools. Zuerst ge?ffnet, kann keine Seite sie sperren.'; PromptLike = 'Session-Cookie (*'; Done = 'Fertig.*' }
-            @{ Language = 'en'; Title = 'Unwire: login for http://router.test/'; Step = '1. *empty browser tab*F12*'; Blocked = '*Developer tools. Opened first, no page can block it.'; PromptLike = 'Session cookie (*'; Done = 'Done.*' }
+            @{ Language = 'de'; Title = 'Unwire: Login f?r http://router.test/'; Step = '1. *leeren Browser-Tab*F12*'; Blocked = '*Entwicklertools. Zuerst ge?ffnet, kann keine Seite sie sperren.'; PromptLike = 'Session ("Als cURL kopieren")'; Done = 'Fertig.*' }
+            @{ Language = 'en'; Title = 'Unwire: login for http://router.test/'; Step = '1. *empty browser tab*F12*'; Blocked = '*Developer tools. Opened first, no page can block it.'; PromptLike = 'Session ("Copy as cURL")'; Done = 'Done.*' }
         ) {
             Mock Read-Host { ConvertTo-SecureString -String 'i_like_gitea=PROMPT-SECRET' -AsPlainText -Force }
 

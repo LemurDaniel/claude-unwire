@@ -41,6 +41,9 @@ somewhere in there.
    and the reason: skipped CDN scripts and failed assets go into the open points.
    `not-found` are guessed chunk paths (any `'*.js'` string in a script), a 404 there is normal.
    Prefer the source maps: they hold the original sources with real names.
+   Modules the UI imports from a path built at runtime (a view loader joining a route and
+   `.js`) are not found by the crawl: derive their paths from the code and load them with
+   `-Script '/js/views/a.js,/js/views/b.js'` (same-origin `*.js`/`*.mjs` only).
 
    **Code behind a login.** Most single-page apps serve their scripts without a login, only
    the data is protected: try without a session first. The script already sends the page
@@ -50,8 +53,8 @@ somewhere in there.
    - the start page or the scripts redirect to a login,
    - the summary reports `AccessDenied` above 0: scripts answered 401 or 403 although the
      Referer was sent,
-   - the summary reports `LoginForm: True`: the start page is a login form, so only the
-     code of the login page is there.
+   - the summary reports `LoginForm: True`: the start page is a login form (a password
+     field or a script named after a login), so only the code of the login page is there.
 
    Never decide this yourself, also not when the login page's code already looks useful:
    the user picks with a login, without one, or cancel. Then:
@@ -94,6 +97,16 @@ somewhere in there.
      Elsewhere (macOS, Linux, no desktop) give the command for the user's own terminal
      instead of opening a window, it shows the same guide there, and ask "Done?" with
      AskUserQuestion after it ran.
+   - The script reads every session the cURL carries: cookie, `Authorization` header
+     (Basic, Bearer, own schemes), auth headers like `X-Auth-Token` and a `;name=value`
+     token in the URL path. HTTP Digest is rejected (valid for one URL only): offer the
+     local folder ("Save page as") instead.
+   - Session in a URL parameter instead of a cookie: the login code builds URLs like
+     `?sid=` or posts a form with `sid`, and the window rejects the cURL as "no cookie".
+     Add `'-SessionParameter', '<name>'` with the name from the code to the window
+     command and open it again. The script then appends `<name>=<VALUE>` to every GET,
+     takes the value from the URL or data of the cURL, and keeps it out of every record.
+     `LoginForm: True` in session mode means the session was not accepted.
    - Never ask for the password, never log in, never ask the user to paste the cookie into
      the chat, never write it to a file.
    - `-UseSession` reads the cookie from `$env:UNWIRE_COOKIE` instead, for automation only.

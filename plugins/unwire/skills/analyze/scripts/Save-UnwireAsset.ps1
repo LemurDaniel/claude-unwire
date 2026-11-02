@@ -6,16 +6,24 @@
 #   Every asset goes out with the page that loaded it as Referer, like a browser: some
 #   devices answer 403 to scripts without it. Scripts that still answer 401 or 403
 #   are counted as AccessDenied: the code is probably behind a login, try session mode.
-#   A start page with a password field is reported as LoginForm: without a session only
-#   the code of the login page is there.
+#   A start page with a password field or a script named after a login (login.js) is
+#   reported as LoginForm: without a session only the code of the login page is there.
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
 #   the start page, *.htm/*.html pages and frames and *.js, *.mjs, *.map files, never an
 #   endpoint or redirect. Signed-in pages are read, never saved: only their inline script
-#   code is kept, with the string values of 'var x = "..."' assignments redacted.
+#   code is kept, with the string values of 'var x = "..."' assignments and of object
+#   properties redacted (plain paths stay). The session value itself is scrubbed from every
+#   file before it is written.
 #   -PromptSession shows the login guide of data/login-guide.json in -Language, then asks for
 #   the cookie with a masked prompt (interactive, nothing on disk), -UseSession reads it from
 #   an environment variable (automation). The cookie never appears in output, logs or manifest.
+#   A pasted cURL is read for every session it carries: the cookie, the Authorization header
+#   (Basic, Bearer, own schemes; Digest is rejected), auth headers like X-Auth-Token and a
+#   ';name=value' token in the URL path ('/ui/;stok=<VALUE>/', ';jsessionid=<VALUE>').
+#   -SessionParameter 'sid' adds a session URL parameter, for UIs that keep it in the URL or
+#   form data. A token or parameter goes only on the wire, never into a record, a Referer or
+#   a log line.
 #
 #   Writes the files below OutputDirectory, mirrored by URL path, plus unwire-assets.json
 #   with every saved, skipped and failed asset.
@@ -23,6 +31,7 @@
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local:5001' -OutputDirectory ./unwire/nas/assets -SkipCertificateCheck
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets -Page '/main/status.htm,/frame/menu.htm'
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'http://192.168.178.1' -OutputDirectory ./unwire/router/assets -Script '/js/views/status.js'
 #
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/wiki/' -OutputDirectory ./unwire/wiki/assets -PromptSession -Language en
 #     Unwire: login for https://nas.local/wiki/        # the guide, then the masked prompt
@@ -30,6 +39,8 @@
 #
 #   $env:UNWIRE_COOKIE = 'session_id=<VALUE>'
 #   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://nas.local/dashboard/' -OutputDirectory ./unwire/dashboard/assets -UseSession
+#
+#   ./plugins/unwire/skills/analyze/scripts/Save-UnwireAsset.ps1 -Uri 'https://router.test' -OutputDirectory ./unwire/router/assets -PromptSession -SessionParameter sid
 
 #
 #   Chapters:
@@ -73,6 +84,18 @@ param (
     )]
     [System.String[]]
     $Page = @(),
+
+    <#
+    [Optional]
+    Extra scripts to load besides the start page, e.g. '/js/views/status.js': modules the UI
+    imports at runtime from a path built in code, derived from the code by the agent. Only
+    same-origin *.js or *.mjs paths, resolved against Uri, the denylist applies in session mode.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [System.String[]]
+    $Script = @(),
 
     <#
     [Optional]
@@ -166,6 +189,21 @@ param (
 
     <#
     [Optional]
+    Name of the URL parameter that carries the session, e.g. 'sid', for UIs that keep the
+    session in the URL or form data instead of a cookie. Session mode then appends
+    'name=<VALUE>' to the query of every request instead of sending a Cookie header. The
+    value comes from the prompt or the session variable: a cURL with the parameter in its URL
+    or data, 'name=value' or the bare value.
+    #>
+    [Parameter(
+        Mandatory = $false
+    )]
+    [ValidatePattern('^[\w-]+$')]
+    [System.String]
+    $SessionParameter,
+
+    <#
+    [Optional]
     Asks for the session cookie with a masked prompt and switches to session mode like
     UseSession. The cookie lives only in memory for this run: not on disk, not in the history.
     #>
@@ -207,6 +245,12 @@ $HTML_BASE_REF     = '<base\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_SCRIPT_REF  = '<script\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
 $HTML_PRELOAD_REF  = '<link\b[^>]*?\bhref\s*=\s*["'']?(?<ref>[^"''\s>]+\.m?js(?:\?[^"''\s>]*)?)'
 $HTML_FRAME_REF    = '<i?frame\b[^>]*?\bsrc\s*=\s*["'']?(?<ref>[^"''\s>]+)'
+# Inline module scripts: import login from "/js/login.js", import "./a.mjs", import("/js/lazy.js")
+$HTML_IMPORT_REF   = '\bimport\s*(?:\(\s*|[\w$*{}\s,]+?\s*from\s*)?["''](?<ref>[^"''\s]+\.m?js)["'']'
+# Script file names of a login page: login.js, box-login.js, signin.mjs (not catalog.js)
+$LOGIN_SCRIPT_NAME = '(?i)(?<![a-z])(log-?in|sign-?in)'
+# Session value of SessionParameter: URL-safe characters only, it goes into the query
+$SESSION_VALUE     = '^[\w.~%-]+$'
 # //# sourceMappingURL=app.js.map (last one wins, bundlers append it at the end)
 $JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
 # 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`
@@ -221,11 +265,25 @@ $CHUNK_HASH        = '^[0-9a-fA-F]{6,}$'
 # Session mode: what may be requested at all, and what never
 $SESSION_STATIC    = '\.(m?js|map)$'
 $SESSION_PAGE      = '\.html?$'
+$EXTRA_SCRIPT      = '\.m?js$'
 # Inline script blocks of a page: <script>...</script> without src
 $HTML_INLINE_SCRIPT = '(?is)<script\b(?![^>]*\bsrc\s*=)[^>]*>(?<code>.*?)</script>'
 # Server-rendered values: var name = "value"; => var name = "<redacted>";
 $JS_STRING_ASSIGNMENT = '(?<head>\b(?:var|let|const)\s+[\w$]+\s*=\s*)(?<q>["''])(?:\\.|(?!\k<q>)[^\\\r\n])*\k<q>'
+# Server-rendered objects: {"sid":"value", user: 'value'} => {"sid":"<redacted>", user: "<redacted>"}
+$JS_PROPERTY_STRING = '(?<head>(?:"[\w$-]+"|''[\w$-]+''|\b[\w$]+)\s*:\s*)(?<q>["''])(?<value>(?:\\.|(?!\k<q>)[^\\\r\n])*)\k<q>'
+# Property values kept for the analysis: plain paths without a query, '/api/status', './x.js'
+$JS_PATH_VALUE      = '^\.{0,2}/[\w./-]*$'
+# Session values shorter than this are no secret (lang=de) and are not scrubbed
+$MIN_SECRET_LENGTH  = 6
 $SESSION_DENYLIST  = '(?i)(log-?out|sign-?out|reboot|restart|shutdown|reset|delete|remove|apply|save|firmware|upgrade|factory)'
+# Headers of a pasted cURL that carry a session: Authorization, X-Auth-Token, X-CSRF-Token, X-Api-Key
+$SESSION_HEADER    = '^(?i)(authorization|x-[\w-]*(auth|token|session|api-?key)[\w-]*)$'
+# Session token in the URL path of a pasted cURL:
+# - own segment:   '/cgi-bin/ui/;stok=abc/admin'  => prefix '/cgi-bin/ui/', token 'stok=abc'
+# - appended:      '/app/home.jsp;jsessionid=abc' => token 'jsessionid=abc'
+$PATH_TOKEN_SEGMENT = '^(?<prefix>/(?:[^/;]+/)*);(?<token>[\w.-]+=[^/;]+)(?:/|$)'
+$PATH_TOKEN_SUFFIX  = '[^/;]+;(?<token>[\w.-]+=[^/;]+)$'
 # Line continuations of a pasted cURL command: bash '\', cmd '^', PowerShell '`'
 $PASTE_CONTINUATION = '\s[\\^`]\s*$'
 $MAX_PASTE_LINES    = 200
@@ -237,11 +295,17 @@ $MAX_PASTE_LINES    = 200
 #   Test-UnwireSameOrigin          Compares scheme, host and port of two URIs.
 #   Get-UnwireSessionBlock         Why session mode must not request a URI, $null if it may.
 #   Get-UnwireInlineScript         Inline script code of a page, string values redacted.
-#   ConvertTo-UnwireCookieHeader   Cookie header from the usual copy formats of a browser.
+#   ConvertTo-UnwireRedactedText   Text with every session value replaced.
+#   ConvertFrom-UnwireCurlSession  Cookie, auth headers and path token of a pasted cURL.
+#   ConvertTo-UnwireCookieHeader   Cookie header from the other copy formats of a browser.
+#   ConvertTo-UnwireSessionValue   Value of the session URL parameter from pasted text.
+#   Get-UnwireRequestUri           URI with the session token and parameter added.
+#   Get-UnwireCleanUri             URI with the session token and parameter removed.
 #   Get-UnwireCookieShape          Describes pasted text without showing its content.
 #   Invoke-UnwireAssetRequest      GET with redirects followed only within the origin.
 #   Get-UnwireAssetFile            Local file path of an asset, always inside the root.
 #   Find-UnwireAssetReference      Scripts, frames, chunks and source maps of a text.
+#   Test-UnwireLoginPage           Whether a page is a login page.
 #   ConvertFrom-UnwireDataUri      Decodes an inline 'data:' source map.
 #
 
@@ -286,15 +350,100 @@ function Get-UnwireInlineScript {
         [System.String] $Text
     )
 
-    # Only the code between the tags; string values of simple assignments are redacted, a
-    # signed-in page renders its data there (var wlanKey = "secret";).
+    # Only the code between the tags; string values of simple assignments and of object
+    # properties are redacted, a signed-in page renders its data there
+    # (var wlanKey = "secret";, const data = {"sid":"secret"}). Plain paths stay for the analysis.
     $blocks = [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_INLINE_SCRIPT)
     | ForEach-Object { $_.Groups['code'].Value.Trim() }
     | Where-Object { -NOT [System.String]::IsNullOrEmpty($_) }
     if ($null -EQ $blocks) {
         return $null
     }
-    return [System.Text.RegularExpressions.Regex]::Replace((@($blocks) -join "`n;`n"), $JS_STRING_ASSIGNMENT, '${head}"<redacted>"')
+    $assignmentsRedacted = [System.Text.RegularExpressions.Regex]::Replace((@($blocks) -join "`n;`n"), $JS_STRING_ASSIGNMENT, '${head}"<redacted>"')
+    return [System.Text.RegularExpressions.Regex]::Replace($assignmentsRedacted, $JS_PROPERTY_STRING, {
+            param ($match)
+            if ($match.Groups['value'].Value -MATCH $JS_PATH_VALUE) {
+                return $match.Value
+            }
+            return "$($match.Groups['head'].Value)`"<redacted>`""
+        })
+}
+
+function ConvertTo-UnwireRedactedText {
+    param (
+        [System.String]   $Text,
+        [System.String[]] $Secrets
+    )
+
+    # Last line of defense before a file is written: a session value never reaches the disk,
+    # wherever the page or script put it.
+    $redacted = $Text
+    foreach ($secret in $Secrets) {
+        $redacted = $redacted.Replace($secret, '<redacted>')
+    }
+    return $redacted
+}
+
+function ConvertFrom-UnwireCurlSession {
+    param (
+        [System.String] $Text
+    )
+
+    <#
+        Every session form a browser's "Copy as cURL" can carry, bash and cmd (^"...^") quoting:
+        > -b / --cookie, else the cookie: header   -> Cookie
+        > Authorization header                     -> Headers, as it is (Basic, Bearer, own
+                                                      schemes); Digest is rejected, its answer
+                                                      is valid for one URL and nonce only
+        > Auth headers (X-Auth-Token, ...)         -> Headers, as they are
+        > ';name=value' in the URL path            -> PathToken, with PathPrefix when it is a
+                                                      segment of its own
+        Other headers (accept, user-agent, ...) are dropped.
+    #>
+
+    $value = $Text.Trim()
+    # cmd format escapes with '^': -b ^"a=b; c=d^" => -b "a=b; c=d"
+    if ($value.Contains('^"')) {
+        $value = $value -REPLACE '\^(.)', '$1'
+    }
+    $session = [PSCustomObject]@{ Cookie = $null; Headers = [ordered]@{}; PathToken = $null; PathPrefix = $null }
+
+    # -b / --cookie, else the cookie: header
+    $cookie = [System.Text.RegularExpressions.Regex]::Match($value, '(?:-b|--cookie)\s+(?<q>[''"])(?<value>.*?)\k<q>')
+    if (-NOT $cookie.Success) {
+        $cookie = [System.Text.RegularExpressions.Regex]::Match($value, '-H\s+(?<q>[''"])(?i:cookie):\s*(?<value>.*?)\k<q>')
+    }
+    if ($cookie.Success) {
+        $session.Cookie = $cookie.Groups['value'].Value.Trim()
+    }
+
+    # Authorization and auth headers
+    foreach ($header in [System.Text.RegularExpressions.Regex]::Matches($value, '-H\s+(?<q>[''"])(?<name>[\w-]+):\s*(?<value>.*?)\k<q>')) {
+        $headerName = $header.Groups['name'].Value
+        if ($headerName -NOTMATCH $SESSION_HEADER) {
+            continue
+        }
+        if ($header.Groups['value'].Value -MATCH '^(?i)Digest\s') {
+            throw [System.ArgumentException]::new("The session must not be HTTP Digest: its Authorization header is valid for one URL only. Save the UI in the browser ('Save page as') and analyze the local folder instead.")
+        }
+        $session.Headers[$headerName] = $header.Groups['value'].Value.Trim()
+    }
+
+    # ';name=value' in the URL path
+    $url = [System.Text.RegularExpressions.Regex]::Match($value, '^curl\s+(?:--url\s+)?(?<q>[''"])(?<url>[^''"]+)\k<q>')
+    $curlUri = $null
+    if ($url.Success -AND [System.Uri]::TryCreate($url.Groups['url'].Value, [System.UriKind]::Absolute, [ref] $curlUri)) {
+        $segment = [System.Text.RegularExpressions.Regex]::Match($curlUri.AbsolutePath, $PATH_TOKEN_SEGMENT)
+        $suffix  = [System.Text.RegularExpressions.Regex]::Match($curlUri.AbsolutePath, $PATH_TOKEN_SUFFIX)
+        if ($segment.Success) {
+            $session.PathToken  = $segment.Groups['token'].Value
+            $session.PathPrefix = $segment.Groups['prefix'].Value
+        }
+        elseif ($suffix.Success) {
+            $session.PathToken = $suffix.Groups['token'].Value
+        }
+    }
+    return $session
 }
 
 function ConvertTo-UnwireCookieHeader {
@@ -303,27 +452,13 @@ function ConvertTo-UnwireCookieHeader {
     )
 
     <#
-        > cURL ("Copy as cURL")         -> the -b / --cookie value, else the cookie: header,
-                                           bash and cmd (^"...^") quoting
         > Header line ("cookie: a=b")   -> everything after 'cookie:'
         > DevTools table row            -> 'name<TAB>value<TAB>domain...' => 'name=value'
         > Anything else                 -> trimmed as it is, 'a=b; c=d' stays a list
+        A cURL goes to ConvertFrom-UnwireCurlSession.
     #>
 
     $value = $Text.Trim()
-
-    # cURL ("Copy as cURL")
-    if ($value -MATCH '^curl\s') {
-        # cmd format escapes with '^': -b ^"a=b; c=d^" => -b "a=b; c=d"
-        if ($value.Contains('^"')) {
-            $value = $value -REPLACE '\^(.)', '$1'
-        }
-        $curlCookie = [System.Text.RegularExpressions.Regex]::Match($value, '(?:-b|--cookie)\s+(?<q>[''"])(?<value>.*?)\k<q>')
-        if (-NOT $curlCookie.Success) {
-            $curlCookie = [System.Text.RegularExpressions.Regex]::Match($value, '-H\s+(?<q>[''"])(?i:cookie):\s*(?<value>.*?)\k<q>')
-        }
-        return $(if ($curlCookie.Success) { $curlCookie.Groups['value'].Value.Trim() } else { $value })
-    }
 
     # Header line ("cookie: a=b")
     if ($value -MATCH '^(?i)cookie:\s*') {
@@ -338,6 +473,89 @@ function ConvertTo-UnwireCookieHeader {
 
     # Anything else
     return $value
+}
+
+function ConvertTo-UnwireSessionValue {
+    param (
+        [System.String] $Text,
+        [System.String] $Name
+    )
+
+    <#
+        > Text with 'name=value'   -> the value of the first one: the URL query or the --data
+                                      body of a cURL (bash and cmd quoting), a cookie list
+        > Anything else            -> trimmed as it is, the bare value
+    #>
+
+    $value = $Text.Trim()
+    # cmd format escapes with '^': ^"sid=abc^" => "sid=abc"
+    if ($value.Contains('^"')) {
+        $value = $value -REPLACE '\^(.)', '$1'
+    }
+
+    # Text with 'name=value': '...?sid=abc&lang=de', "--data-raw 'sid=abc&page='" => 'abc'
+    $parameter = [System.Text.RegularExpressions.Regex]::Match($value, "(?<![\w-])$([System.Text.RegularExpressions.Regex]::Escape($Name))=(?<value>[^&;\s'`"]+)")
+    if ($parameter.Success) {
+        return $parameter.Groups['value'].Value
+    }
+
+    # Anything else
+    return $value
+}
+
+function Get-UnwireRequestUri {
+    param (
+        [System.Uri]    $Uri,
+        [System.String] $Query,
+        [System.String] $PathToken,
+        [System.String] $PathPrefix
+    )
+
+    <#
+        > PathToken with PathPrefix   -> inserted after the prefix, only below it:
+                                         '/ui/admin' => '/ui/;stok=abc/admin', '/static/a.js' stays
+        > PathToken without prefix    -> appended to the path: '/a.js' => '/a.js;jsessionid=abc'
+        > Query                       -> appended to the query: '?v=2' => '?v=2&sid=abc'
+    #>
+
+    $builder = [System.UriBuilder]::new($Uri)
+    if (-NOT [System.String]::IsNullOrEmpty($PathToken) -AND -NOT [System.String]::IsNullOrEmpty($PathPrefix)) {
+        if ($builder.Path.StartsWith($PathPrefix, [System.StringComparison]::Ordinal)) {
+            $builder.Path = "$PathPrefix;$PathToken/$($builder.Path.Substring($PathPrefix.Length))"
+        }
+    }
+    elseif (-NOT [System.String]::IsNullOrEmpty($PathToken)) {
+        $builder.Path = "$($builder.Path);$PathToken"
+    }
+    if (-NOT [System.String]::IsNullOrEmpty($Query)) {
+        $builder.Query = if ($builder.Query.Length -GT 1) { "$($builder.Query.Substring(1))&$Query" } else { $Query }
+    }
+    return $builder.Uri
+}
+
+function Get-UnwireCleanUri {
+    param (
+        [System.Uri]    $Uri,
+        [System.String] $Query,
+        [System.String] $PathToken,
+        [System.String] $PathPrefix
+    )
+
+    # Links of a signed-in page may already carry the session: removed before the URI is
+    # recorded, Get-UnwireRequestUri adds it again on the wire only.
+    # '/ui/;stok=abc/admin?x=1&sid=abc' => '/ui/admin?x=1'
+    $builder = [System.UriBuilder]::new($Uri)
+    # Own segment (with PathPrefix) or appended to a segment, as Get-UnwireRequestUri adds it
+    if (-NOT [System.String]::IsNullOrEmpty($PathToken) -AND -NOT [System.String]::IsNullOrEmpty($PathPrefix)) {
+        $builder.Path = $builder.Path.Replace(";$PathToken/", '')
+    }
+    elseif (-NOT [System.String]::IsNullOrEmpty($PathToken)) {
+        $builder.Path = $builder.Path.Replace(";$PathToken", '')
+    }
+    if (-NOT [System.String]::IsNullOrEmpty($Query) -AND $builder.Query.Length -GT 1) {
+        $builder.Query = ($builder.Query.Substring(1).Split('&') | Where-Object { $_ -NE $Query }) -join '&'
+    }
+    return $builder.Uri
 }
 
 function Get-UnwireCookieShape {
@@ -430,7 +648,8 @@ function Find-UnwireAssetReference {
     )
 
     <#
-        > HTML  -> <script src>, <link href="*.js"> as js, <frame>/<iframe src> as html,
+        > HTML  -> <script src>, <link href="*.js">, import of inline modules as js,
+                   <frame>/<iframe src> as html,
                    relative to the <base href> of the page, else to the page itself
         > JS    -> the last sourceMappingURL as map, relative to the script
                 -> webpack runtime chunk maps as js, exact names, relative to the literal
@@ -452,6 +671,7 @@ function Find-UnwireAssetReference {
         $htmlRefs = @(
             [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_SCRIPT_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'js' } }
             [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_PRELOAD_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'js' } }
+            [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_IMPORT_REF) | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'js' } }
             [System.Text.RegularExpressions.Regex]::Matches($Text, $HTML_FRAME_REF, 'IgnoreCase') | ForEach-Object { @{ Ref = $_.Groups['ref'].Value; Kind = 'html' } }
         )
         foreach ($htmlRef in $htmlRefs) {
@@ -509,6 +729,26 @@ function Find-UnwireAssetReference {
     return $references
 }
 
+function Test-UnwireLoginPage {
+    param (
+        [System.String] $Text,
+        [System.Uri]    $PageUri
+    )
+
+    <#
+        > A password field                         -> login page
+        > A script or import named after a login   -> login page, the form is built by script
+        > Anything else                            -> no login page
+    #>
+
+    if ($Text -MATCH $HTML_PASSWORD_FIELD) {
+        return $true
+    }
+    $loginScripts = Find-UnwireAssetReference -Text $Text -Kind 'html' -AssetUri $PageUri -PageBase $PageUri
+    | Where-Object { $_.Kind -EQ 'js' -AND [System.IO.Path]::GetFileName($_.Uri.AbsolutePath) -MATCH $LOGIN_SCRIPT_NAME }
+    return $null -NE $loginScripts
+}
+
 function ConvertFrom-UnwireDataUri {
     param (
         [System.String] $DataUri
@@ -533,7 +773,8 @@ function ConvertFrom-UnwireDataUri {
 # ===========================================================================
 #
 #   1. Validations   Fails early on a bad URI, a bad page or a missing session cookie.
-#   2. Queue         Queues the start page and extra pages, prepares the request settings.
+#   2. Queue         Queues the start page, extra pages and scripts, prepares the request
+#                    settings.
 #
 
 # ---------------------------------------------------------------------------
@@ -557,21 +798,35 @@ $ExtraPages = foreach ($pagePath in $PagePaths) {
     $pageUri
 }
 
+# Extra scripts: same check, '/a.js,/b.mjs' => '/a.js', '/b.mjs'
+$ScriptPaths  = $Script -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -NE '' }
+$ExtraScripts = foreach ($scriptPath in $ScriptPaths) {
+    $scriptUri = [System.Uri]::new($StartUri, $scriptPath)
+    if (-NOT (Test-UnwireSameOrigin -Left $scriptUri -Right $StartUri) -OR $scriptUri.AbsolutePath -NOTMATCH $EXTRA_SCRIPT) {
+        throw [System.ArgumentException]::new("Script must be a same-origin *.js or *.mjs path, e.g. '/js/views/status.js', got '$scriptPath'.")
+    }
+    $scriptUri
+}
+
 # PromptSession is session mode too, only the source of the cookie differs.
 $IsSessionMode = $UseSession.IsPresent -OR $PromptSession.IsPresent
 
 if ($IsSessionMode -AND $null -NE (Get-UnwireSessionBlock -Target $StartUri -Start $StartUri)) {
     throw [System.ArgumentException]::new("Uri '$StartUri' must not match the session denylist (logout, reboot, delete, ...).")
 }
+if (-NOT $IsSessionMode -AND -NOT [System.String]::IsNullOrEmpty($SessionParameter)) {
+    throw [System.ArgumentException]::new("SessionParameter '$SessionParameter' must be used with PromptSession or UseSession.")
+}
 
 <#
-    The cookie value never goes into a message, a log line or the manifest.
+    The session value never goes into a message, a log line or the manifest.
     Order of precedence:
     - PromptSession  -> masked prompt
     - UseSession     -> environment variable SessionVariable
     - neither        -> no session
+    Then SessionParameter decides the form: the value of that URL parameter, else a cookie.
 #>
-$SessionCookie = $null
+$SessionText = $null
 # PromptSession -> masked prompt
 if ($PromptSession) {
     # Hard-coded guide, so the steps reach the user even when the chat only announced them.
@@ -599,21 +854,81 @@ if ($PromptSession) {
         $pastedLines.Add(($pastedLine -REPLACE $PASTE_CONTINUATION, ''))
     } while ($pastedLine -MATCH $PASTE_CONTINUATION -AND $pastedLines.Count -LT $MAX_PASTE_LINES)
 
-    $SessionCookie = ConvertTo-UnwireCookieHeader -Text ($pastedLines -join ' ')
+    $SessionText = $pastedLines -join ' '
 }
 # UseSession -> environment variable SessionVariable
 elseif ($UseSession) {
-    $variableCookie = [System.Environment]::GetEnvironmentVariable($SessionVariable)
-    if ([System.String]::IsNullOrWhiteSpace($variableCookie)) {
+    $SessionText = [System.Environment]::GetEnvironmentVariable($SessionVariable)
+    if ([System.String]::IsNullOrWhiteSpace($SessionText)) {
         throw [System.ArgumentException]::new("Environment variable '$SessionVariable' must hold the session cookie for UseSession, e.g. 'session_id=<VALUE>'.")
     }
-    $SessionCookie = ConvertTo-UnwireCookieHeader -Text $variableCookie
 }
 
-# A bare value without its name is the most common copy mistake.
-if ($IsSessionMode -AND $SessionCookie -NOTMATCH '^[^=\s;]+=\S') {
-    throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'sid=<VALUE>' or 'session_id=<VALUE>', with the name from the browser's cookie list. Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
+$SessionCookie  = $null
+$SessionHeaders = [ordered]@{}     # Authorization and auth headers of a cURL
+$UriSession     = @{ Query = $null; PathToken = $null; PathPrefix = $null }     # added on the wire in DOWNLOAD ASSETS
+$IsCurlPaste    = $IsSessionMode -AND $SessionText.TrimStart() -MATCH '^curl\s'
+
+<#
+    > cURL                -> cookie, auth headers and path token, whatever it carries
+    > SessionParameter    -> plus the value of that URL parameter, from the cURL or the
+                             pasted 'name=value' or bare value
+    > Anything else       -> a cookie in one of the other copy formats
+#>
+# cURL
+if ($IsCurlPaste) {
+    $curlSession             = ConvertFrom-UnwireCurlSession -Text $SessionText
+    $SessionCookie           = $curlSession.Cookie
+    $SessionHeaders          = $curlSession.Headers
+    $UriSession.PathToken    = $curlSession.PathToken
+    $UriSession.PathPrefix   = $curlSession.PathPrefix
+    if ($null -NE $UriSession.PathToken -AND $UriSession.PathToken -NOTMATCH '^[\w.-]+=[\w.~%+-]+$') {
+        throw [System.ArgumentException]::new("The session token in the cURL path must be 'name=value' with URL-safe characters. Got: $(Get-UnwireCookieShape -Text $UriSession.PathToken).")
+    }
 }
+# SessionParameter
+if ($IsSessionMode -AND -NOT [System.String]::IsNullOrEmpty($SessionParameter)) {
+    $sessionValue = ConvertTo-UnwireSessionValue -Text $SessionText -Name $SessionParameter
+    if ($sessionValue -NOTMATCH $SESSION_VALUE) {
+        throw [System.ArgumentException]::new("The session must be a 'Copy as cURL' with '$SessionParameter=' in its URL or data, '$SessionParameter=<VALUE>' or the bare value, URL-safe characters only. Got: $(Get-UnwireCookieShape -Text $sessionValue).")
+    }
+    $UriSession.Query = "$SessionParameter=$sessionValue"
+}
+# Anything else
+elseif ($IsSessionMode -AND -NOT $IsCurlPaste) {
+    $SessionCookie = ConvertTo-UnwireCookieHeader -Text $SessionText
+    # A bare value without its name is the most common copy mistake.
+    if ($SessionCookie -NOTMATCH '^[^=\s;]+=\S') {
+        throw [System.ArgumentException]::new("The session cookie must be 'name=value', e.g. 'sid=<VALUE>' or 'session_id=<VALUE>', with the name from the browser's cookie list (a cURL without a cookie: the UI may keep its session in a URL parameter, see -SessionParameter). Got: $(Get-UnwireCookieShape -Text $SessionCookie).")
+    }
+}
+
+# A cURL without any session is the wrong request (the reload before the POST, a script).
+if ($IsCurlPaste -AND $null -EQ $SessionCookie -AND $SessionHeaders.Count -EQ 0 -AND $null -EQ $UriSession.PathToken -AND $null -EQ $UriSession.Query) {
+    throw [System.ArgumentException]::new("The cURL must carry a session: a cookie, an Authorization or auth header (X-Auth-Token, ...) or a ';name=value' token in its path; a session in a form field needs -SessionParameter. Copy the first POST of type 'document' after the reload, else the reload itself. Got: $(Get-UnwireCookieShape -Text $SessionText).")
+}
+
+$IsUriSession = $null -NE $UriSession.Query -OR $null -NE $UriSession.PathToken
+# Names only, for the log and the manifest: 'cookie', 'header:Authorization', 'path-token', 'query:sid'
+$SessionKinds = @(
+    if ($null -NE $SessionCookie) { 'cookie' }
+    $SessionHeaders.Keys | ForEach-Object { "header:$_" }
+    if ($null -NE $UriSession.PathToken) { 'path-token' }
+    if ($null -NE $UriSession.Query) { "query:$SessionParameter" }
+)
+
+# Every session value, scrubbed from each text before it is written in DOWNLOAD ASSETS.
+# 'sid=abc123; lang=de' => 'abc123' ('de' is too short to be a secret)
+# 'Basic dXNlcjpwdw==' => 'Basic dXNlcjpwdw==', 'dXNlcjpwdw=='
+$SessionSecrets = @(
+    if ($null -NE $UriSession.Query) { $UriSession.Query.Substring($UriSession.Query.IndexOf('=') + 1) }
+    if ($null -NE $UriSession.PathToken) { $UriSession.PathToken.Substring($UriSession.PathToken.IndexOf('=') + 1) }
+    if ($null -NE $SessionCookie) { $SessionCookie.Split(';') | ForEach-Object { $_.Substring($_.IndexOf('=') + 1).Trim() } }
+    foreach ($headerValue in $SessionHeaders.Values) {
+        $headerValue
+        if ($headerValue.Contains(' ')) { $headerValue.Substring($headerValue.IndexOf(' ') + 1).Trim() }
+    }
+) | Where-Object { $_.Length -GE $MIN_SECRET_LENGTH }
 
 # ---------------------------------------------------------------------------
 # Queue
@@ -630,9 +945,18 @@ $RequestConfig = @{
     SkipHttpErrorCheck   = $true
     SkipCertificateCheck = $SkipCertificateCheck.IsPresent
 }
+$sessionRequestHeaders = [ordered]@{}
+if ($null -NE $SessionCookie) {
+    $sessionRequestHeaders.Cookie = $SessionCookie
+}
+foreach ($headerName in $SessionHeaders.Keys) {
+    $sessionRequestHeaders[$headerName] = $SessionHeaders[$headerName]
+}
+if ($sessionRequestHeaders.Count -GT 0) {
+    $RequestConfig.Headers = @{} + $sessionRequestHeaders
+}
 if ($IsSessionMode) {
-    $RequestConfig.Headers = @{ Cookie = $SessionCookie }
-    Write-Verbose "[Save-UnwireAsset] Session mode: cookie from $(if ($PromptSession) { 'the prompt' } else { "'$SessionVariable'" }), only the start page and *.js, *.mjs, *.map."
+    Write-Verbose "[Save-UnwireAsset] Session mode: $($SessionKinds -join ', ') from $(if ($PromptSession) { 'the prompt' } else { "'$SessionVariable'" }), only the start page, *.htm pages and *.js, *.mjs, *.map."
 }
 
 $Queue     = [System.Collections.Generic.Queue[PSCustomObject]]::new()
@@ -646,6 +970,10 @@ $Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; Fou
 # Pages the UI loads at runtime: one level below the start page, which is their Referer.
 foreach ($pageUri in $ExtraPages) {
     $Queue.Enqueue([PSCustomObject]@{ Uri = $pageUri; Kind = 'html'; Depth = 1; FoundIn = '-Page'; PageBase = $pageUri; Guessed = $false; Referer = $StartUri })
+}
+# Scripts the UI imports from runtime paths: like a script of the start page.
+foreach ($scriptUri in $ExtraScripts) {
+    $Queue.Enqueue([PSCustomObject]@{ Uri = $scriptUri; Kind = 'js'; Depth = 1; FoundIn = '-Script'; PageBase = $StartUri; Guessed = $false; Referer = $StartUri })
 }
 
 # ===========================================================================
@@ -684,6 +1012,10 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
 
 :CRAWL while ($Queue.Count -GT 0) {
     $item = $Queue.Dequeue()
+    # A link of a signed-in page may carry the session: recorded without it, sent with it.
+    if ($IsUriSession) {
+        $item.Uri = Get-UnwireCleanUri -Uri $item.Uri @UriSession
+    }
     $key  = $item.Uri.GetLeftPart([System.UriPartial]::Query)
 
     # Already visited
@@ -724,9 +1056,25 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
         }
     }
 
+    # Session in the URL (parameter or path token): only on the wire. No verbose line of the
+    # request may show it, the record, the Referer and the file name keep the URI without it.
+    $requestUri     = $item.Uri
+    $requestVerbose = $VerbosePreference
+    if ($IsUriSession) {
+        $requestUri     = Get-UnwireRequestUri -Uri $item.Uri @UriSession
+        $requestVerbose = 'SilentlyContinue'
+    }
+
     # Request fails or not HTTP 200
     try {
-        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $itemConfig -IsRedirectAllowed (-NOT $IsSessionMode)
+        $result = & {
+            $VerbosePreference = $requestVerbose
+            Invoke-UnwireAssetRequest -Target $requestUri -Origin $StartUri -RequestConfig $itemConfig -IsRedirectAllowed (-NOT $IsSessionMode)
+        }
+        # Session mode follows no redirect, so the final URI is the requested one.
+        if ($IsUriSession) {
+            $result.FinalUri = $item.Uri
+        }
     }
     catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
         # Untrusted certificate on the start page: the user decides about SkipCertificateCheck.
@@ -756,7 +1104,7 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
         $record.Reason = if ($null -NE $result.Reason) { $result.Reason } else { "HTTP $($result.Response.StatusCode)" }
         Write-Verbose "[Save-UnwireAsset] '$key' -> $($record.Reason)."
         if ($item.Depth -EQ 0 -AND $IsSessionMode -AND $result.Reason -LIKE '*redirect*') {
-            Write-Warning "[Save-UnwireAsset] Start page '$StartUri' redirects, the session cookie is probably expired: log in again and update '$SessionVariable'."
+            Write-Warning "[Save-UnwireAsset] Start page '$StartUri' redirects, the session cookie is probably expired: log in again and update the session."
         }
         elseif ($item.Depth -EQ 0) {
             Write-Warning "[Save-UnwireAsset] Start page '$StartUri' could not be loaded: $($record.Reason)."
@@ -790,6 +1138,13 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
         continue CRAWL
     }
 
+    # Login page as start page: without a session only its code is here, in session mode the
+    # session was not accepted (warned in WRITE MANIFEST).
+    if ($item.Depth -EQ 0 -AND $item.Kind -EQ 'html' -AND (Test-UnwireLoginPage -Text $text -PageUri $result.FinalUri)) {
+        $IsLoginForm = $true
+        Write-Verbose "[Save-UnwireAsset] Start page '$key' has a password field or a login script -> login page."
+    }
+
     # Session mode: the signed-in page may hold personal data or tokens, it is only read for
     # its references and its inline script code (values redacted), never written to disk.
     if ($IsSessionMode -AND $item.Kind -EQ 'html') {
@@ -803,7 +1158,7 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
             $inlineFile = "$(Get-UnwireAssetFile -AssetUri $result.FinalUri -Root $RootPath -Kind 'html').inline.js"
             if ($UsedFiles.Add($inlineFile) -AND $PSCmdlet.ShouldProcess($inlineFile, "Save inline scripts of '$key'")) {
                 $null = New-Item -ItemType Directory -Path ([System.IO.Path]::GetDirectoryName($inlineFile)) -Force
-                Set-Content -Path $inlineFile -Value $inlineCode -NoNewline -Encoding utf8NoBOM
+                Set-Content -Path $inlineFile -Value (ConvertTo-UnwireRedactedText -Text $inlineCode -Secrets $SessionSecrets) -NoNewline -Encoding utf8NoBOM
                 $SavedCount++
                 $Records.Add([PSCustomObject]@{ Uri = "$key (inline scripts)"; Kind = 'js'; Status = 'saved'; Reason = 'session mode: inline script code, string values redacted'; File = [System.IO.Path]::GetRelativePath($RootPath, $inlineFile).Replace('\', '/'); FoundIn = $key })
             }
@@ -827,19 +1182,13 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
     }
     if ($PSCmdlet.ShouldProcess($file, "Save '$key'")) {
         $null = New-Item -ItemType Directory -Path ([System.IO.Path]::GetDirectoryName($file)) -Force
-        Set-Content -Path $file -Value $text -NoNewline -Encoding utf8NoBOM
+        Set-Content -Path $file -Value (ConvertTo-UnwireRedactedText -Text $text -Secrets $SessionSecrets) -NoNewline -Encoding utf8NoBOM
     }
     $SavedCount++
     $record.Status = 'saved'
     $record.File   = [System.IO.Path]::GetRelativePath($RootPath, $file).Replace('\', '/')
     $SavedHashes[$hash] = $record.File
     Write-Verbose "[Save-UnwireAsset] Saved '$key' as '$($record.File)'."
-
-    # A start page with a password field is a login page: without a session only its code is here.
-    if ($item.Depth -EQ 0 -AND $item.Kind -EQ 'html' -AND $text -MATCH $HTML_PASSWORD_FIELD) {
-        $IsLoginForm = $true
-        Write-Verbose "[Save-UnwireAsset] Start page '$key' has a password field -> login page."
-    }
 
     if ($item.Kind -EQ 'map') {
         continue CRAWL
@@ -866,7 +1215,7 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
         if ($reference.Kind -EQ 'map-inline') {
             $mapText = ConvertFrom-UnwireDataUri -DataUri $reference.Data
             if ($null -NE $mapText -AND $PSCmdlet.ShouldProcess("$file.map", 'Save inline source map')) {
-                Set-Content -Path "$file.map" -Value $mapText -NoNewline -Encoding utf8NoBOM
+                Set-Content -Path "$file.map" -Value (ConvertTo-UnwireRedactedText -Text $mapText -Secrets $SessionSecrets) -NoNewline -Encoding utf8NoBOM
                 $Records.Add([PSCustomObject]@{ Uri = "$key (inline)"; Kind = 'map'; Status = 'saved'; Reason = $null; File = "$($record.File).map"; FoundIn = $key })
             }
             continue
@@ -893,16 +1242,20 @@ $IsLoginForm = $false     # reported in WRITE MANIFEST
 $ManifestPath = Join-Path -Path $RootPath -ChildPath $MANIFEST_FILE
 if ($PSCmdlet.ShouldProcess($ManifestPath, 'Write manifest')) {
     $null = New-Item -ItemType Directory -Path $RootPath -Force
-    [PSCustomObject]@{
-        startUri = $StartUri.AbsoluteUri
-        session  = $IsSessionMode     # whether a cookie was sent, never its value
-        assets   = $Records
+    $manifestJson = [PSCustomObject]@{
+        startUri         = $StartUri.AbsoluteUri
+        session          = $IsSessionMode       # whether a session was sent, never its value
+        sessionParameter = $SessionParameter    # its URL parameter name, empty for a cookie
+        sessionKinds     = $SessionKinds        # names only: cookie, header:Authorization, path-token
+        assets           = $Records
     }
     | ConvertTo-Json -Depth 5
+    # Last line of defense, as for every saved file in DOWNLOAD ASSETS.
+    ConvertTo-UnwireRedactedText -Text $manifestJson -Secrets $SessionSecrets
     | Set-Content -Path $ManifestPath -Encoding utf8NoBOM
 }
 
-# Step 5 of the guide in PREPARE CRAWL: the user closes the window only after this line.
+# Last step of the guide in PREPARE CRAWL: the user closes the window only after this line.
 if ($PromptSession) {
     Write-Host ''
     Write-Host $LoginGuide.done
@@ -917,7 +1270,10 @@ if ($AccessDenied -GT 0 -AND -NOT $IsSessionMode) {
     Write-Warning "[Save-UnwireAsset] $AccessDenied scripts or maps answered 401/403 although the Referer was sent: the code is probably behind a login, use session mode."
 }
 
-if ($IsLoginForm) {
+if ($IsLoginForm -AND $IsSessionMode) {
+    Write-Warning "[Save-UnwireAsset] The start page still is a login form in session mode: the session was probably not accepted (expired, or the UI expects it elsewhere, see -SessionParameter)."
+}
+elseif ($IsLoginForm) {
     Write-Warning "[Save-UnwireAsset] The start page is a login form: without a session only the code of the login page was saved."
 }
 

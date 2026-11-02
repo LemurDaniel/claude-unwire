@@ -1,6 +1,6 @@
 {
   "en": {
-    "question": "{URL} shows a login page or keeps its code behind one, without a login Unwire only sees the login page. With a login, the next step opens a PowerShell window with a step-by-step guide: open the developer tools in an empty tab (F12 or the browser menu, works even when the page blocks F12 and right-click), log in, Network → right-click the document request → Copy as cURL, then paste it into the masked prompt of that window. Analyze with a login?",
+    "question": "{URL} shows a login page or keeps its code behind one, without a login Unwire only sees the login page. With a login, the next step opens a PowerShell window with a step-by-step guide: open the developer tools in an empty tab (F12 or the browser menu, works even when the page blocks F12 and right-click), log in, Network → right-click the first POST document request (none: the reload) → Copy as cURL, then paste it into the masked prompt of that window. Analyze with a login?",
     "open": {
       "label": "Open the window",
       "description": "Opens the window with the guide and a masked prompt, the download runs there."
@@ -18,25 +18,27 @@
       "1. Open a new, empty browser tab and press F12 there. If F12 does nothing:",
       "   browser menu → More tools → Developer tools. Opened first, no page can block it.",
       "2. Open the Network tab and tick 'Preserve log' (newer Chrome: 'Keep log', Firefox: 'Persist Logs').",
-      "   List empty but '0 / N requests' at the bottom? A filter is on: funnel icon, clear the text, pick 'All'.",
       "3. In the same tab open {URL} and log in. Stay on the page,",
       "   then reload it (F5 or the reload button).",
-      "4. Right-click the last request of type 'document' in the Network list (the reload).",
-      "   This works even when the page blocks right-click, the list is not the page:",
+      "4. Find the right entry in the Network list:",
+      "   Type into the filter box at the top:  method:POST",
+      "   Is there an entry of type 'document' after the reload? Then the first of them is the one.",
+      "   Is there none: clear the filter, then the last entry of type 'document' is the one (the reload).",
+      "5. Right-click this entry (works even when the page blocks right-click):",
       "     Chrome / Edge: Copy → Copy as cURL (bash) or (cmd), both work.",
       "     Firefox:       Copy Value → Copy as cURL (POSIX) or (Windows).",
-      "   The page keeps pausing in the debugger? Ctrl+F8 turns its breakpoints off.",
-      "5. Paste the cURL below, all lines at once, and press Enter.",
+      "6. Paste the cURL below (all lines at once) and press Enter.",
       "   The input stays masked (****).",
-      "6. The download runs in this window. When it is done, read any warning,",
+      "   The page keeps pausing in the debugger? Ctrl+F8 turns its breakpoints off.",
+      "7. The download runs in this window. When it is done, read any warning,",
       "   then close the window: Unwire continues only after that."
     ],
-    "warning": "Never paste the cURL into the chat, it holds your session cookie.",
-    "prompt": "Session cookie (\"Copy as cURL\", cookie header or name=value)",
+    "warning": "Never paste the cURL into the chat, it holds your session.",
+    "prompt": "Session (\"Copy as cURL\")",
     "done": "Done. Read any warning above, then close this window."
   },
   "de": {
-    "question": "{URL} zeigt eine Login-Seite oder sperrt seinen Code ohne Login, ohne Login sieht Unwire nur die Login-Seite. Mit Login öffnet sich im nächsten Schritt ein PowerShell-Fenster mit einer Schritt-für-Schritt-Anleitung: Entwicklertools in einem leeren Tab öffnen (F12 oder Browser-Menü, klappt auch, wenn die Seite F12 und Rechtsklick sperrt), anmelden, Netzwerk → Rechtsklick auf den document-Request → Als cURL kopieren, dann in den maskierten Prompt dieses Fensters einfügen. Mit Login analysieren?",
+    "question": "{URL} zeigt eine Login-Seite oder sperrt seinen Code ohne Login, ohne Login sieht Unwire nur die Login-Seite. Mit Login öffnet sich im nächsten Schritt ein PowerShell-Fenster mit einer Schritt-für-Schritt-Anleitung: Entwicklertools in einem leeren Tab öffnen (F12 oder Browser-Menü, klappt auch, wenn die Seite F12 und Rechtsklick sperrt), anmelden, Netzwerk → Rechtsklick auf den ersten POST-document-Request (gibt es keinen: auf das Neuladen) → Als cURL kopieren, dann in den maskierten Prompt dieses Fensters einfügen. Mit Login analysieren?",
     "open": {
       "label": "Fenster öffnen",
       "description": "Öffnet das Fenster mit Anleitung und maskiertem Prompt, der Download läuft dort."
@@ -54,21 +56,23 @@
       "1. Öffne einen neuen, leeren Browser-Tab und drück dort F12. Passiert nichts:",
       "   Browser-Menü → Weitere Tools → Entwicklertools. Zuerst geöffnet, kann keine Seite sie sperren.",
       "2. Öffne den Tab Netzwerk (Network) und setz den Haken bei 'Log beibehalten' (neueres Chrome: 'Keep log', Firefox: 'Logs beibehalten').",
-      "   Liste leer, aber unten '0 / N requests'? Ein Filter ist an: Trichter-Symbol, Text leeren, 'All' wählen.",
       "3. Öffne im selben Tab {URL} und melde dich an. Bleib auf der Seite",
       "   und lade sie neu (F5 oder der Neu-laden-Knopf).",
-      "4. Rechtsklick auf den letzten Request vom Typ 'document' in der Netzwerk-Liste (das Neuladen).",
-      "   Das geht auch, wenn die Seite Rechtsklick sperrt, die Liste gehört nicht zur Seite:",
+      "4. Such den richtigen Eintrag in der Netzwerk-Liste:",
+      "   Tipp ins Filterfeld oben:  method:POST",
+      "   Gibt es nach dem Neuladen einen Eintrag vom Typ 'document'? Dann ist der erste davon es.",
+      "   Gibt es keinen: Filter wieder leeren, dann ist der letzte Eintrag vom Typ 'document' es (das Neuladen).",
+      "5. Rechtsklick auf diesen Eintrag (geht auch, wenn die Seite Rechtsklick sperrt):",
       "     Chrome / Edge: Kopieren → Als cURL kopieren (bash) oder (cmd), beides geht.",
       "     Firefox:       Wert kopieren → Als cURL kopieren (POSIX) oder (Windows).",
-      "   Die Seite hält ständig im Debugger an? Strg+F8 schaltet ihre Haltepunkte ab.",
-      "5. Füg den cURL hier unten ein, alle Zeilen auf einmal, und drück Enter.",
+      "6. Füg den cURL hier unten ein (alle Zeilen auf einmal) und drück Enter.",
       "   Die Eingabe bleibt maskiert (****).",
-      "6. Der Download läuft in diesem Fenster. Wenn er fertig ist, lies die Warnungen",
+      "   Die Seite hält ständig im Debugger an? Strg+F8 schaltet ihre Haltepunkte ab.",
+      "7. Der Download läuft in diesem Fenster. Wenn er fertig ist, lies die Warnungen",
       "   und schließ dann das Fenster: Unwire macht erst danach weiter."
     ],
-    "warning": "Füg den cURL nie in den Chat ein, er enthält dein Session-Cookie.",
-    "prompt": "Session-Cookie (\"Als cURL kopieren\", Cookie-Header oder name=value)",
+    "warning": "Füg den cURL nie in den Chat ein, er enthält deine Session.",
+    "prompt": "Session (\"Als cURL kopieren\")",
     "done": "Fertig. Lies die Warnungen oben und schließ dann dieses Fenster."
   }
 }
