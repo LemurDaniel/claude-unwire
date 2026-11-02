@@ -24,6 +24,7 @@ param ()
 #   broken_ref              Rejects a $ref to a missing target.
 #   low_without_open        Warns on low confidence without open points.
 #   root_open_points        Rejects root x-unwire-open that is no list of strings.
+#   servers_not_list        Rejects servers that is a single object.
 #   security_set            Accepts [] and a defined scheme on every operation.
 #   security_unknown        Rejects a scheme missing in components.securitySchemes.
 #   security_not_list       Rejects a security that is no list of objects.
@@ -195,6 +196,15 @@ Describe 'Test-UnwireSpec' {
         $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))
 
         $findings.Location | Should -Be @('x-unwire-open')
+    }
+
+    It 'servers_not_list: rejects servers that is a single object' {
+        $spec = New-TestSpec
+        $spec['servers'] = @{ url = '/api/v1' }
+
+        $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))
+
+        $findings.Location | Should -Be @('servers')
     }
 
     Context 'security' {

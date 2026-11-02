@@ -314,7 +314,8 @@ else {
 $OpenApi = [ordered]@{
     openapi           = '3.0.3'
     info              = $Swagger['info']
-    servers           = $Servers
+    # @() again: the if above unrolls a single server into an object.
+    servers           = @($Servers)
     'x-unwire-source' = $SourceLabel
 }
 foreach ($key in @('tags', 'security', 'externalDocs')) {

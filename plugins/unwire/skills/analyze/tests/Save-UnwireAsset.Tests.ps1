@@ -32,6 +32,7 @@ param ()
 #   untrusted_certificate  Stops at the start page on an untrusted certificate.
 #   webpack_chunk_map      Loads the lazy chunks of a webpack runtime by name and hash.
 #   webpack_chunk_prefix   Builds CRA-style chunk names relative to the runtime's folder.
+#   webpack_chunk_if       Loads named chunks of a runtime with one if per chunk.
 #   referer                Sends the loading page as Referer, the start page without one.
 #   access_denied          Counts scripts that answer 401 or 403 and warns about a login.
 #   inline_imports         Follows the imports of inline module scripts.
@@ -315,6 +316,20 @@ Describe 'Save-UnwireAsset' {
         $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
 
         Join-Path -Path $OutputDirectory -ChildPath 'static/js/45.0a1b2c3d.chunk.js' | Should -Exist
+    }
+
+    It 'webpack_chunk_if: loads named chunks of a runtime with one if per chunk' {
+        $Site['http://router.test/']                   = New-TestResponse -Content '<script src="/assets/js/index.js"></script>'
+        $Site['http://router.test/assets/js/index.js'] = New-TestResponse -Content 'b.p=e+"../";b.u=function(e){if(e==="graph")return"js/"+e+".f652150c.js";if(e==="token-selector")return"js/"+e+".3fc6ff66.js"}'
+        $Site['http://router.test/assets/js/graph.f652150c.js']          = New-TestResponse -Content 'g()'
+        $Site['http://router.test/assets/js/token-selector.3fc6ff66.js'] = New-TestResponse -Content 't()'
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
+
+        $summary.NotFound                                                                     | Should -Be 0
+        Join-Path -Path $OutputDirectory -ChildPath 'assets/js/graph.f652150c.js'          | Should -Exist
+        Join-Path -Path $OutputDirectory -ChildPath 'assets/js/token-selector.3fc6ff66.js' | Should -Exist
+        Should -Invoke Invoke-WebRequest -Times 0 -Exactly -ParameterFilter { $Uri.AbsolutePath -LIKE '*/.f652150c.js' }
     }
 
     It 'referer: sends the loading page as Referer, the start page without one' {

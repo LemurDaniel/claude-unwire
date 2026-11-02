@@ -12,6 +12,7 @@ param ()
 #
 #   root_and_servers      Builds openapi 3.0.3, servers from host, basePath and schemes.
 #   relative_server       Keeps a relative server URL when the host is missing.
+#   single_server_list    Writes one server as a list, not as an object.
 #   refs_rewritten        Points every $ref to the OpenAPI 3 components.
 #   query_parameter       Moves type, format and enum of a parameter into its schema.
 #   body_parameter        Turns a body parameter into a required requestBody.
@@ -105,6 +106,10 @@ Describe 'ConvertFrom-UnwireSwagger' {
 
     It 'relative_server: keeps a relative server URL when the host is missing' {
         $Spec['servers'].url | Should -Be @('/gitea/api/v1')
+    }
+
+    It 'single_server_list: writes one server as a list, not as an object' {
+        Get-Content -Path $Result.File -Raw | Should -Match '"servers":\s*\['
     }
 
     It 'refs_rewritten: points every $ref to the OpenAPI 3 components' {

@@ -253,14 +253,19 @@ $LOGIN_SCRIPT_NAME = '(?i)(?<![a-z])(log-?in|sign-?in)'
 $SESSION_VALUE     = '^[\w.~%-]+$'
 # //# sourceMappingURL=app.js.map (last one wins, bundlers append it at the end)
 $JS_SOURCE_MAP_REF = '(?m)^\s*//[#@]\s*sourceMappingURL=(?<ref>\S+)\s*$'
-# 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`
-$JS_CHUNK_REF      = '[''"`](?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`]'
+# 'static/js/12.chunk.js', "./lazy.mjs", `/js/vendor.js`, not a name fragment like ".0a1b2c3d.js"
+$JS_CHUNK_REF      = '[''"`](?!\.[\w-])(?<ref>(?:\.{1,2}/|/)?(?:[\w.-]+/)*[\w.-]+\.m?js)[''"`]'
 # Webpack runtime, the file name of a lazy chunk built from two maps:
 # - ""+({123:"SupportBundles"}[e]||e)+"."+{123:"cbbdd876417c6516e99c"}[e]+".js"   => SupportBundles.cbbdd876417c6516e99c.js
 # - "static/js/"+e+"."+{45:"0a1b2c3d"}[e]+".chunk.js"                              => static/js/45.0a1b2c3d.chunk.js
 $JS_CHUNK_MAP      = '(?:"(?<prefix>[^"]*)"\+)?(?:\(\{(?<names>[^{}]*)\}\[\w+\]\|\|\w+\)|\b\w+)\+"(?<sep>[.-])"\+\{(?<hashes>[^{}]*)\}\[\w+\]\+"(?<suffix>(?:\.chunk)?\.m?js)"'
 $JS_MAP_ENTRY      = '"?(?<key>[\w-]+)"?\s*:\s*"(?<value>[^"]*)"'
+# Webpack runtime, one if per named chunk instead of a map:
+# - if(e==="sortablejs")return"js/"+e+".deb655b2.js"                               => js/sortablejs.deb655b2.js
+$JS_CHUNK_IF       = '\b(?<var>\w+)===?"(?<name>[\w.~-]+)"\)return"(?<prefix>[^"]*)"\+\k<var>\+"(?<sep>[.-])(?<hash>[0-9a-fA-F]{6,})(?<suffix>(?:\.chunk)?\.m?js)"'
 $JS_PUBLIC_PATH    = '\b\w+\.p\s*=\s*"(?<path>[^"]*)"'
+# Automatic publicPath, relative to the folder of the running script: b.p=e+"../"
+$JS_PUBLIC_PATH_AUTO = '\b\w+\.p\s*=\s*\w+\+"(?<path>(?:\.\./)+|\./)"'
 $CHUNK_HASH        = '^[0-9a-fA-F]{6,}$'
 # Session mode: what may be requested at all, and what never
 $SESSION_STATIC    = '\.(m?js|map)$'
@@ -652,8 +657,9 @@ function Find-UnwireAssetReference {
                    <frame>/<iframe src> as html,
                    relative to the <base href> of the page, else to the page itself
         > JS    -> the last sourceMappingURL as map, relative to the script
-                -> webpack runtime chunk maps as js, exact names, relative to the literal
-                   publicPath (against the page base), else to the runtime's folder
+                -> webpack runtime chunk maps and chunk ifs as js, exact names, relative to
+                   the literal publicPath (against the page base), else to the automatic
+                   publicPath (against the runtime's folder), else to the runtime's folder
                 -> chunk paths as js: './x.js', '../x.js', '/x.js' relative to the script,
                    bare 'static/js/x.js' relative to the base of the page that loaded
                    the script (webpack publicPath)
@@ -696,11 +702,27 @@ function Find-UnwireAssetReference {
         }
     }
 
-    # JS: webpack runtime chunk maps
+    # JS: webpack runtime chunk maps and chunk ifs
     $chunkMaps = [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_MAP)
-    if ($chunkMaps.Count -GT 0) {
-        $publicPath = [System.Text.RegularExpressions.Regex]::Match($Text, $JS_PUBLIC_PATH)
-        $chunkBase  = if ($publicPath.Success -AND $publicPath.Groups['path'].Value -NE 'auto') { [System.Uri]::new($PageBase, $publicPath.Groups['path'].Value) } else { [System.Uri]::new($AssetUri, './') }
+    $chunkIfs  = [System.Text.RegularExpressions.Regex]::Matches($Text, $JS_CHUNK_IF)
+    if ($chunkMaps.Count -GT 0 -OR $chunkIfs.Count -GT 0) {
+        # Order of precedence: literal publicPath > automatic publicPath > the runtime's folder
+        $publicPath     = [System.Text.RegularExpressions.Regex]::Match($Text, $JS_PUBLIC_PATH)
+        $publicPathAuto = [System.Text.RegularExpressions.Regex]::Match($Text, $JS_PUBLIC_PATH_AUTO)
+        $chunkBase      = if ($publicPath.Success -AND $publicPath.Groups['path'].Value -NE 'auto') {
+            [System.Uri]::new($PageBase, $publicPath.Groups['path'].Value)
+        }
+        elseif ($publicPathAuto.Success) {
+            [System.Uri]::new($AssetUri, "./$($publicPathAuto.Groups['path'].Value)")
+        }
+        else {
+            [System.Uri]::new($AssetUri, './')
+        }
+
+        foreach ($chunkIf in $chunkIfs) {
+            $chunkFile = "$($chunkIf.Groups['prefix'].Value)$($chunkIf.Groups['name'].Value)$($chunkIf.Groups['sep'].Value)$($chunkIf.Groups['hash'].Value)$($chunkIf.Groups['suffix'].Value)"
+            $references.Add([PSCustomObject]@{ Uri = [System.Uri]::new($chunkBase, $chunkFile); Kind = 'js'; Data = $null; PageBase = $PageBase; Guessed = $false })
+        }
 
         foreach ($chunkMap in $chunkMaps) {
             $names = @{}

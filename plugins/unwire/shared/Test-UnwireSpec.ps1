@@ -169,14 +169,14 @@ if ($Spec -isnot [System.Collections.IDictionary]) {
 # =============================   CHECK SPEC   ==============================
 # ===========================================================================
 #
-#   1. Root         openapi 3.x, info, x-unwire-open, paths and the root security.
+#   1. Root         openapi 3.x, info, servers, x-unwire-open, paths, root security.
 #   2. Operations   Path parameters, operationId, responses, x-unwire-* and security.
 #   3. References   Every local $ref points to an existing target.
 #
 
 # ---------------------------------------------------------------------------
 # Root
-#   openapi 3.x, info, x-unwire-open, paths and the root security.
+#   openapi 3.x, info, servers, x-unwire-open, paths, root security.
 # ---------------------------------------------------------------------------
 
 if (-NOT ([System.String] $Spec['openapi']).StartsWith('3.')) {
@@ -188,6 +188,12 @@ foreach ($field in @('title', 'version')) {
     if ($Info -isnot [System.Collections.IDictionary] -OR [System.String]::IsNullOrWhiteSpace($Info[$field])) {
         Add-UnwireFinding -Severity Error -Location "info.$field" -Rule 'info' -Message "info.$field must be a non-empty string."
     }
+}
+
+# servers: a list of objects with a url, a single object is a common conversion bug
+$Servers = $Spec['servers']
+if ($null -NE $Servers -AND ($Servers -isnot [System.Collections.IList] -OR @($Servers | Where-Object { $_ -isnot [System.Collections.IDictionary] -OR [System.String]::IsNullOrWhiteSpace($_['url']) }).Count -GT 0)) {
+    Add-UnwireFinding -Severity Error -Location 'servers' -Rule 'servers' -Message 'servers must be a list of objects with a url, e.g. [{ "url": "/api" }].'
 }
 
 # Root x-unwire-open: the open points of the whole spec (auth, unresolved URLs)
