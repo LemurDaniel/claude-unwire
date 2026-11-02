@@ -38,6 +38,9 @@ Every change must keep this true, it is the reason the plugin may run against re
 - `API.html` never sends a request: its "Try it" block only builds PowerShell and cURL
   commands for the user's own terminal, write operations behind a confirmation, session
   values in memory only (user decision 2026-11-02, a test forbids fetch, forms and storage).
+  The one link: "Open in browser" for a GET that changes nothing, an http(s) link the user
+  clicks, the browser adds its own cookie or Basic dialog; no Send button, CORS blocks it
+  from a local page anyway (user decision 2026-11-02).
 - Every request to the target goes through the scripts (denylist, manifest), the skills
   forbid own `Invoke-WebRequest`/`curl` calls. A gap in a script is fixed in the script.
 - Live GET, the one exception (user decision 2026-11-02): `Test-UnwireGet.ps1`, last step of

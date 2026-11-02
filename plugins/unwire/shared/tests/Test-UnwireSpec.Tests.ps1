@@ -24,6 +24,7 @@ param ()
 #   broken_ref              Rejects a $ref to a missing target.
 #   low_without_open        Warns on low confidence without open points.
 #   root_open_points        Rejects root x-unwire-open that is no list of strings.
+#   target                  Accepts an absolute http(s) x-unwire-target, rejects anything else.
 #   servers_not_list        Rejects servers that is a single object.
 #   security_set            Accepts [] and a defined scheme on every operation.
 #   security_unknown        Rejects a scheme missing in components.securitySchemes.
@@ -196,6 +197,20 @@ Describe 'Test-UnwireSpec' {
         $findings = @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))
 
         $findings.Location | Should -Be @('x-unwire-open')
+    }
+
+    It 'target: accepts an absolute http(s) x-unwire-target, rejects <Case>' -ForEach @(
+        @{ Case = 'a relative path'; Target = '/ui/' }
+        @{ Case = 'another scheme';  Target = 'javascript:alert(1)' }
+        @{ Case = 'a non-string';    Target = 42 }
+    ) {
+        $valid = New-TestSpec
+        $valid['x-unwire-target'] = 'http://router.test/ui/'
+        $spec = New-TestSpec
+        $spec['x-unwire-target'] = $Target
+
+        @(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $valid)).Count | Should -Be 0
+        (@(& $SCRIPT_PATH -Path (Set-TestSpec -Spec $spec))).Location | Should -Be @('x-unwire-target')
     }
 
     It 'servers_not_list: rejects servers that is a single object' {

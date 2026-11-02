@@ -169,14 +169,16 @@ if ($Spec -isnot [System.Collections.IDictionary]) {
 # =============================   CHECK SPEC   ==============================
 # ===========================================================================
 #
-#   1. Root         openapi 3.x, info, servers, x-unwire-open, paths, root security.
+#   1. Root         openapi 3.x, info, servers, x-unwire-target and -open, paths,
+#                   root security.
 #   2. Operations   Path parameters, operationId, responses, x-unwire-* and security.
 #   3. References   Every local $ref points to an existing target.
 #
 
 # ---------------------------------------------------------------------------
 # Root
-#   openapi 3.x, info, servers, x-unwire-open, paths, root security.
+#   openapi 3.x, info, servers, x-unwire-target and -open, paths,
+#   root security.
 # ---------------------------------------------------------------------------
 
 if (-NOT ([System.String] $Spec['openapi']).StartsWith('3.')) {
@@ -194,6 +196,13 @@ foreach ($field in @('title', 'version')) {
 $Servers = $Spec['servers']
 if ($null -NE $Servers -AND ($Servers -isnot [System.Collections.IList] -OR @($Servers | Where-Object { $_ -isnot [System.Collections.IDictionary] -OR [System.String]::IsNullOrWhiteSpace($_['url']) }).Count -GT 0)) {
     Add-UnwireFinding -Severity Error -Location 'servers' -Rule 'servers' -Message 'servers must be a list of objects with a url, e.g. [{ "url": "/api" }].'
+}
+
+# Root x-unwire-target: the URL Unwire ran against, the default base URL of API.html
+$Target    = $Spec['x-unwire-target']
+$targetUri = $null
+if ($null -NE $Target -AND ($Target -isnot [System.String] -OR -NOT [System.Uri]::TryCreate($Target, [System.UriKind]::Absolute, [ref] $targetUri) -OR $targetUri.Scheme -NOTIN 'http', 'https')) {
+    Add-UnwireFinding -Severity Error -Location 'x-unwire-target' -Rule 'x-unwire-target' -Message "x-unwire-target must be the absolute http(s) URL Unwire ran against, e.g. 'http://192.168.178.1/'."
 }
 
 # Root x-unwire-open: the open points of the whole spec (auth, unresolved URLs)

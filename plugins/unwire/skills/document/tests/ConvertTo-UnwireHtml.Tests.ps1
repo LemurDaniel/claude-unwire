@@ -22,6 +22,7 @@ param ()
 #   no_network             The page never sends a request itself, it only builds commands.
 #   try_it                 Builds PowerShell and cURL commands, session values never stored,
 #                          cookie names editable.
+#   browser_link           Offers an http(s) link only for a safe GET, explains CORS.
 #   placeholder_in_title   Never replaces a placeholder inside the title again.
 #   invalid_json           Fails early on invalid JSON.
 #   missing_file           Fails early on a missing file.
@@ -158,6 +159,24 @@ Describe 'ConvertTo-UnwireHtml' {
         $script | Should -Match 'toBase64\(`\$\{user\.value\}:\$\{input\.value\}`\)'
         $script | Should -Match 'btoa\(Array\.from\(new TextEncoder\(\)\.encode\(text\)'
         $script | Should -Not -Match 'localStorage|sessionStorage|indexedDB|document\.cookie'
+    }
+
+    It 'browser_link: offers an http(s) link only for a GET that changes nothing, explains CORS' {
+        $template = Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath '../templates/tmpl.api.html') -Raw
+        $script   = [System.Text.RegularExpressions.Regex]::Match($template, '(?s)function renderBrowserLink\(.*?\n        \}\n').Value
+
+        $script   | Should -Match "if \(request\.method !== 'GET' \|\| entry\.isWrite\) return null"
+        # Only http(s) becomes a link: the base URL may come from the untrusted spec.
+        $script   | Should -Match ([System.Text.RegularExpressions.Regex]::Escape('if (!/^https?:\/\//i.test(request.url)) return disabled('))
+        $script   | Should -Match "el\('a', \{ href: request\.url, target: '_blank', rel: 'noopener', className: 'button' \}"
+        # Visible also when it cannot work: greyed out with the reason.
+        $script   | Should -Match "el\('button', \{ type: 'button', disabled: true \}, LABEL\)"
+        # The base URL defaults to the first server resolved against the target of the run.
+        $template | Should -Match "baseUrl:\s+defaultBaseUrl\(\)"
+        $template | Should -Match ([System.Text.RegularExpressions.Regex]::Escape("const target   = String(spec['x-unwire-target'] ?? '')"))
+        $template | Should -Match ([System.Text.RegularExpressions.Regex]::Escape("new URL(server || '/', target)"))
+        $template | Should -Match 'Why no Send button\?'
+        $template | Should -Match 'CORS, same-origin policy'
     }
 
     It 'placeholder_in_title: never replaces a placeholder inside the title again' {

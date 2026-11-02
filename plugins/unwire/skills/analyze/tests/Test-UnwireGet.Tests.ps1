@@ -20,6 +20,7 @@ param ()
 #   anonymous_pass          Sends every planned GET once without a session, no redirect.
 #   session_pass            Sends a second time with the session, never writes its value.
 #   verified_and_shape      Marks 2xx as verified and fills an empty schema with the shape.
+#   target_written          Writes the target into a spec without x-unwire-target.
 #   no_values_written       Writes keys and types only, no value of a body reaches a file.
 #   data_keys               Turns an object with data keys into additionalProperties.
 #   published_schema_kept   Never replaces a schema that is not empty.
@@ -218,6 +219,20 @@ Describe 'Test-UnwireGet' {
         $schema['items']['properties']['rssi']['type']    | Should -Be 'integer'
         $schema['items']['properties']['load']['type']    | Should -Be 'number'
         $operation['x-unwire-open'][-1]           | Should -Match 'Response schema from the live answer'
+    }
+
+    It 'target_written: writes the target into a spec without x-unwire-target, keeps an existing one' {
+        $Site['http://router.test/api/devices'] = New-TestResponse -Content '[]'
+        $file  = Set-TestSpec -Spec (New-TestSpec -Paths @{ '/devices' = @{ get = (New-TestOperation -OperationId 'getDevices') } })
+        $kept  = New-TestSpec -Paths @{ '/devices' = @{ get = (New-TestOperation -OperationId 'getDevices') } }
+        $kept['x-unwire-target'] = 'http://router.test/start/'
+        $keptFile = Set-TestSpec -Spec $kept
+
+        $null = & $SCRIPT_PATH -Path $file -Uri $TARGET_URI
+        $null = & $SCRIPT_PATH -Path $keptFile -Uri $TARGET_URI
+
+        (Get-TestSpec -File $file)['x-unwire-target']     | Should -Be ([System.Uri] $TARGET_URI).AbsoluteUri
+        (Get-TestSpec -File $keptFile)['x-unwire-target'] | Should -Be 'http://router.test/start/'
     }
 
     It 'no_values_written: writes keys and types only, no value of a body reaches a file' {

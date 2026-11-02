@@ -14,7 +14,7 @@
         HELPERS             DOM builder, $ref resolution and small formatters.
         LOAD SPEC           Parses the embedded spec and flattens the operations.
         RENDER SCHEMAS      Turns a JSON schema into a nested property list.
-        BUILD COMMANDS      'Try it': PowerShell and cURL commands, the page sends nothing.
+        BUILD COMMANDS      'Try it': PowerShell and cURL commands, a GET link, the page sends nothing.
         RENDER OPERATIONS   One collapsible card per operation.
         RENDER PAGE         Header, stats, navigation, groups and open points.
         FILTER OPERATIONS   Search, filter chips and group tabs.
@@ -332,6 +332,15 @@
         .try-settings .prefixed .cookie-name, .try-settings .prefixed .basic-user { flex: 0 0 12rem; min-width: 0; font-family: var(--mono); }
         .try .warn { margin: 0 0 10px; padding: 8px 12px; border-radius: 6px; background: var(--warn-bg); border: 1px solid var(--warn-border); font-size: 0.88rem; }
         .try .warn label { display: block; margin-top: 6px; font-weight: 600; }
+        .try .why-no-send { margin: -4px 0 10px; }
+        .try .why-no-send > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
+        .try .browser-link { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 8px 0 0; }
+        .try .browser-link .button, .try .browser-link button {
+            flex: none; padding: 6px 14px; font: inherit; font-size: 0.88rem; font-weight: 600; text-decoration: none; cursor: pointer;
+            color: var(--surface); background: var(--text); border: 1px solid var(--text); border-radius: 6px;
+        }
+        .try .browser-link button:disabled { cursor: not-allowed; color: var(--muted); background: var(--surface); border-color: var(--border); }
+        .try .browser-link .hint { flex: 1 1 16rem; }
         .try .command { position: relative; margin: 8px 0 0; }
         .try .command pre { margin: 4px 0 0; padding: 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; background: var(--code); border-radius: 6px; }
         .try .command button {
@@ -389,6 +398,7 @@
       "url": "/ui/"
     }
   ],
+  "x-unwire-target": "http://127.0.0.1:3015/ui/",
   "paths": {
     "/api/status": {
       "get": {
@@ -1129,6 +1139,7 @@
         // ===========================   BUILD COMMANDS   ============================
         // ===========================================================================
         //
+        //   defaultBaseUrl       First server resolved against x-unwire-target, the target of the run.
         //   trySettings          Base URL, certificate switch, session values and cookie names,
         //                        in memory only.
         //   valuePrefixOf        Fixed text before a session value: 'Bearer ', 'Basic ', 'SID '.
@@ -1139,15 +1150,30 @@
         //   bodySkeleton         Editable body text from a schema: 'name=' lines or JSON.
         //   buildRequest         URL, headers and body of an operation with the session added.
         //   renderCommands       The PowerShell and cURL command with copy buttons.
+        //   renderBrowserLink    'Open in browser' link for a GET that changes nothing.
         //   renderTry            The 'Try it' block of one operation card.
         //   renderTrySettings    The settings panel in the header.
         //
         // The page never sends a request: it builds commands the user runs in a terminal
         // (a file:// page cannot read answers of other origins, a form POST would still fire).
 
+        /*
+            Default base URL, the first server resolved against the target Unwire ran against:
+            > absolute server                  -> as it is
+            > relative server, http(s) target  -> resolved: '/api' + 'http://router.test/' => 'http://router.test/api'
+            > anything else                    -> the server as it is (the user sets the host)
+        */
+        function defaultBaseUrl() {
+            const server   = String(spec.servers?.[0]?.url ?? '')
+            const target   = String(spec['x-unwire-target'] ?? '')
+            const isHttp   = url => /^https?:\/\//i.test(url)
+            if (isHttp(server) || !isHttp(target)) return server.replace(/\/$/, '')
+            try { return new URL(server || '/', target).href.replace(/\/$/, '') } catch { return server.replace(/\/$/, '') }
+        }
+
         // Session values live in this tab only: never stored, gone on reload.
         const trySettings = {
-            baseUrl:         String(spec.servers?.[0]?.url ?? '').replace(/\/$/, ''),
+            baseUrl:         defaultBaseUrl(),
             skipCertificate: false,
             secrets:         {},
             // The spec may only guess a cookie name ('session'), the user corrects it here.
@@ -1303,6 +1329,35 @@
             return [command('PowerShell 7', pwsh), command('cURL (bash)', curl)]
         }
 
+        /*
+            'Open in browser' for a GET that changes nothing: a plain link the user clicks, the
+            page itself still sends nothing.
+            > no GET, or a write operation          -> nothing
+            > no absolute http(s) URL               -> hint to set the base URL
+            > placeholders left ('{id}', '<sid>')   -> hint to fill them in
+            > a header other than Basic or Cookie   -> hint: a link cannot send headers
+            > otherwise                             -> link in a new tab: the browser adds its
+                                                       own cookie of the target, or asks for Basic
+            Only http(s) URLs become a link: the base URL may come from the untrusted spec.
+        */
+        function renderBrowserLink(entry, request) {
+            if (request.method !== 'GET' || entry.isWrite) return null
+            const LABEL    = 'Open in browser ↗'
+            // The button is always there: greyed out with the reason while it cannot work.
+            const disabled = reason => el('div', { className: 'browser-link' },
+                el('button', { type: 'button', disabled: true }, LABEL),
+                el('span', { className: 'hint' }, reason))
+            if (!/^https?:\/\//i.test(request.url)) return disabled('Set an absolute base URL first, in "Try it: base URL and session" at the top, e.g. http://192.168.178.1.')
+            if (/[{}<>]/.test(request.url)) return disabled('Fill in the path parameters and the session values of the URL first.')
+            const headerNames = Object.entries(request.headers)
+                .filter(([name, value]) => name.toLowerCase() !== 'cookie' && !(name.toLowerCase() === 'authorization' && value.startsWith('Basic ')))
+                .map(([name]) => name)
+            if (headerNames.length > 0) return disabled(`Not possible: the request needs the header ${headerNames.join(', ')}, a link cannot send headers. Use a command below.`)
+            return el('div', { className: 'browser-link' },
+                el('a', { href: request.url, target: '_blank', rel: 'noopener', className: 'button' }, LABEL),
+                el('span', { className: 'hint' }, 'Opens the GET as a page in a new tab: the browser sends its own cookie of the target, or asks for Basic itself. A session in the URL lands in the browser history.'))
+        }
+
         function renderTry(entry) {
             const values  = {}
             const output  = el('div', {})
@@ -1317,8 +1372,9 @@
             bodyInput.value = variants.length > 0 ? bodySkeleton(mediaType, variants[0]) : ''
 
             const update = () => {
+                const request = isConfirmed ? buildRequest(entry, values, mediaType, bodyInput.value) : null
                 output.replaceChildren(...(isConfirmed
-                    ? renderCommands(buildRequest(entry, values, mediaType, bodyInput.value))
+                    ? [renderBrowserLink(entry, request), ...renderCommands(request)].filter(Boolean)
                     : [el('p', { className: 'hint' }, 'Confirm the warning above to build the command.')]))
             }
 
@@ -1349,6 +1405,9 @@
             return el('div', { className: 'try' },
                 el('h3', {}, 'Try it'),
                 el('p', { className: 'hint' }, 'Builds a command for your own terminal. This page sends nothing, session values stay in this tab.'),
+                el('details', { className: 'why-no-send' },
+                    el('summary', {}, 'Why no Send button?'),
+                    el('p', { className: 'hint' }, 'This page is a local file (or comes from another origin than the device). The browser blocks it from reading the answers of the device (CORS, same-origin policy) and does not send the cookie of the device along with a request from here. A Send button would fail on almost every device, or change data without showing the answer. A GET can still be opened as a normal page with the link, everything else runs as a command.')),
                 warning,
                 entry.parameters.length > 0 ? fields : null,
                 null != mediaType ? [el('div', { className: 'hint' }, `Body (${mediaType}${mediaType === 'application/x-www-form-urlencoded' ? ', one name=value per line' : ''})`), variantSelect, bodyInput] : null,

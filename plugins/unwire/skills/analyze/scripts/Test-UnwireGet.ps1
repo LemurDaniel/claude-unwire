@@ -683,6 +683,10 @@ foreach ($entry in @($Operations | Where-Object Status -EQ 'tested')) {
     $operation['x-unwire-open'] = @($openPoints) + $notes
 }
 
+# The target is the default base URL of API.html, an analysis may have left it out.
+if (-NOT $Spec.Contains('x-unwire-target')) {
+    $Spec['x-unwire-target'] = $TargetUri.AbsoluteUri
+}
 $Spec | ConvertTo-Json -Depth 100 | Set-Content -Path $SpecPath -Encoding utf8NoBOM
 
 # ---------------------------------------------------------------------------

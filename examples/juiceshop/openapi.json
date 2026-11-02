@@ -11,6 +11,7 @@
       "description": "App root (B2B API under /b2b/v2, UI routes under /rest, /api, /snippets)"
     }
   ],
+  "x-unwire-target": "http://localhost:3000/",
   "x-unwire-source": "discover:api-docs.json",
   "security": [
     {

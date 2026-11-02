@@ -181,6 +181,11 @@ somewhere in there.
    | `x-unwire-impact` | `write` for operations that change data, else `read` |
    | `x-unwire-open` | list of open points of this operation |
 
+   At the root `x-unwire-target`: the URL Unwire ran against, as the user gave it
+   (`"http://192.168.178.1/"`), never with a session in it; left out for a local folder.
+   API.html takes it as the default base URL of "Try it", the live GET fills it in when
+   it is missing.
+
    And `security` on every derived operation, even when a root default exists:
    `[{ "bearerAuth": [] }]` or `[]` for no auth. The page lists who needs what from it.
    `x-unwire-auth` holds the evidence in one sentence ("app-register (no guard) calls it
