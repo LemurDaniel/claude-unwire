@@ -1,5 +1,5 @@
 ---
-description: Reverse engineers the API of a web UI into openapi.json and a clickable HTML documentation. Read-only. A PowerShell module follows only on request.
+description: Reverse engineers the API of a web UI into openapi.json and a clickable HTML documentation. Read-only.
 argument-hint: <url|folder> [-Name <api-name>] [-SkipCertificateCheck]
 ---
 
@@ -38,7 +38,7 @@ Runs the Unwire chain for: `$ARGUMENTS`
   is skipped and step 2 works fully offline. A cookie login needs no folder, see Code behind
   a login below.
 - `-Name` (optional): short name of the API, used for the output folder (lowercase,
-  `unwire/nfs/`) and the module prefix (PascalCase, `Get-NfsDevice`). When it is missing,
+  `unwire/nfs/`), PascalCase as the display name (`Nfs`). When it is missing,
   derive it and name it in the first reply:
   - URL with a path: its last segment, `https://nas.example.test/gitea/` → `Gitea`
     (several apps behind one reverse proxy).
@@ -71,9 +71,8 @@ unwire/<name>/
   discover/          # step 1: found documentation
   assets/            # step 2: downloaded HTML, JS, maps (add to .gitignore)
   candidates.json    # step 2: pre-filtered endpoint candidates
-  openapi.json       # the spec, the contract for steps 3 and 4
+  openapi.json       # the spec, the contract for step 3
   API.html           # step 3: the clickable documentation, the primary output
-  module/<Name>/     # step 4, only on request: the PowerShell module
 ```
 
 ## Steps
@@ -83,7 +82,7 @@ unwire/<name>/
    open points in the spec.
 3. **Document** with the `unwire:document` skill: `API.html`. Give the user its path and a short
    summary (operations per confidence, write operations, top open points).
-4. **Module**: ask whether a PowerShell module is wanted and for which tags or paths. Only then
-   run the `unwire:module` skill for the picked operations.
+4. **Code** (`unwire:code`) is not implemented yet: do not offer it. When the user asks for
+   client code, say that this step does not exist yet.
 
 Stop after each step when it fails, and report what is missing.

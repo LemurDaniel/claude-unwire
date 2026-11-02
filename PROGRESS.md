@@ -8,7 +8,7 @@ things got here; this file holds what holds now, and the one next thing at the e
 
 A Claude Code plugin that turns the undocumented HTTP API of a web UI (router, NAS, smart
 home, web app) into an OpenAPI spec and a clickable HTML documentation, without ever
-changing anything on the target. A PowerShell module for picked operations follows on request.
+changing anything on the target. Client code for picked operations is planned (`unwire:code`).
 
 ## Decisions, and why
 
@@ -22,8 +22,11 @@ changing anything on the target. A PowerShell module for picked operations follo
   is unverified, a module would look finished when it is not. The page is self-contained
   (no CDN), writes spec values only as text, and tells documented from derived operations.
 - **The spec is the contract** (2026-11-02). `openapi.json` with `x-unwire-source`,
-  `-confidence`, `-verified`, `-impact`, `-open`; page and module are views of it, and
-  `Test-UnwireSpec` checks it before either.
+  `-confidence`, `-verified`, `-impact`, `-open`; the page (and later the code) is a view of
+  it, and `Test-UnwireSpec` checks it before.
+- **Step 4 is `unwire:code`, not implemented** (2026-11-02). The PowerShell module generator
+  never ran: renamed, emptied to a stub, templates removed (still in the git history before
+  this commit). The plugin promises only what works.
 - **Session mode loads code only** (2026-11-02). Cookie from a masked prompt in the user's
   terminal (or an env variable for automation), then only the start page and `*.js`, `*.mjs`,
   `*.map`. The signed-in page is read, never saved. Bearer tokens and MCP servers were
@@ -36,14 +39,15 @@ changing anything on the target. A PowerShell module for picked operations follo
 
 ## State
 
-- v0.2.0 on `master`. Skills: discover, analyze, document, module. 7 scripts, 91 Pester tests.
+- v0.2.0 on `master`. Skills: discover, analyze, document, code (stub). 7 scripts, 109 Pester tests.
 - Live runs: Grafana (webpack, base tag, 243 candidates), Gitea without and with login
   (full run to `API.html`: 471 documented + 47 derived operations, 0 spec findings).
 - `examples/testbed`: Juice Shop, Grafana, Gitea, Uptime Kuma on 127.0.0.1, not started yet.
 
 ## Open
 
-- **`unwire:module` has never run.** Skill and templates exist, nothing was generated yet.
+- **`unwire:code` is a stub.** Open: which language(s), what shape; the old PowerShell
+  module design (SKILL.md, templates) is in the history of `core/module/`.
 - **C · Reference output inside the plugin** (Claude Code tip 3, "show what good looks
   like"). `examples/` is outside `plugins/unwire/` and missing after an install. Put a small
   reference spec into `core/analyze/references/` and point the skills at it.
@@ -59,5 +63,4 @@ changing anything on the target. A PowerShell module for picked operations follo
 ## Next
 
 Start a fresh session: bring up the testbed, create the Gitea admin, run the full chain
-against the local Gitea and then `unwire:module` for the tags `repository` and `issue`,
-calling the generated cmdlets for real against the throwaway instance.
+against the local Gitea up to `API.html` and compare it with the published `swagger.v1.json`.

@@ -6,9 +6,9 @@ sessions: read it first, rewrite it last. `README.md` holds the pitch and the st
 
 ## What this repo is
 A Claude Code **marketplace** with one plugin, **Unwire**: it reverse engineers the
-undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`, a PowerShell
-module only on request. Skills live in `plugins/unwire/core/<skill>/` with their own scripts,
-data or templates and Pester tests; `plugins/unwire/shared/` holds what several skills use.
+undocumented HTTP API of a web UI into `openapi.json` and a clickable `API.html`; client code
+(`unwire:code`) is planned, not implemented. Skills live in `plugins/unwire/core/<skill>/`
+with their own scripts, data or templates and Pester tests; `plugins/unwire/shared/` holds what several skills use.
 
 ## Ground rule: own home systems, read-only
 Every change must keep this true, it is the reason the plugin may run against real devices.

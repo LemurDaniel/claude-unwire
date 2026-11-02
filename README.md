@@ -1,7 +1,7 @@
 # claude-unwire
 Claude Code plugin that reverse engineers the undocumented HTTP API of a web UI (router, NAS,
 smart home device, web app) into an OpenAPI spec and a clickable HTML documentation.
-A PowerShell module for the parts you need follows on request.
+Client code for the parts you need is planned (`unwire:code`, not implemented yet).
 
 > [!CAUTION]
 > **ONLY USE FOR HOME SYSTEMS YOU OWN.** Run Unwire only against devices and services that
@@ -14,7 +14,7 @@ A PowerShell module for the parts you need follows on request.
 > [!WARNING]
 > **Prototype.** Unwire is an early prototype (v0.2.0). It is tested against a few home
 > systems only, its output can be incomplete or wrong, and its interfaces may change without
-> notice. Treat every generated spec, page and module as a draft to review, not as fact.
+> notice. Treat every generated spec and page as a draft to review, not as fact.
 
 > [!NOTE]
 > **AI-generated.** The code, skills and documentation of this repository were written with
@@ -30,7 +30,7 @@ downloaded JavaScript.
 1. Discover   swagger.json, openapi.json, /v3/api-docs, Swagger UI …   GET on well-known paths
 2. Analyze    HTML + JS bundles + source maps → openapi.json           static assets only
 3. Document   openapi.json → API.html (primary output)                 offline, no CDN
-4. Module     picked operations → PowerShell module + Pester tests     only on request
+4. Code       picked operations → client code                          not implemented yet
 ```
 
 Open points (auth flow, URLs built at runtime, unknown schemas) live in the spec and show up
@@ -95,7 +95,7 @@ A marketplace repository with one plugin, laid out like Infrastructure-as-Skills
 
 ## Status
 v0.2.0: all scripts work and are tested, one full run against Gitea (518 operations).
-The module generation of `unwire:module` has not run yet.
+Step 4, `unwire:code`, is not implemented yet.
 
 ## Development
 ```powershell

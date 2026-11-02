@@ -6,7 +6,7 @@ description: Step 3 of Unwire and its primary output. Renders an Unwire openapi.
 # Unwire: Document
 
 The documentation is what the user reads first: what exists, how sure it is, what is open.
-The PowerShell module (`unwire:module`) is optional and comes later, for the parts the user picks.
+Client code (`unwire:code`) is planned, not implemented yet.
 
 ## Steps
 1. **Enrich the spec** before rendering, the page shows what the spec says:

@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "unwire",
-      "description": "Finds published API docs, analyzes the static frontend code of a web UI (HTML, JS bundles, webpack chunks, source maps) and writes an OpenAPI spec plus a clickable HTML documentation. Never calls an endpoint, a PowerShell module follows on request.",
+      "description": "Finds published API docs, analyzes the static frontend code of a web UI (HTML, JS bundles, webpack chunks, source maps) and writes an OpenAPI spec plus a clickable HTML documentation. Never calls an endpoint.",
       "author": {
         "name": "LemurDaniel"
       },

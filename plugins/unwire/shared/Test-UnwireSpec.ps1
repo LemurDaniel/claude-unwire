@@ -1,5 +1,5 @@
 # NOTE:
-#   Validates an Unwire openapi.json before unwire:document renders it and unwire:module uses it:
+#   Validates an Unwire openapi.json before unwire:document renders it:
 #   the OpenAPI 3.x structure both need, path parameters, unique operationIds,
 #   local $ref targets and the x-unwire-* extensions on every operation.
 #   Returns one finding per problem, nothing when the spec is valid.
@@ -181,7 +181,7 @@ if ($Paths -isnot [System.Collections.IDictionary]) {
     $Paths = @{}
 }
 elseif ($Paths.Count -EQ 0) {
-    Add-UnwireFinding -Severity Warning -Location 'paths' -Rule 'paths' -Message 'paths is empty, the module would have no functions.'
+    Add-UnwireFinding -Severity Warning -Location 'paths' -Rule 'paths' -Message 'paths is empty, the spec documents nothing.'
 }
 
 # A spec of unwire:discover comes from the device: missing x-unwire-* are only warnings.
@@ -241,10 +241,10 @@ foreach ($pathKey in $Paths.Keys) {
             }
         }
 
-        # operationId: the module names its functions after it
+        # operationId: names the operation on the page
         $operationId = $operation['operationId']
         if ([System.String]::IsNullOrWhiteSpace($operationId)) {
-            Add-UnwireFinding -Severity Error -Location $location -Rule 'operation-id' -Message 'operationId must be set, the module function is named after it.'
+            Add-UnwireFinding -Severity Error -Location $location -Rule 'operation-id' -Message 'operationId must be set, the operation is named after it.'
         }
         elseif ($OperationIds.ContainsKey($operationId)) {
             Add-UnwireFinding -Severity Error -Location $location -Rule 'operation-id' -Message "operationId '$operationId' must be unique, already used at $($OperationIds[$operationId])."
@@ -291,7 +291,7 @@ foreach ($pathKey in $Paths.Keys) {
             Add-UnwireFinding -Severity Warning -Location $location -Rule 'x-unwire-open' -Message 'x-unwire-confidence is low, x-unwire-open should say what is unclear.'
         }
 
-        # x-unwire-impact: write methods must be marked, so the module asks for confirmation
+        # x-unwire-impact: write methods must be marked, so the page flags them
         $impact = $operation['x-unwire-impact']
         if ($null -NE $impact -AND $impact -NOTIN $IMPACT_VALUES) {
             Add-UnwireFinding -Severity Error -Location $location -Rule 'x-unwire-impact' -Message "x-unwire-impact must be one of: $($IMPACT_VALUES -join ', '), got '$impact'."
