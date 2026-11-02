@@ -76,7 +76,7 @@ changing anything on the target. Client code for picked operations is planned (`
   count as `AccessDenied`. `Get-UnwireJsCandidate` reads the method only from the call's own
   arguments.
 - Examples (committed, checked for secrets):
-  - `examples/testbed/juiceshop/` (user decision 2026-11-02, replaces `examples/juiceshop/`):
+  - `examples/juiceshop/` (replaced by the second run, user decision 2026-11-02):
     the second run, 88 operations, with `candidates.json`; its `assets/` git-ignored (6.8 MB). B2B missing (see Open).
   - `examples/mocks/<variant>/`: all 7 mock variants after the fixes, 14 candidates each
     with and without login, live GET 5 of 5 per variant (401 → 200), Digest rejected by
@@ -91,7 +91,7 @@ changing anything on the target. Client code for picked operations is planned (`
 - **Embedded Swagger UI spec**: `/api-docs/swagger-ui-init.js` carries the spec as
   `swaggerDoc`; `Find-UnwireSpec` misses it and finds only the Petstore default (Juice Shop
   B2B lost in the second run, 88 instead of 89).
-- **`examples/testbed/juiceshop/`** has three wrong `security` values (`/api/Quantitys/`,
+- **`examples/juiceshop/`** has three wrong `security` values (`/api/Quantitys/`,
   `/rest/chatbot/status`, `/rest/user/whoami`: 200 without session, still `bearerAuth`),
   from the run before the live GET hint rule.
 - **Asset crawl guesses webpack module ids** (`./node_modules/dayjs/...`) as chunk paths:

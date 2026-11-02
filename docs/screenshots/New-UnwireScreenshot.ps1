@@ -2,7 +2,7 @@
 #   Requires: Windows with Microsoft Edge (headless screenshot), PowerShell 7.
 #
 #   Takes the README screenshot of an Unwire page in light mode: by default
-#   examples/testbed/juiceshop/API.html into api-html.png next to this script.
+#   examples/juiceshop/API.html into api-html.png next to this script.
 #   Edge runs with a throwaway profile, so no stored dark theme applies and a
 #   running Edge is not touched.
 #
@@ -18,13 +18,13 @@
 param (
     <#
     [Optional]
-    The page to take. Default is examples/testbed/juiceshop/API.html of this repository.
+    The page to take. Default is examples/juiceshop/API.html of this repository.
     #>
     [Parameter(
         Mandatory = $false
     )]
     [System.String]
-    $Path = (Join-Path -Path $PSScriptRoot -ChildPath '../../examples/testbed/juiceshop/API.html'),
+    $Path = (Join-Path -Path $PSScriptRoot -ChildPath '../../examples/juiceshop/API.html'),
 
     <#
     [Optional]

@@ -15,7 +15,7 @@ param ()
 #   default_output         Writes API.html next to the spec by default.
 #   file_uri               Returns a file URI to open the page in the browser.
 #   confidence_legend      Explains every confidence level on the page.
-#   example_current        examples/testbed/juiceshop/API.html matches the current template.
+#   example_current        examples/juiceshop/API.html matches the current template.
 #   title_escaped          HTML-encodes the title.
 #   script_breakout        Keeps a closing script tag in spec strings from ending the block.
 #   favicon                Embeds the plugin icon as base64 SVG favicon.
@@ -89,8 +89,8 @@ Describe 'ConvertTo-UnwireHtml' {
         $html | Should -Match 'None of them is verified\.'
     }
 
-    It 'example_current: examples/testbed/juiceshop/API.html matches the current template' {
-        $exampleFolder = Join-Path -Path $PSScriptRoot -ChildPath '../../../../../examples/testbed/juiceshop'
+    It 'example_current: examples/juiceshop/API.html matches the current template' {
+        $exampleFolder = Join-Path -Path $PSScriptRoot -ChildPath '../../../../../examples/juiceshop'
         $outputFile    = Join-Path -Path $TestDrive -ChildPath 'juiceshop.html'
 
         $null = & $SCRIPT_PATH -Path (Join-Path -Path $exampleFolder -ChildPath 'openapi.json') -OutputFile $outputFile
