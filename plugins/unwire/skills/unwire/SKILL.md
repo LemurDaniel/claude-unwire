@@ -43,6 +43,9 @@ from Claude Code:
 - Unwire never changes anything on the target. Only GET requests to well-known documentation
   paths and to static assets (HTML, JS, source maps) are allowed. Never call an API endpoint
   found in the code, never submit a form, never execute downloaded JavaScript.
+- Every request to the target goes through the Unwire scripts, never an own
+  `Invoke-WebRequest`, `curl` or fetch. A script that cannot do what the target needs is
+  an open point to report, never a reason to work around it.
 - Unwire is a prototype and its specs are AI-derived: present every result as a draft to
   review, with its open points, never as verified fact.
 

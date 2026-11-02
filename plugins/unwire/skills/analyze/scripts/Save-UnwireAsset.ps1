@@ -3,6 +3,9 @@
 #   every same-origin script, the chunks those scripts reference (also the lazy chunks of a
 #   webpack runtime) and their source maps.
 #   GET only, same origin only, redirects only within the origin. Nothing is executed.
+#   Every asset goes out with the page that loaded it as Referer, like a browser: some
+#   devices (TP-Link) answer 403 to scripts without it. Scripts that still answer 401 or 403
+#   are counted as AccessDenied: the code is probably behind a login, try session mode.
 #
 #   Session mode for UIs whose code is behind a login: sends a session cookie and loads only
 #   the start page and *.js, *.mjs, *.map files, never a page, frame, endpoint or redirect.
@@ -585,7 +588,7 @@ $Records   = [System.Collections.Generic.List[PSCustomObject]]::new()     # writ
 
 $SavedHashes = [System.Collections.Generic.Dictionary[System.String, System.String]]::new()     # content hash => saved file
 
-$Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; FoundIn = $null; PageBase = $StartUri; Guessed = $false })
+$Queue.Enqueue([PSCustomObject]@{ Uri = $StartUri; Kind = 'html'; Depth = 0; FoundIn = $null; PageBase = $StartUri; Guessed = $false; Referer = $null })
 
 # ===========================================================================
 # ===========================   DOWNLOAD ASSETS   ===========================
@@ -652,9 +655,19 @@ $GuessMisses = 0
         continue CRAWL
     }
 
+    # Referer like a browser: the page that loaded the asset, none for the start page.
+    $itemConfig = $RequestConfig
+    if ($null -NE $item.Referer) {
+        $itemConfig         = $RequestConfig.Clone()
+        $itemConfig.Headers = @{ Referer = $item.Referer.AbsoluteUri }
+        if ($null -NE $RequestConfig.Headers) {
+            $itemConfig.Headers += $RequestConfig.Headers
+        }
+    }
+
     # Request fails or not HTTP 200
     try {
-        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $RequestConfig -IsRedirectAllowed (-NOT $IsSessionMode)
+        $result = Invoke-UnwireAssetRequest -Target $item.Uri -Origin $StartUri -RequestConfig $itemConfig -IsRedirectAllowed (-NOT $IsSessionMode)
     }
     catch [System.Net.Http.HttpRequestException], [System.OperationCanceledException], [System.TimeoutException] {
         # Untrusted certificate on the start page: the user decides about SkipCertificateCheck.
@@ -693,6 +706,9 @@ $GuessMisses = 0
     }
     $text = ConvertTo-UnwireText -Content $result.Response.Content
 
+    # A page is the Referer of what it loads, a script passes on the page that loaded it.
+    $referer = if ($item.Kind -EQ 'html') { $result.FinalUri } else { $item.Referer }
+
     # Script that is HTML (SPA fallback)
     if ($item.Kind -EQ 'js' -AND $text.TrimStart().StartsWith('<')) {
         $record.Reason = 'HTML instead of a script (SPA fallback)'
@@ -722,7 +738,7 @@ $GuessMisses = 0
         $record.Reason = 'session mode: page read for script references only, not saved'
         Write-Verbose "[Save-UnwireAsset] '$key' read in session mode, not saved."
         foreach ($reference in Find-UnwireAssetReference -Text $text -Kind 'html' -AssetUri $result.FinalUri -PageBase $item.PageBase) {
-            $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed })
+            $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed; Referer = $referer })
         }
         continue CRAWL
     }
@@ -777,7 +793,7 @@ $GuessMisses = 0
         if ($reference.Kind -NE 'map' -AND $item.Depth + 1 -GT $MaxDepth) {
             continue
         }
-        $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed })
+        $Queue.Enqueue([PSCustomObject]@{ Uri = $reference.Uri; Kind = $reference.Kind; Depth = $item.Depth + 1; FoundIn = $key; PageBase = $reference.PageBase; Guessed = $reference.Guessed; Referer = $referer })
     }
 }
 
@@ -811,8 +827,18 @@ if ($PromptSession) {
     Write-Host $LoginGuide.done
 }
 
+# Scripts or maps that answer 401/403 even with a Referer: the code is behind a login.
+$AccessDenied = @(
+    $Records
+    | Where-Object { $_.Status -EQ 'failed' -AND $_.Kind -IN @('js', 'map') -AND $_.Reason -IN @('HTTP 401', 'HTTP 403') }
+).Count
+if ($AccessDenied -GT 0 -AND -NOT $IsSessionMode) {
+    Write-Warning "[Save-UnwireAsset] $AccessDenied scripts or maps answered 401/403 although the Referer was sent: the code is probably behind a login, use session mode."
+}
+
 return [PSCustomObject]@{
     OutputDirectory = $RootPath
+    AccessDenied    = $AccessDenied
     Manifest        = $ManifestPath
     Saved           = @($Records | Where-Object -Property Status -EQ -Value 'saved').Count
     Skipped         = @($Records | Where-Object -Property Status -EQ -Value 'skipped').Count

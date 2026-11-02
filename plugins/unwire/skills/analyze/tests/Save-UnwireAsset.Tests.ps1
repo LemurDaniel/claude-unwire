@@ -32,6 +32,8 @@ param ()
 #   untrusted_certificate  Stops at the start page on an untrusted certificate.
 #   webpack_chunk_map      Loads the lazy chunks of a webpack runtime by name and hash.
 #   webpack_chunk_prefix   Builds CRA-style chunk names relative to the runtime's folder.
+#   referer                Sends the loading page as Referer, the start page without one.
+#   access_denied          Counts scripts that answer 401 or 403 and warns about a login.
 #   no_cookie_by_default   Sends no Cookie header without UseSession.
 #   session_missing        Fails early when the session variable is empty.
 #   session_cookie         Sends the cookie from the session variable.
@@ -293,6 +295,34 @@ Describe 'Save-UnwireAsset' {
         $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
 
         Join-Path -Path $OutputDirectory -ChildPath 'static/js/45.0a1b2c3d.chunk.js' | Should -Exist
+    }
+
+    It 'referer: sends the loading page as Referer, the start page without one' {
+        $Site['http://router.test/']              = New-TestResponse -Content '<script src="/js/runtime.js"></script><iframe src="/frame.htm"></iframe>'
+        $Site['http://router.test/js/runtime.js'] = New-TestResponse -Content 'load("js/chunk.js")'
+        $Site['http://router.test/js/chunk.js']   = New-TestResponse -Content 'c()'
+        $Site['http://router.test/frame.htm']     = New-TestResponse -Content '<script src="/js/frame.js"></script>'
+        $Site['http://router.test/js/frame.js']   = New-TestResponse -Content 'f()'
+
+        $null = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe
+
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/' -AND $null -EQ $Headers }
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/js/runtime.js' -AND $Headers.Referer -EQ 'http://router.test/' }
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/js/chunk.js' -AND $Headers.Referer -EQ 'http://router.test/' }
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $Uri.AbsolutePath -EQ '/js/frame.js' -AND $Headers.Referer -EQ 'http://router.test/frame.htm' }
+    }
+
+    It 'access_denied: counts scripts that answer 401 or 403 and warns about a login' {
+        $Site['http://router.test/']       = New-TestResponse -Content '<script src="/a.js"></script><script src="/b.js"></script><script src="/c.js"></script>'
+        $Site['http://router.test/a.js']   = New-TestResponse -StatusCode 403
+        $Site['http://router.test/b.js']   = New-TestResponse -StatusCode 401
+        $Site['http://router.test/c.js']   = New-TestResponse -StatusCode 500
+
+        $summary = & $SCRIPT_PATH -Uri $START_URI -OutputDirectory $OutputDirectory -SkipSourceMapProbe -WarningVariable warnings -WarningAction SilentlyContinue
+
+        $summary.AccessDenied | Should -Be 2
+        $summary.Failed       | Should -Be 3
+        $warnings             | Should -BeLike '*2 scripts or maps answered 401/403*session mode*'
     }
 
     It 'no_cookie_by_default: sends no Cookie header without UseSession' {

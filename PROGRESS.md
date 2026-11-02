@@ -37,6 +37,10 @@ changing anything on the target. Client code for picked operations is planned (`
 - **Missing pwsh: check, ask, never install unasked** (2026-11-02). `shared/pwsh-check.md`
   runs before the first script (Bash tool, PS >= 7), then AskUserQuestion: install yourself
   (recommended), Claude runs winget/brew (not on Linux, sudo), or cancel. No 5.1 fallback.
+- **Referer like a browser, 401/403 means login** (2026-11-02). A TP-Link router answered
+  403 to its scripts without a Referer; the agent guessed and fetched them by hand.
+  `Save-UnwireAsset` now sends the loading page as Referer and reports `AccessDenied`, which
+  leads to the login question; own requests past the scripts are forbidden.
 - **Marketplace layout like Infrastructure-as-Skills** (2026-11-02). `plugins/unwire/skills/<skill>/`
   with its own scripts, data or templates and tests; `shared/` for what several skills use.
 - **One plugin for every agent with skills** (2026-11-02). Claude Code, Copilot CLI, Codex and
